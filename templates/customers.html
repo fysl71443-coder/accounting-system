@@ -32,14 +32,13 @@
 {% endblock %}
 
 {% block content %}
-
 <!-- Statistics Cards -->
-<div class="row mb-4">
+<div class="row mb-3">
     <div class="col-md-3">
         <div class="card text-center">
-            <div class="card-body">
-                <h5 class="card-title text-primary">156</h5>
-                <p class="card-text">
+            <div class="card-body py-3">
+                <h5 class="card-title text-primary mb-1">156</h5>
+                <p class="card-text mb-0 small">
                     {% if session.get('language', 'ar') == 'ar' %}إجمالي العملاء{% else %}Total Customers{% endif %}
                 </p>
             </div>

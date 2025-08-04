@@ -1070,6 +1070,50 @@ def role_management():
     """صفحة إدارة الأدوار والصلاحيات"""
     return render_template('role_management.html')
 
+# الروابط الإضافية للحسابات الرئيسية
+
+@app.route('/purchases')
+@login_required
+def purchases():
+    """صفحة المشتريات"""
+    return render_template('purchases.html')
+
+@app.route('/financial_statements')
+@login_required
+def financial_statements():
+    """صفحة القوائم المالية"""
+    return render_template('financial_statements.html')
+
+@app.route('/payments_dues')
+@login_required
+def payments_dues():
+    """صفحة المدفوعات والمستحقات"""
+    return render_template('payments_dues.html')
+
+@app.route('/tax_management')
+@login_required
+def tax_management():
+    """صفحة إدارة ضريبة القيمة المضافة"""
+    return render_template('tax_management.html')
+
+@app.route('/employee_payroll')
+@login_required
+def employee_payroll():
+    """صفحة الموظفين والرواتب"""
+    return render_template('employee_payroll.html')
+
+@app.route('/advanced_reports')
+@login_required
+def advanced_reports():
+    """صفحة التقارير المتقدمة"""
+    return render_template('advanced_reports.html')
+
+@app.route('/user_management')
+@login_required
+def user_management():
+    """صفحة إدارة المستخدمين"""
+    return render_template('user_management.html')
+
 # API routes معطلة مؤقتاً - سيتم تفعيلها بعد تحديث قاعدة البيانات
 
 if __name__ == '__main__':

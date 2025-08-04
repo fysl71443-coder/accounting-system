@@ -26,14 +26,11 @@ Product Management - Accounting System
 {% endblock %}
 
 {% block content %}
-
 <!-- Search and Filter -->
-<div class="row mb-4">
+<div class="row mb-3">
     <div class="col-md-6">
         <div class="input-group">
-            <span class="input-group-text">
-                <i class="fas fa-search"></i>
-            </span>
+            <span class="input-group-text"><i class="fas fa-search"></i></span>
             <input type="text" class="form-control" id="searchInput" placeholder="{% if session.get('language', 'ar') == 'ar' %}البحث في المنتجات...{% else %}Search products...{% endif %}" value="{{ search }}">
         </div>
     </div>
@@ -43,7 +40,6 @@ Product Management - Accounting System
             <option value="إلكترونيات">{% if session.get('language', 'ar') == 'ar' %}إلكترونيات{% else %}Electronics{% endif %}</option>
             <option value="ملابس">{% if session.get('language', 'ar') == 'ar' %}ملابس{% else %}Clothing{% endif %}</option>
             <option value="أغذية">{% if session.get('language', 'ar') == 'ar' %}أغذية{% else %}Food{% endif %}</option>
-            <option value="مستحضرات تجميل">{% if session.get('language', 'ar') == 'ar' %}مستحضرات تجميل{% else %}Cosmetics{% endif %}</option>
         </select>
     </div>
     <div class="col-md-3">

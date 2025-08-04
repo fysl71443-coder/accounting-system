@@ -550,12 +550,15 @@
         </div>
 
         <ul class="nav flex-column">
+            <!-- الرئيسية -->
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if request.endpoint == 'dashboard' else '' }}" href="{{ url_for('dashboard') }}">
                     <i class="fas fa-tachometer-alt"></i>
                     {% if session.get('language', 'ar') == 'ar' %}الرئيسية{% else %}Dashboard{% endif %}
                 </a>
             </li>
+
+            <!-- المبيعات -->
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if request.endpoint == 'new_sale' else '' }}" href="{{ url_for('new_sale') }}">
                     <i class="fas fa-plus-circle"></i>
@@ -568,12 +571,30 @@
                     {% if session.get('language', 'ar') == 'ar' %}المبيعات{% else %}Sales{% endif %}
                 </a>
             </li>
+
+            <!-- المشتريات -->
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'purchases' else '' }}" href="{{ url_for('purchases') }}">
+                    <i class="fas fa-shopping-cart"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}المشتريات{% else %}Purchases{% endif %}
+                </a>
+            </li>
+
+            <!-- المخزون والمنتجات -->
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if request.endpoint == 'products' else '' }}" href="{{ url_for('products') }}">
                     <i class="fas fa-box"></i>
                     {% if session.get('language', 'ar') == 'ar' %}المنتجات{% else %}Products{% endif %}
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'inventory' else '' }}" href="{{ url_for('inventory') }}">
+                    <i class="fas fa-warehouse"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}المخزون{% else %}Inventory{% endif %}
+                </a>
+            </li>
+
+            <!-- العملاء والموردين -->
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if request.endpoint == 'customers' else '' }}" href="{{ url_for('customers') }}">
                     <i class="fas fa-users"></i>
@@ -586,16 +607,54 @@
                     {% if session.get('language', 'ar') == 'ar' %}الموردين{% else %}Suppliers{% endif %}
                 </a>
             </li>
+
+            <!-- المالية والمحاسبة -->
             <li class="nav-item">
-                <a class="nav-link {{ 'active' if request.endpoint == 'inventory' else '' }}" href="{{ url_for('inventory') }}">
-                    <i class="fas fa-warehouse"></i>
-                    {% if session.get('language', 'ar') == 'ar' %}المخزون{% else %}Inventory{% endif %}
+                <a class="nav-link {{ 'active' if request.endpoint == 'financial_statements' else '' }}" href="{{ url_for('financial_statements') }}">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}القوائم المالية{% else %}Financial Statements{% endif %}
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'payments_dues' else '' }}" href="{{ url_for('payments_dues') }}">
+                    <i class="fas fa-credit-card"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}المدفوعات والمستحقات{% else %}Payments & Dues{% endif %}
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'tax_management' else '' }}" href="{{ url_for('tax_management') }}">
+                    <i class="fas fa-percentage"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}ضريبة القيمة المضافة{% else %}VAT Management{% endif %}
+                </a>
+            </li>
+
+            <!-- الموظفين والرواتب -->
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'employee_payroll' else '' }}" href="{{ url_for('employee_payroll') }}">
+                    <i class="fas fa-user-tie"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}الموظفين والرواتب{% else %}Employees & Payroll{% endif %}
+                </a>
+            </li>
+
+            <!-- التقارير -->
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if request.endpoint == 'reports' else '' }}" href="{{ url_for('reports') }}">
                     <i class="fas fa-chart-bar"></i>
                     {% if session.get('language', 'ar') == 'ar' %}التقارير{% else %}Reports{% endif %}
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'advanced_reports' else '' }}" href="{{ url_for('advanced_reports') }}">
+                    <i class="fas fa-chart-line"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}التقارير المتقدمة{% else %}Advanced Reports{% endif %}
+                </a>
+            </li>
+
+            <!-- الإدارة -->
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'user_management' else '' }}" href="{{ url_for('user_management') }}">
+                    <i class="fas fa-users-cog"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}إدارة المستخدمين{% else %}User Management{% endif %}
                 </a>
             </li>
             <li class="nav-item">
@@ -604,6 +663,8 @@
                     {% if session.get('language', 'ar') == 'ar' %}الإعدادات{% else %}Settings{% endif %}
                 </a>
             </li>
+
+            <!-- تسجيل الخروج -->
             <li class="nav-item">
                 <a class="nav-link" href="{{ url_for('logout') }}">
                     <i class="fas fa-sign-out-alt"></i>
