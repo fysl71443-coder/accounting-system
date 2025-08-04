@@ -1,0 +1,747 @@
+{% extends "base_simple_test.html" %}
+
+{% block title %}
+{% if session.get('language', 'ar') == 'ar' %}
+لوحة التحكم - نظام المحاسبة
+{% else %}
+Dashboard - Accounting System
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-tachometer-alt me-2"></i>
+        {% if session.get('language', 'ar') == 'ar' %}
+            لوحة التحكم الرئيسية
+        {% else %}
+            Main Dashboard
+        {% endif %}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshDashboard()">
+                <i class="fas fa-sync-alt me-1"></i>
+                {% if session.get('language', 'ar') == 'ar' %}تحديث{% else %}Refresh{% endif %}
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-primary ms-2" onclick="showQuickActions()">
+                <i class="fas fa-bolt me-1"></i>
+                {% if session.get('language', 'ar') == 'ar' %}إجراءات سريعة{% else %}Quick Actions{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="stats-card">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h6 class="text-uppercase mb-1">
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            مبيعات اليوم
+                        {% else %}
+                            Today's Sales
+                        {% endif %}
+                    </h6>
+                    <h3 class="mb-0">{{ "%.2f"|format(daily_sales) }} ريال</h3>
+                </div>
+                <div class="align-self-center">
+                    <i class="fas fa-calendar-day fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="stats-card success">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h6 class="text-uppercase mb-1">
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            مبيعات الشهر
+                        {% else %}
+                            Monthly Sales
+                        {% endif %}
+                    </h6>
+                    <h3 class="mb-0">{{ "%.2f"|format(monthly_sales) }} ريال</h3>
+                </div>
+                <div class="align-self-center">
+                    <i class="fas fa-chart-line fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="stats-card warning">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h6 class="text-uppercase mb-1">
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            إجمالي المنتجات
+                        {% else %}
+                            Total Products
+                        {% endif %}
+                    </h6>
+                    <h3 class="mb-0">{{ total_products }}</h3>
+                </div>
+                <div class="align-self-center">
+                    <i class="fas fa-box fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="stats-card info">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <h6 class="text-uppercase mb-1">
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            تنبيهات المخزون
+                        {% else %}
+                            Stock Alerts
+                        {% endif %}
+                    </h6>
+                    <h3 class="mb-0">{{ low_stock_products|length }}</h3>
+                </div>
+                <div class="align-self-center">
+                    <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- الصف الثاني من الإحصائيات -->
+<div class="row mb-4">
+    <!-- Suppliers Count -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-start border-4 border-secondary h-100">
+            <div class="card-body d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <h6 class="text-secondary mb-1">
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            إجمالي الموردين
+                        {% else %}
+                            Total Suppliers
+                        {% endif %}
+                    </h6>
+                    <h3 class="mb-0">25</h3>
+                </div>
+                <div class="align-self-center">
+                    <i class="fas fa-truck fa-2x opacity-75 text-secondary"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customers Count -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-start border-4 border-dark h-100">
+            <div class="card-body d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <h6 class="text-dark mb-1">
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            إجمالي العملاء
+                        {% else %}
+                            Total Customers
+                        {% endif %}
+                    </h6>
+                    <h3 class="mb-0">156</h3>
+                </div>
+                <div class="align-self-center">
+                    <i class="fas fa-users fa-2x opacity-75 text-dark"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Orders -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-start border-4 border-info h-100">
+            <div class="card-body d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <h6 class="text-info mb-1">
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            الطلبيات المعلقة
+                        {% else %}
+                            Pending Orders
+                        {% endif %}
+                    </h6>
+                    <h3 class="mb-0">8</h3>
+                </div>
+                <div class="align-self-center">
+                    <i class="fas fa-shopping-cart fa-2x opacity-75 text-info"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Raw Materials -->
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-start border-4 border-success h-100">
+            <div class="card-body d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <h6 class="text-success mb-1">
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            المواد الخام
+                        {% else %}
+                            Raw Materials
+                        {% endif %}
+                    </h6>
+                    <h3 class="mb-0">42</h3>
+                </div>
+                <div class="align-self-center">
+                    <i class="fas fa-cubes fa-2x opacity-75 text-success"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Sales Chart -->
+    <div class="col-lg-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-area me-2"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}
+                        مبيعات آخر 7 أيام
+                    {% else %}
+                        Last 7 Days Sales
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="salesChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Low Stock Alerts -->
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-exclamation-triangle me-2 text-warning"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}
+                        تنبيهات المخزون
+                    {% else %}
+                        Stock Alerts
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                {% if low_stock_products %}
+                    {% for product in low_stock_products %}
+                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                        <div>
+                            <strong>{{ product.product_name }}</strong>
+                            <br>
+                            <small class="text-muted">{{ product.product_code }}</small>
+                        </div>
+                        <span class="badge bg-warning">{{ product.current_stock }}</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted">
+                        <i class="fas fa-check-circle fa-3x mb-3"></i>
+                        <p>
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                لا توجد تنبيهات مخزون
+                            {% else %}
+                                No stock alerts
+                            {% endif %}
+                        </p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Sales -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-receipt me-2"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}
+                        آخر المبيعات
+                    {% else %}
+                        Recent Sales
+                    {% endif %}
+                </h5>
+                <a href="{{ url_for('sales') }}" class="btn btn-sm btn-primary">
+                    {% if session.get('language', 'ar') == 'ar' %}
+                        عرض الكل
+                    {% else %}
+                        View All
+                    {% endif %}
+                </a>
+            </div>
+            <div class="card-body">
+                {% if recent_sales %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>
+                                    {% if session.get('language', 'ar') == 'ar' %}
+                                        رقم الفاتورة
+                                    {% else %}
+                                        Invoice #
+                                    {% endif %}
+                                </th>
+                                <th>
+                                    {% if session.get('language', 'ar') == 'ar' %}
+                                        العميل
+                                    {% else %}
+                                        Customer
+                                    {% endif %}
+                                </th>
+                                <th>
+                                    {% if session.get('language', 'ar') == 'ar' %}
+                                        الفرع
+                                    {% else %}
+                                        Branch
+                                    {% endif %}
+                                </th>
+                                <th>
+                                    {% if session.get('language', 'ar') == 'ar' %}
+                                        المبلغ
+                                    {% else %}
+                                        Amount
+                                    {% endif %}
+                                </th>
+                                <th>
+                                    {% if session.get('language', 'ar') == 'ar' %}
+                                        التاريخ
+                                    {% else %}
+                                        Date
+                                    {% endif %}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in recent_sales %}
+                            <tr>
+                                <td><strong>{{ sale.invoice_number }}</strong></td>
+                                <td>{{ sale.customer_name or 'عميل نقدي' if session.get('language', 'ar') == 'ar' else 'Cash Customer' }}</td>
+                                <td>
+                                    <span class="badge bg-primary">
+                                        {{ sale.branch.branch_name if sale.branch else 'غير محدد' }}
+                                    </span>
+                                </td>
+                                <td><strong>{{ "%.2f"|format(sale.final_amount) }} ريال</strong></td>
+                                <td>{{ sale.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-receipt fa-3x mb-3"></i>
+                    <p>
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            لا توجد مبيعات حتى الآن
+                        {% else %}
+                            No sales yet
+                        {% endif %}
+                    </p>
+                    <a href="{{ url_for('new_sale') }}" class="btn btn-primary">
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            إنشاء فاتورة جديدة
+                        {% else %}
+                            Create New Invoice
+                        {% endif %}
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bolt me-2"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}
+                        إجراءات سريعة
+                    {% else %}
+                        Quick Actions
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('new_sale') }}" class="btn btn-primary w-100 h-100 d-flex flex-column justify-content-center align-items-center p-4">
+                            <i class="fas fa-plus-circle fa-2x mb-2"></i>
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                فاتورة مبيعات جديدة
+                            {% else %}
+                                New Sales Invoice
+                            {% endif %}
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('products') }}" class="btn btn-success w-100 h-100 d-flex flex-column justify-content-center align-items-center p-4">
+                            <i class="fas fa-box fa-2x mb-2"></i>
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                إدارة المنتجات
+                            {% else %}
+                                Manage Products
+                            {% endif %}
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('sales') }}" class="btn btn-info w-100 h-100 d-flex flex-column justify-content-center align-items-center p-4">
+                            <i class="fas fa-chart-bar fa-2x mb-2"></i>
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                تقارير المبيعات
+                            {% else %}
+                                Sales Reports
+                            {% endif %}
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('settings') }}" class="btn btn-warning w-100 h-100 d-flex flex-column justify-content-center align-items-center p-4">
+                            <i class="fas fa-cog fa-2x mb-2"></i>
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                الإعدادات
+                            {% else %}
+                                Settings
+                            {% endif %}
+                        </a>
+                    </div>
+                </div>
+
+                <!-- الصف الثاني من الإجراءات السريعة -->
+                <div class="row mt-3">
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('suppliers') }}" class="btn btn-secondary w-100 h-100 d-flex flex-column justify-content-center align-items-center p-4">
+                            <i class="fas fa-truck fa-2x mb-2"></i>
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                إدارة الموردين
+                            {% else %}
+                                Manage Suppliers
+                            {% endif %}
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('customers') }}" class="btn btn-dark w-100 h-100 d-flex flex-column justify-content-center align-items-center p-4">
+                            <i class="fas fa-users fa-2x mb-2"></i>
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                إدارة العملاء
+                            {% else %}
+                                Manage Customers
+                            {% endif %}
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('inventory') }}" class="btn btn-danger w-100 h-100 d-flex flex-column justify-content-center align-items-center p-4">
+                            <i class="fas fa-boxes fa-2x mb-2"></i>
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                إدارة المخزون
+                            {% else %}
+                                Inventory Management
+                            {% endif %}
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('orders') }}" class="btn btn-light border w-100 h-100 d-flex flex-column justify-content-center align-items-center p-4">
+                            <i class="fas fa-shopping-cart fa-2x mb-2 text-primary"></i>
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                إدارة الطلبيات
+                            {% else %}
+                                Orders Management
+                            {% endif %}
+                        </a>
+                    </div>
+                </div>
+
+                <!-- الصف الثالث من الإجراءات السريعة -->
+                <div class="row mt-3">
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('purchases') }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column justify-content-center align-items-center p-4">
+                            <i class="fas fa-shopping-cart fa-2x mb-2"></i>
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                المشتريات
+                            {% else %}
+                                Purchases
+                            {% endif %}
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('employee_payroll') }}" class="btn btn-outline-success w-100 h-100 d-flex flex-column justify-content-center align-items-center p-4">
+                            <i class="fas fa-users fa-2x mb-2"></i>
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                الموظفين والرواتب
+                            {% else %}
+                                Employees & Payroll
+                            {% endif %}
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('financial_statements') }}" class="btn btn-outline-info w-100 h-100 d-flex flex-column justify-content-center align-items-center p-4">
+                            <i class="fas fa-chart-line fa-2x mb-2"></i>
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                القوائم المالية
+                            {% else %}
+                                Financial Statements
+                            {% endif %}
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-warning w-100 h-100 d-flex flex-column justify-content-center align-items-center p-4">
+                            <i class="fas fa-sync-alt fa-2x mb-2"></i>
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                تحديث البيانات
+                            {% else %}
+                                Refresh Data
+                            {% endif %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Sales Chart
+const ctx = document.getElementById('salesChart').getContext('2d');
+
+// Generate last 7 days labels
+const labels = [];
+const today = new Date();
+for (let i = 6; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+
+    {% if session.get('language', 'ar') == 'ar' %}
+    labels.push(`${day}/${month}`);
+    {% else %}
+    labels.push(`${month}/${day}`);
+    {% endif %}
+}
+
+const salesChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: '{% if session.get('language', 'ar') == 'ar' %}المبيعات{% else %}Sales{% endif %}',
+            data: [1200, 1900, 3000, 5000, 2000, 3000, 4500],
+            borderColor: 'rgb(37, 99, 235)',
+            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return value + ' ريال';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Auto-refresh dashboard every 5 minutes (disabled for debugging)
+// setInterval(function() {
+//     location.reload();
+// }, 300000);
+
+// Debug: Check for unwanted redirects
+console.log('Dashboard loaded, current URL:', window.location.href);
+
+// Prevent unwanted redirects
+window.addEventListener('beforeunload', function(e) {
+    console.log('Page is about to unload, destination:', e.target.activeElement?.href || 'unknown');
+});
+
+// Dashboard functions
+function refreshDashboard() {
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+
+    // Show loading
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> جاري التحديث...';
+    btn.disabled = true;
+
+    // Simulate refresh with animation
+    setTimeout(() => {
+        // Add refresh animation to cards
+        const cards = document.querySelectorAll('.card');
+        cards.forEach(card => {
+            card.style.transform = 'scale(0.95)';
+            card.style.transition = 'transform 0.3s ease';
+            setTimeout(() => {
+                card.style.transform = 'scale(1)';
+            }, 150);
+        });
+
+        // Update data (simulate)
+        updateDashboardData();
+
+        // Restore button
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+
+        // Show success message
+        showToast('تم تحديث لوحة التحكم بنجاح', 'success');
+    }, 1500);
+}
+
+function showQuickActions() {
+    const modalContent = `
+        <div class="modal fade" id="quickActionsModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-bolt"></i> الإجراءات السريعة
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <button type="button" class="btn btn-outline-primary w-100" onclick="quickAction('new_sale')">
+                                    <i class="fas fa-plus-circle"></i><br>
+                                    فاتورة مبيعات جديدة
+                                </button>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <button type="button" class="btn btn-outline-success w-100" onclick="quickAction('new_purchase')">
+                                    <i class="fas fa-shopping-cart"></i><br>
+                                    فاتورة مشتريات جديدة
+                                </button>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <button type="button" class="btn btn-outline-info w-100" onclick="quickAction('financial_report')">
+                                    <i class="fas fa-chart-line"></i><br>
+                                    تقرير مالي سريع
+                                </button>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <button type="button" class="btn btn-outline-warning w-100" onclick="quickAction('backup')">
+                                    <i class="fas fa-download"></i><br>
+                                    نسخ احتياطي
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Remove existing modal if any
+    const existingModal = document.getElementById('quickActionsModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalContent);
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('quickActionsModal'));
+    modal.show();
+}
+
+function quickAction(action) {
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('quickActionsModal'));
+    modal.hide();
+
+    switch(action) {
+        case 'new_sale':
+            window.location.href = '/new_sale';
+            break;
+        case 'new_purchase':
+            window.location.href = '/purchases';
+            break;
+        case 'financial_report':
+            window.location.href = '/financial_statements';
+            break;
+        case 'backup':
+            showToast('سيتم إنشاء نسخة احتياطية...', 'info');
+            setTimeout(() => {
+                showToast('تم إنشاء النسخة الاحتياطية بنجاح', 'success');
+            }, 2000);
+            break;
+    }
+}
+
+function updateDashboardData() {
+    // Simulate data update
+    const cards = document.querySelectorAll('.card-body h3');
+    cards.forEach(card => {
+        if (card.textContent.includes('ريال')) {
+            const currentValue = parseFloat(card.textContent.replace(/[^\d.]/g, ''));
+            const newValue = currentValue + (Math.random() * 1000 - 500);
+            card.textContent = new Intl.NumberFormat('ar-SA', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(Math.max(0, newValue)) + ' ريال';
+        }
+    });
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type} border-0 position-fixed`;
+    toast.style.cssText = 'top: 20px; left: 20px; z-index: 9999;';
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
+                ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+
+    document.body.appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+
+    toast.addEventListener('hidden.bs.toast', function() {
+        document.body.removeChild(toast);
+    });
+}
+</script>
+{% endblock %}

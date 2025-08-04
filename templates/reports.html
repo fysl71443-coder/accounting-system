@@ -1,0 +1,481 @@
+{% extends "base_simple.html" %}
+
+{% block title %}
+    {% if session.get('language', 'ar') == 'ar' %}
+        التقارير المالية - نظام المحاسبة
+    {% else %}
+        Financial Reports - Accounting System
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-chart-bar me-2"></i>
+        {% if session.get('language', 'ar') == 'ar' %}
+            التقارير المالية
+        {% else %}
+            Financial Reports
+        {% endif %}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-primary" onclick="generateReport()">
+                <i class="fas fa-sync-alt me-1"></i>
+                {% if session.get('language', 'ar') == 'ar' %}تحديث التقارير{% else %}Refresh Reports{% endif %}
+            </button>
+            <button type="button" class="btn btn-sm btn-success" onclick="exportAllReports()">
+                <i class="fas fa-download me-1"></i>
+                {% if session.get('language', 'ar') == 'ar' %}تصدير الكل{% else %}Export All{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Date Range Filter -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="row align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}من تاريخ{% else %}From Date{% endif %}
+                        </label>
+                        <input type="date" class="form-control" id="fromDate" value="2024-01-01">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}إلى تاريخ{% else %}To Date{% endif %}
+                        </label>
+                        <input type="date" class="form-control" id="toDate" value="2024-12-31">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}الفرع{% else %}Branch{% endif %}
+                        </label>
+                        <select class="form-select" id="branchFilter">
+                            <option value="">{% if session.get('language', 'ar') == 'ar' %}جميع الفروع{% else %}All Branches{% endif %}</option>
+                            <option value="1">PLACE INDIA</option>
+                            <option value="2">CHINA TOWN</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="button" class="btn btn-primary w-100" onclick="applyFilters()">
+                            <i class="fas fa-filter me-1"></i>
+                            {% if session.get('language', 'ar') == 'ar' %}تطبيق الفلتر{% else %}Apply Filter{% endif %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center stats-card">
+            <div class="card-body">
+                <i class="fas fa-dollar-sign fa-2x text-success mb-2"></i>
+                <h4 class="text-success">125,450.00</h4>
+                <p class="card-text">
+                    {% if session.get('language', 'ar') == 'ar' %}إجمالي المبيعات{% else %}Total Sales{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center stats-card">
+            <div class="card-body">
+                <i class="fas fa-shopping-cart fa-2x text-primary mb-2"></i>
+                <h4 class="text-primary">1,234</h4>
+                <p class="card-text">
+                    {% if session.get('language', 'ar') == 'ar' %}عدد الفواتير{% else %}Total Invoices{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center stats-card">
+            <div class="card-body">
+                <i class="fas fa-chart-line fa-2x text-warning mb-2"></i>
+                <h4 class="text-warning">101.50</h4>
+                <p class="card-text">
+                    {% if session.get('language', 'ar') == 'ar' %}متوسط الفاتورة{% else %}Average Invoice{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center stats-card">
+            <div class="card-body">
+                <i class="fas fa-percentage fa-2x text-info mb-2"></i>
+                <h4 class="text-info">18,817.50</h4>
+                <p class="card-text">
+                    {% if session.get('language', 'ar') == 'ar' %}إجمالي الضرائب{% else %}Total Tax{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reports Grid -->
+<div class="row">
+    <!-- Sales Report -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}تقرير المبيعات{% else %}Sales Report{% endif %}
+                </h5>
+                <button class="btn btn-sm btn-outline-primary" onclick="exportReport('sales')">
+                    <i class="fas fa-download"></i>
+                </button>
+            </div>
+            <div class="card-body">
+                <canvas id="salesChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products Performance -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-box me-2"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}أداء المنتجات{% else %}Products Performance{% endif %}
+                </h5>
+                <button class="btn btn-sm btn-outline-primary" onclick="exportReport('products')">
+                    <i class="fas fa-download"></i>
+                </button>
+            </div>
+            <div class="card-body">
+                <canvas id="productsChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Comparison -->
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}مقارنة شهرية{% else %}Monthly Comparison{% endif %}
+                </h5>
+                <button class="btn btn-sm btn-outline-primary" onclick="exportReport('monthly')">
+                    <i class="fas fa-download"></i>
+                </button>
+            </div>
+            <div class="card-body">
+                <canvas id="monthlyChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Products Table -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-star me-2"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}أفضل المنتجات{% else %}Top Products{% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>{% if session.get('language', 'ar') == 'ar' %}المنتج{% else %}Product{% endif %}</th>
+                                <th>{% if session.get('language', 'ar') == 'ar' %}الكمية{% else %}Quantity{% endif %}</th>
+                                <th>{% if session.get('language', 'ar') == 'ar' %}المبيعات{% else %}Sales{% endif %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>iPhone 14</td>
+                                <td>45</td>
+                                <td>157,500 ريال</td>
+                            </tr>
+                            <tr>
+                                <td>Samsung Galaxy S23</td>
+                                <td>38</td>
+                                <td>114,000 ريال</td>
+                            </tr>
+                            <tr>
+                                <td>MacBook Air</td>
+                                <td>12</td>
+                                <td>57,600 ريال</td>
+                            </tr>
+                            <tr>
+                                <td>برياني دجاج</td>
+                                <td>156</td>
+                                <td>7,020 ريال</td>
+                            </tr>
+                            <tr>
+                                <td>قميص قطني</td>
+                                <td>89</td>
+                                <td>7,120 ريال</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Branch Performance -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-store me-2"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}أداء الفروع{% else %}Branch Performance{% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>{% if session.get('language', 'ar') == 'ar' %}الفرع{% else %}Branch{% endif %}</th>
+                                <th>{% if session.get('language', 'ar') == 'ar' %}الفواتير{% else %}Invoices{% endif %}</th>
+                                <th>{% if session.get('language', 'ar') == 'ar' %}المبيعات{% else %}Sales{% endif %}</th>
+                                <th>{% if session.get('language', 'ar') == 'ar' %}النمو{% else %}Growth{% endif %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <span class="badge bg-primary">PLACE INDIA</span>
+                                </td>
+                                <td>756</td>
+                                <td>78,450 ريال</td>
+                                <td>
+                                    <span class="text-success">
+                                        <i class="fas fa-arrow-up"></i> +12.5%
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <span class="badge bg-success">CHINA TOWN</span>
+                                </td>
+                                <td>478</td>
+                                <td>47,000 ريال</td>
+                                <td>
+                                    <span class="text-success">
+                                        <i class="fas fa-arrow-up"></i> +8.3%
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Methods -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-credit-card me-2"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}طرق الدفع{% else %}Payment Methods{% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="paymentChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tax Summary -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-percentage me-2"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}ملخص الضرائب{% else %}Tax Summary{% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6 text-center">
+                        <h4 class="text-primary">125,450.00</h4>
+                        <small class="text-muted">
+                            {% if session.get('language', 'ar') == 'ar' %}المبيعات قبل الضريبة{% else %}Sales Before Tax{% endif %}
+                        </small>
+                    </div>
+                    <div class="col-6 text-center">
+                        <h4 class="text-success">18,817.50</h4>
+                        <small class="text-muted">
+                            {% if session.get('language', 'ar') == 'ar' %}ضريبة القيمة المضافة (15%){% else %}VAT (15%){% endif %}
+                        </small>
+                    </div>
+                </div>
+                <hr>
+                <div class="text-center">
+                    <h3 class="text-warning">144,267.50</h3>
+                    <small class="text-muted">
+                        {% if session.get('language', 'ar') == 'ar' %}إجمالي المبيعات شامل الضريبة{% else %}Total Sales Including Tax{% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Reports Modal -->
+<div class="modal fade" id="detailedReportModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {% if session.get('language', 'ar') == 'ar' %}تقرير مفصل{% else %}Detailed Report{% endif %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="detailedReportContent">
+                <!-- Content will be loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {% if session.get('language', 'ar') == 'ar' %}إغلاق{% else %}Close{% endif %}
+                </button>
+                <button type="button" class="btn btn-primary" onclick="printReport()">
+                    <i class="fas fa-print me-1"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}طباعة{% else %}Print{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Sales Chart
+const salesCtx = document.getElementById('salesChart').getContext('2d');
+new Chart(salesCtx, {
+    type: 'line',
+    data: {
+        labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+        datasets: [{
+            label: 'المبيعات',
+            data: [12000, 19000, 15000, 25000, 22000, 30000],
+            borderColor: 'rgb(37, 99, 235)',
+            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+});
+
+// Products Chart
+const productsCtx = document.getElementById('productsChart').getContext('2d');
+new Chart(productsCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['iPhone 14', 'Samsung Galaxy', 'MacBook Air', 'أخرى'],
+        datasets: [{
+            data: [157500, 114000, 57600, 45000],
+            backgroundColor: [
+                'rgb(37, 99, 235)',
+                'rgb(16, 185, 129)',
+                'rgb(245, 158, 11)',
+                'rgb(239, 68, 68)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+
+// Monthly Chart
+const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+new Chart(monthlyCtx, {
+    type: 'bar',
+    data: {
+        labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'],
+        datasets: [{
+            label: '2024',
+            data: [12000, 19000, 15000, 25000, 22000, 30000, 28000, 32000, 27000, 35000, 31000, 38000],
+            backgroundColor: 'rgba(37, 99, 235, 0.8)'
+        }, {
+            label: '2023',
+            data: [10000, 16000, 13000, 22000, 20000, 27000, 25000, 29000, 24000, 31000, 28000, 34000],
+            backgroundColor: 'rgba(16, 185, 129, 0.8)'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+
+// Payment Methods Chart
+const paymentCtx = document.getElementById('paymentChart').getContext('2d');
+new Chart(paymentCtx, {
+    type: 'pie',
+    data: {
+        labels: ['نقداً', 'بطاقة ائتمان', 'بطاقة مدى', 'تحويل بنكي'],
+        datasets: [{
+            data: [45, 30, 20, 5],
+            backgroundColor: [
+                'rgb(34, 197, 94)',
+                'rgb(59, 130, 246)',
+                'rgb(168, 85, 247)',
+                'rgb(249, 115, 22)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+
+function applyFilters() {
+    const fromDate = document.getElementById('fromDate').value;
+    const toDate = document.getElementById('toDate').value;
+    const branch = document.getElementById('branchFilter').value;
+    
+    console.log('Applying filters:', { fromDate, toDate, branch });
+    alert('تم تطبيق الفلتر وتحديث التقارير');
+}
+
+function generateReport() {
+    alert('جاري تحديث التقارير...');
+}
+
+function exportReport(type) {
+    alert('تصدير تقرير: ' + type);
+}
+
+function exportAllReports() {
+    alert('تصدير جميع التقارير');
+}
+
+function printReport() {
+    window.print();
+}
+</script>
+{% endblock %}

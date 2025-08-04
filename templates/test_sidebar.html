@@ -1,0 +1,205 @@
+{% extends "base_simple_test.html" %}
+
+{% block title %}
+    اختبار القائمة الجانبية - Test Sidebar
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-bug"></i>
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            اختبار القائمة الجانبية
+                        {% else %}
+                            Sidebar Test Page
+                        {% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h5>
+                            <i class="fas fa-info-circle"></i>
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                معلومات الاختبار
+                            {% else %}
+                                Test Information
+                            {% endif %}
+                        </h5>
+                        <ul>
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                <li>هذه صفحة اختبار للتأكد من عمل القائمة الجانبية</li>
+                                <li>يجب أن تظهر القائمة الجانبية على اليمين (للعربية) أو اليسار (للإنجليزية)</li>
+                                <li>يجب أن تحتوي القائمة على جميع روابط النظام</li>
+                                <li>عند النقر على أي رابط، يجب أن يصبح نشطاً (active)</li>
+                            {% else %}
+                                <li>This is a test page to verify sidebar functionality</li>
+                                <li>Sidebar should appear on the right (Arabic) or left (English)</li>
+                                <li>Sidebar should contain all system links</li>
+                                <li>Clicking any link should make it active</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        {% if session.get('language', 'ar') == 'ar' %}
+                                            معلومات المتصفح
+                                        {% else %}
+                                            Browser Information
+                                        {% endif %}
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>User Agent:</strong> <span id="user-agent"></span></p>
+                                    <p><strong>Screen Size:</strong> <span id="screen-size"></span></p>
+                                    <p><strong>Window Size:</strong> <span id="window-size"></span></p>
+                                    <p><strong>Language:</strong> {{ session.get('language', 'ar') }}</p>
+                                    <p><strong>Direction:</strong> {{ 'rtl' if session.get('language', 'ar') == 'ar' else 'ltr' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        {% if session.get('language', 'ar') == 'ar' %}
+                                            اختبار القائمة الجانبية
+                                        {% else %}
+                                            Sidebar Test
+                                        {% endif %}
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <button type="button" class="btn btn-primary mb-2" onclick="testSidebar()">
+                                        {% if session.get('language', 'ar') == 'ar' %}
+                                            اختبار القائمة الجانبية
+                                        {% else %}
+                                            Test Sidebar
+                                        {% endif %}
+                                    </button>
+                                    <button type="button" class="btn btn-secondary mb-2" onclick="toggleSidebar()">
+                                        {% if session.get('language', 'ar') == 'ar' %}
+                                            إخفاء/إظهار القائمة
+                                        {% else %}
+                                            Toggle Sidebar
+                                        {% endif %}
+                                    </button>
+                                    <div id="test-results" class="mt-3"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        {% if session.get('language', 'ar') == 'ar' %}
+                                            روابط سريعة للاختبار
+                                        {% else %}
+                                            Quick Test Links
+                                        {% endif %}
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3 mb-2">
+                                            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary w-100">
+                                                <i class="fas fa-tachometer-alt"></i>
+                                                {% if session.get('language', 'ar') == 'ar' %}لوحة التحكم{% else %}Dashboard{% endif %}
+                                            </a>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <a href="{{ url_for('financial_statements') }}" class="btn btn-outline-success w-100">
+                                                <i class="fas fa-chart-line"></i>
+                                                {% if session.get('language', 'ar') == 'ar' %}القوائم المالية{% else %}Financial Statements{% endif %}
+                                            </a>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <a href="{{ url_for('purchases') }}" class="btn btn-outline-info w-100">
+                                                <i class="fas fa-shopping-bag"></i>
+                                                {% if session.get('language', 'ar') == 'ar' %}المشتريات{% else %}Purchases{% endif %}
+                                            </a>
+                                        </div>
+                                        <div class="col-md-3 mb-2">
+                                            <a href="{{ url_for('sales') }}" class="btn btn-outline-warning w-100">
+                                                <i class="fas fa-shopping-cart"></i>
+                                                {% if session.get('language', 'ar') == 'ar' %}المبيعات{% else %}Sales{% endif %}
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Display browser information
+    document.getElementById('user-agent').textContent = navigator.userAgent;
+    document.getElementById('screen-size').textContent = screen.width + 'x' + screen.height;
+    document.getElementById('window-size').textContent = window.innerWidth + 'x' + window.innerHeight;
+    
+    console.log('Test page loaded');
+    console.log('Sidebar element:', document.getElementById('sidebar'));
+});
+
+function testSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const results = document.getElementById('test-results');
+    
+    let testResults = '<div class="alert alert-info"><h6>نتائج الاختبار / Test Results:</h6><ul>';
+    
+    if (sidebar) {
+        testResults += '<li class="text-success">✅ القائمة الجانبية موجودة / Sidebar exists</li>';
+        
+        const links = sidebar.querySelectorAll('.nav-link');
+        testResults += `<li class="text-info">📊 عدد الروابط / Links count: ${links.length}</li>`;
+        
+        const visibleLinks = Array.from(links).filter(link => 
+            window.getComputedStyle(link).display !== 'none'
+        );
+        testResults += `<li class="text-info">👁️ الروابط المرئية / Visible links: ${visibleLinks.length}</li>`;
+        
+        if (window.getComputedStyle(sidebar).display !== 'none') {
+            testResults += '<li class="text-success">✅ القائمة الجانبية مرئية / Sidebar is visible</li>';
+        } else {
+            testResults += '<li class="text-danger">❌ القائمة الجانبية مخفية / Sidebar is hidden</li>';
+        }
+        
+        const sidebarWidth = sidebar.offsetWidth;
+        testResults += `<li class="text-info">📏 عرض القائمة / Sidebar width: ${sidebarWidth}px</li>`;
+        
+    } else {
+        testResults += '<li class="text-danger">❌ القائمة الجانبية غير موجودة / Sidebar not found</li>';
+    }
+    
+    testResults += '</ul></div>';
+    results.innerHTML = testResults;
+}
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) {
+        sidebar.style.display = sidebar.style.display === 'none' ? 'block' : 'none';
+        console.log('Sidebar toggled, display:', sidebar.style.display);
+    }
+}
+</script>
+{% endblock %}

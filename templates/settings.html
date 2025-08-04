@@ -1,0 +1,786 @@
+{% extends "base_simple.html" %}
+
+{% block title %}
+    {% if session.get('language', 'ar') == 'ar' %}
+        الإعدادات - نظام المحاسبة
+    {% else %}
+        Settings - Accounting System
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-cog me-2"></i>
+        {% if session.get('language', 'ar') == 'ar' %}
+            إعدادات النظام
+        {% else %}
+            System Settings
+        {% endif %}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-success" onclick="saveAllSettings()">
+                <i class="fas fa-save me-1"></i>
+                {% if session.get('language', 'ar') == 'ar' %}حفظ جميع الإعدادات{% else %}Save All Settings{% endif %}
+            </button>
+            <button type="button" class="btn btn-sm btn-warning" onclick="resetSettings()">
+                <i class="fas fa-undo me-1"></i>
+                {% if session.get('language', 'ar') == 'ar' %}إعادة تعيين{% else %}Reset{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Settings Tabs -->
+<ul class="nav nav-tabs" id="settingsTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab">
+            <i class="fas fa-building me-2"></i>
+            {% if session.get('language', 'ar') == 'ar' %}إعدادات عامة{% else %}General{% endif %}
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="financial-tab" data-bs-toggle="tab" data-bs-target="#financial" type="button" role="tab">
+            <i class="fas fa-dollar-sign me-2"></i>
+            {% if session.get('language', 'ar') == 'ar' %}إعدادات مالية{% else %}Financial{% endif %}
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab">
+            <i class="fas fa-users me-2"></i>
+            {% if session.get('language', 'ar') == 'ar' %}المستخدمين{% else %}Users{% endif %}
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="permissions-tab" data-bs-toggle="tab" data-bs-target="#permissions" type="button" role="tab">
+            <i class="fas fa-user-shield me-2"></i>
+            {% if session.get('language', 'ar') == 'ar' %}الصلاحيات{% else %}Permissions{% endif %}
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="system-tab" data-bs-toggle="tab" data-bs-target="#system" type="button" role="tab">
+            <i class="fas fa-server me-2"></i>
+            {% if session.get('language', 'ar') == 'ar' %}النظام{% else %}System{% endif %}
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="backup-tab" data-bs-toggle="tab" data-bs-target="#backup" type="button" role="tab">
+            <i class="fas fa-database me-2"></i>
+            {% if session.get('language', 'ar') == 'ar' %}النسخ الاحتياطي{% else %}Backup{% endif %}
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="settingsTabContent">
+    <!-- General Settings -->
+    <div class="tab-pane fade show active" id="general" role="tabpanel">
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    {% if session.get('language', 'ar') == 'ar' %}معلومات الشركة{% else %}Company Information{% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="generalSettingsForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}اسم الشركة{% else %}Company Name{% endif %}
+                            </label>
+                            <input type="text" class="form-control" name="company_name" value="شركة المحاسبة المتقدمة">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}اسم الشركة بالإنجليزية{% else %}Company Name (English){% endif %}
+                            </label>
+                            <input type="text" class="form-control" name="company_name_en" value="Advanced Accounting Company">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}رقم السجل التجاري{% else %}Commercial Registration{% endif %}
+                            </label>
+                            <input type="text" class="form-control" name="cr_number" value="1010123456">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}الرقم الضريبي{% else %}Tax Number{% endif %}
+                            </label>
+                            <input type="text" class="form-control" name="tax_number" value="300123456789003">
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}عنوان الشركة{% else %}Company Address{% endif %}
+                            </label>
+                            <textarea class="form-control" name="company_address" rows="3">الرياض، المملكة العربية السعودية</textarea>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}رقم الهاتف{% else %}Phone Number{% endif %}
+                            </label>
+                            <input type="tel" class="form-control" name="company_phone" value="+966 11 123 4567">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}البريد الإلكتروني{% else %}Email{% endif %}
+                            </label>
+                            <input type="email" class="form-control" name="company_email" value="info@company.com">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}الموقع الإلكتروني{% else %}Website{% endif %}
+                            </label>
+                            <input type="url" class="form-control" name="company_website" value="https://www.company.com">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}شعار الشركة{% else %}Company Logo{% endif %}
+                            </label>
+                            <input type="file" class="form-control" name="company_logo" accept="image/*">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Settings -->
+    <div class="tab-pane fade" id="financial" role="tabpanel">
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    {% if session.get('language', 'ar') == 'ar' %}الإعدادات المالية{% else %}Financial Settings{% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="financialSettingsForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}العملة الافتراضية{% else %}Default Currency{% endif %}
+                            </label>
+                            <select class="form-select" name="default_currency">
+                                <option value="SAR" selected>ريال سعودي (SAR)</option>
+                                <option value="USD">دولار أمريكي (USD)</option>
+                                <option value="EUR">يورو (EUR)</option>
+                                <option value="AED">درهم إماراتي (AED)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}نسبة ضريبة القيمة المضافة{% else %}VAT Rate (%){% endif %}
+                            </label>
+                            <input type="number" class="form-control" name="vat_rate" value="15" step="0.01" min="0" max="100">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}طريقة حساب الضريبة{% else %}Tax Calculation Method{% endif %}
+                            </label>
+                            <select class="form-select" name="tax_method">
+                                <option value="inclusive" selected>شامل الضريبة</option>
+                                <option value="exclusive">غير شامل الضريبة</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}عدد الخانات العشرية{% else %}Decimal Places{% endif %}
+                            </label>
+                            <select class="form-select" name="decimal_places">
+                                <option value="2" selected>2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}طريقة الدفع الافتراضية{% else %}Default Payment Method{% endif %}
+                            </label>
+                            <select class="form-select" name="default_payment_method">
+                                <option value="cash" selected>نقداً</option>
+                                <option value="card">بطاقة ائتمان</option>
+                                <option value="bank_transfer">تحويل بنكي</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}السنة المالية{% else %}Financial Year{% endif %}
+                            </label>
+                            <select class="form-select" name="financial_year">
+                                <option value="calendar" selected>سنة ميلادية (يناير - ديسمبر)</option>
+                                <option value="hijri">سنة هجرية</option>
+                                <option value="custom">مخصص</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h6>{% if session.get('language', 'ar') == 'ar' %}إعدادات الفواتير{% else %}Invoice Settings{% endif %}</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}بادئة رقم الفاتورة{% else %}Invoice Number Prefix{% endif %}
+                            </label>
+                            <input type="text" class="form-control" name="invoice_prefix" value="INV">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}طول رقم الفاتورة{% else %}Invoice Number Length{% endif %}
+                            </label>
+                            <input type="number" class="form-control" name="invoice_length" value="6" min="4" max="10">
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="auto_invoice_number" id="autoInvoiceNumber" checked>
+                                <label class="form-check-label" for="autoInvoiceNumber">
+                                    {% if session.get('language', 'ar') == 'ar' %}ترقيم تلقائي للفواتير{% else %}Auto Invoice Numbering{% endif %}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Management -->
+    <div class="tab-pane fade" id="users" role="tabpanel">
+        <div class="card mt-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    {% if session.get('language', 'ar') == 'ar' %}إدارة المستخدمين{% else %}Users Management{% endif %}
+                </h5>
+                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                    <i class="fas fa-plus me-1"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}إضافة مستخدم{% else %}Add User{% endif %}
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>{% if session.get('language', 'ar') == 'ar' %}الاسم{% else %}Name{% endif %}</th>
+                                <th>{% if session.get('language', 'ar') == 'ar' %}اسم المستخدم{% else %}Username{% endif %}</th>
+                                <th>{% if session.get('language', 'ar') == 'ar' %}البريد الإلكتروني{% else %}Email{% endif %}</th>
+                                <th>{% if session.get('language', 'ar') == 'ar' %}الدور{% else %}Role{% endif %}</th>
+                                <th>{% if session.get('language', 'ar') == 'ar' %}الحالة{% else %}Status{% endif %}</th>
+                                <th>{% if session.get('language', 'ar') == 'ar' %}آخر دخول{% else %}Last Login{% endif %}</th>
+                                <th>{% if session.get('language', 'ar') == 'ar' %}إجراءات{% else %}Actions{% endif %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>مدير النظام</td>
+                                <td>admin</td>
+                                <td>admin@company.com</td>
+                                <td><span class="badge bg-danger">مدير</span></td>
+                                <td><span class="badge bg-success">نشط</span></td>
+                                <td>2024-01-20 14:30</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-warning" onclick="editUser(1)">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger" onclick="deleteUser(1)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>أحمد محمد</td>
+                                <td>ahmed</td>
+                                <td>ahmed@company.com</td>
+                                <td><span class="badge bg-primary">موظف</span></td>
+                                <td><span class="badge bg-success">نشط</span></td>
+                                <td>2024-01-19 16:45</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-warning" onclick="editUser(2)">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger" onclick="deleteUser(2)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Settings -->
+    <div class="tab-pane fade" id="system" role="tabpanel">
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    {% if session.get('language', 'ar') == 'ar' %}إعدادات النظام{% else %}System Settings{% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="systemSettingsForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}اللغة الافتراضية{% else %}Default Language{% endif %}
+                            </label>
+                            <select class="form-select" name="default_language">
+                                <option value="ar" selected>العربية</option>
+                                <option value="en">English</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}المنطقة الزمنية{% else %}Timezone{% endif %}
+                            </label>
+                            <select class="form-select" name="timezone">
+                                <option value="Asia/Riyadh" selected>الرياض (GMT+3)</option>
+                                <option value="Asia/Dubai">دبي (GMT+4)</option>
+                                <option value="UTC">UTC (GMT+0)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}تنسيق التاريخ{% else %}Date Format{% endif %}
+                            </label>
+                            <select class="form-select" name="date_format">
+                                <option value="dd/mm/yyyy" selected>DD/MM/YYYY</option>
+                                <option value="mm/dd/yyyy">MM/DD/YYYY</option>
+                                <option value="yyyy-mm-dd">YYYY-MM-DD</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}تنسيق الوقت{% else %}Time Format{% endif %}
+                            </label>
+                            <select class="form-select" name="time_format">
+                                <option value="24" selected>24 ساعة</option>
+                                <option value="12">12 ساعة</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}عدد العناصر في الصفحة{% else %}Items Per Page{% endif %}
+                            </label>
+                            <select class="form-select" name="items_per_page">
+                                <option value="10">10</option>
+                                <option value="25" selected>25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}مدة انتهاء الجلسة (دقيقة){% else %}Session Timeout (minutes){% endif %}
+                            </label>
+                            <input type="number" class="form-control" name="session_timeout" value="60" min="15" max="480">
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h6>{% if session.get('language', 'ar') == 'ar' %}إعدادات الأمان{% else %}Security Settings{% endif %}</h6>
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="enable_2fa" id="enable2FA">
+                                <label class="form-check-label" for="enable2FA">
+                                    {% if session.get('language', 'ar') == 'ar' %}تفعيل المصادقة الثنائية{% else %}Enable Two-Factor Authentication{% endif %}
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="force_password_change" id="forcePasswordChange" checked>
+                                <label class="form-check-label" for="forcePasswordChange">
+                                    {% if session.get('language', 'ar') == 'ar' %}إجبار تغيير كلمة المرور كل 90 يوم{% else %}Force Password Change Every 90 Days{% endif %}
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="log_user_activities" id="logUserActivities" checked>
+                                <label class="form-check-label" for="logUserActivities">
+                                    {% if session.get('language', 'ar') == 'ar' %}تسجيل أنشطة المستخدمين{% else %}Log User Activities{% endif %}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backup Settings -->
+    <div class="tab-pane fade" id="backup" role="tabpanel">
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    {% if session.get('language', 'ar') == 'ar' %}النسخ الاحتياطي{% else %}Backup & Restore{% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>{% if session.get('language', 'ar') == 'ar' %}إنشاء نسخة احتياطية{% else %}Create Backup{% endif %}</h6>
+                        <p class="text-muted">
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                إنشاء نسخة احتياطية من قاعدة البيانات والملفات
+                            {% else %}
+                                Create a backup of database and files
+                            {% endif %}
+                        </p>
+                        <button type="button" class="btn btn-primary" onclick="createBackup()">
+                            <i class="fas fa-download me-2"></i>
+                            {% if session.get('language', 'ar') == 'ar' %}إنشاء نسخة احتياطية{% else %}Create Backup{% endif %}
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>{% if session.get('language', 'ar') == 'ar' %}استعادة النسخة الاحتياطية{% else %}Restore Backup{% endif %}</h6>
+                        <p class="text-muted">
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                استعادة البيانات من نسخة احتياطية سابقة
+                            {% else %}
+                                Restore data from a previous backup
+                            {% endif %}
+                        </p>
+                        <input type="file" class="form-control mb-2" id="backupFile" accept=".sql,.zip">
+                        <button type="button" class="btn btn-warning" onclick="restoreBackup()">
+                            <i class="fas fa-upload me-2"></i>
+                            {% if session.get('language', 'ar') == 'ar' %}استعادة{% else %}Restore{% endif %}
+                        </button>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h6>{% if session.get('language', 'ar') == 'ar' %}النسخ الاحتياطية التلقائية{% else %}Automatic Backups{% endif %}</h6>
+                <form id="backupSettingsForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="auto_backup" id="autoBackup" checked>
+                                <label class="form-check-label" for="autoBackup">
+                                    {% if session.get('language', 'ar') == 'ar' %}تفعيل النسخ الاحتياطي التلقائي{% else %}Enable Automatic Backup{% endif %}
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}تكرار النسخ الاحتياطي{% else %}Backup Frequency{% endif %}
+                            </label>
+                            <select class="form-select" name="backup_frequency">
+                                <option value="daily" selected>يومياً</option>
+                                <option value="weekly">أسبوعياً</option>
+                                <option value="monthly">شهرياً</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+                
+                <hr>
+                
+                <h6>{% if session.get('language', 'ar') == 'ar' %}النسخ الاحتياطية المتاحة{% else %}Available Backups{% endif %}</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>{% if session.get('language', 'ar') == 'ar' %}اسم الملف{% else %}File Name{% endif %}</th>
+                                <th>{% if session.get('language', 'ar') == 'ar' %}التاريخ{% else %}Date{% endif %}</th>
+                                <th>{% if session.get('language', 'ar') == 'ar' %}الحجم{% else %}Size{% endif %}</th>
+                                <th>{% if session.get('language', 'ar') == 'ar' %}إجراءات{% else %}Actions{% endif %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>backup_2024_01_20.sql</td>
+                                <td>2024-01-20 02:00:00</td>
+                                <td>2.5 MB</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary" onclick="downloadBackup('backup_2024_01_20.sql')">
+                                            <i class="fas fa-download"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger" onclick="deleteBackup('backup_2024_01_20.sql')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>backup_2024_01_19.sql</td>
+                                <td>2024-01-19 02:00:00</td>
+                                <td>2.4 MB</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary" onclick="downloadBackup('backup_2024_01_19.sql')">
+                                            <i class="fas fa-download"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger" onclick="deleteBackup('backup_2024_01_19.sql')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Permissions Tab -->
+    <div class="tab-pane fade" id="permissions" role="tabpanel">
+        <div class="card mt-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-user-shield me-2"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}إدارة الصلاحيات والأدوار{% else %}Permissions & Roles Management{% endif %}
+                </h5>
+                <div class="btn-group">
+                    <a href="{{ url_for('user_management') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-users"></i>
+                        {% if session.get('language', 'ar') == 'ar' %}إدارة المستخدمين{% else %}User Management{% endif %}
+                    </a>
+                    <a href="{{ url_for('role_management') }}" class="btn btn-success btn-sm">
+                        <i class="fas fa-user-shield"></i>
+                        {% if session.get('language', 'ar') == 'ar' %}إدارة الأدوار{% else %}Role Management{% endif %}
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- User Management Card -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-users"></i>
+                                    {% if session.get('language', 'ar') == 'ar' %}إدارة المستخدمين{% else %}User Management{% endif %}
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">
+                                    {% if session.get('language', 'ar') == 'ar' %}
+                                        إدارة شاملة للمستخدمين تشمل إضافة وتعديل وحذف المستخدمين وتعيين الأدوار
+                                    {% else %}
+                                        Comprehensive user management including adding, editing, deleting users and assigning roles
+                                    {% endif %}
+                                </p>
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-check text-success"></i> إضافة مستخدمين جدد</li>
+                                    <li><i class="fas fa-check text-success"></i> تعديل بيانات المستخدمين</li>
+                                    <li><i class="fas fa-check text-success"></i> إعادة تعيين كلمات المرور</li>
+                                    <li><i class="fas fa-check text-success"></i> تفعيل/تعطيل المستخدمين</li>
+                                    <li><i class="fas fa-check text-success"></i> تصدير قائمة المستخدمين</li>
+                                </ul>
+                                <a href="{{ url_for('user_management') }}" class="btn btn-primary w-100">
+                                    <i class="fas fa-arrow-left"></i>
+                                    {% if session.get('language', 'ar') == 'ar' %}انتقل لإدارة المستخدمين{% else %}Go to User Management{% endif %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Role Management Card -->
+                    <div class="col-md-6 mb-4">
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-user-shield"></i>
+                                    {% if session.get('language', 'ar') == 'ar' %}إدارة الأدوار والصلاحيات{% else %}Roles & Permissions{% endif %}
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">
+                                    {% if session.get('language', 'ar') == 'ar' %}
+                                        إنشاء وإدارة الأدوار المختلفة وتحديد الصلاحيات لكل دور بشكل مرن ومتقدم
+                                    {% else %}
+                                        Create and manage different roles and define permissions for each role flexibly and advanced
+                                    {% endif %}
+                                </p>
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-check text-success"></i> إنشاء أدوار مخصصة</li>
+                                    <li><i class="fas fa-check text-success"></i> تحديد صلاحيات الوصول</li>
+                                    <li><i class="fas fa-check text-success"></i> صلاحيات العمليات (CRUD)</li>
+                                    <li><i class="fas fa-check text-success"></i> مصفوفة الصلاحيات</li>
+                                    <li><i class="fas fa-check text-success"></i> ربط المستخدمين بالأدوار</li>
+                                </ul>
+                                <a href="{{ url_for('role_management') }}" class="btn btn-success w-100">
+                                    <i class="fas fa-arrow-left"></i>
+                                    {% if session.get('language', 'ar') == 'ar' %}انتقل لإدارة الأدوار{% else %}Go to Role Management{% endif %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card bg-light">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-chart-bar"></i>
+                                    {% if session.get('language', 'ar') == 'ar' %}إحصائيات سريعة{% else %}Quick Stats{% endif %}
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col-md-3">
+                                        <div class="border-end">
+                                            <h4 class="text-primary mb-0" id="total-users">3</h4>
+                                            <small class="text-muted">إجمالي المستخدمين</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="border-end">
+                                            <h4 class="text-success mb-0" id="active-users">3</h4>
+                                            <small class="text-muted">المستخدمين النشطين</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="border-end">
+                                            <h4 class="text-info mb-0" id="total-roles">5</h4>
+                                            <small class="text-muted">إجمالي الأدوار</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <h4 class="text-warning mb-0" id="active-roles">5</h4>
+                                        <small class="text-muted">الأدوار النشطة</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {% if session.get('language', 'ar') == 'ar' %}إضافة مستخدم جديد{% else %}Add New User{% endif %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm">
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}الاسم الكامل{% else %}Full Name{% endif %}
+                        </label>
+                        <input type="text" class="form-control" name="full_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}اسم المستخدم{% else %}Username{% endif %}
+                        </label>
+                        <input type="text" class="form-control" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}البريد الإلكتروني{% else %}Email{% endif %}
+                        </label>
+                        <input type="email" class="form-control" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}كلمة المرور{% else %}Password{% endif %}
+                        </label>
+                        <input type="password" class="form-control" name="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}الدور{% else %}Role{% endif %}
+                        </label>
+                        <select class="form-select" name="role" required>
+                            <option value="">{% if session.get('language', 'ar') == 'ar' %}اختر الدور{% else %}Select Role{% endif %}</option>
+                            <option value="admin">{% if session.get('language', 'ar') == 'ar' %}مدير{% else %}Admin{% endif %}</option>
+                            <option value="user">{% if session.get('language', 'ar') == 'ar' %}موظف{% else %}User{% endif %}</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {% if session.get('language', 'ar') == 'ar' %}إلغاء{% else %}Cancel{% endif %}
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveUser()">
+                    {% if session.get('language', 'ar') == 'ar' %}حفظ{% else %}Save{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function saveAllSettings() {
+    alert('تم حفظ جميع الإعدادات بنجاح');
+}
+
+function resetSettings() {
+    if (confirm('هل تريد إعادة تعيين جميع الإعدادات؟')) {
+        alert('تم إعادة تعيين الإعدادات');
+    }
+}
+
+function editUser(id) {
+    alert('تعديل المستخدم رقم: ' + id);
+}
+
+function deleteUser(id) {
+    if (confirm('هل تريد حذف هذا المستخدم؟')) {
+        alert('تم حذف المستخدم رقم: ' + id);
+    }
+}
+
+function saveUser() {
+    const form = document.getElementById('addUserForm');
+    const formData = new FormData(form);
+    
+    alert('تم إضافة المستخدم بنجاح');
+    
+    const modal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
+    modal.hide();
+    form.reset();
+}
+
+function createBackup() {
+    alert('جاري إنشاء النسخة الاحتياطية...');
+}
+
+function restoreBackup() {
+    const fileInput = document.getElementById('backupFile');
+    if (!fileInput.files.length) {
+        alert('يرجى اختيار ملف النسخة الاحتياطية');
+        return;
+    }
+    
+    if (confirm('هل تريد استعادة النسخة الاحتياطية؟ سيتم استبدال البيانات الحالية.')) {
+        alert('جاري استعادة النسخة الاحتياطية...');
+    }
+}
+
+function downloadBackup(filename) {
+    alert('تحميل النسخة الاحتياطية: ' + filename);
+}
+
+function deleteBackup(filename) {
+    if (confirm('هل تريد حذف النسخة الاحتياطية: ' + filename + '؟')) {
+        alert('تم حذف النسخة الاحتياطية');
+    }
+}
+</script>
+{% endblock %}

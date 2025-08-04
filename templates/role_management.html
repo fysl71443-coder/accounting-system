@@ -1,0 +1,790 @@
+{% extends "base_simple_test.html" %}
+
+{% block title %}
+    {% if session.get('language', 'ar') == 'ar' %}
+        إدارة الأدوار والصلاحيات
+    {% else %}
+        Roles & Permissions Management
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            {% if session.get('language', 'ar') == 'ar' %}
+                <i class="fas fa-user-shield"></i> إدارة الأدوار والصلاحيات
+            {% else %}
+                <i class="fas fa-user-shield"></i> Roles & Permissions Management
+            {% endif %}
+        </h1>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-primary" onclick="showAddRoleModal()">
+                {% if session.get('language', 'ar') == 'ar' %}
+                    <i class="fas fa-plus"></i> إضافة دور
+                {% else %}
+                    <i class="fas fa-plus"></i> Add Role
+                {% endif %}
+            </button>
+            <button type="button" class="btn btn-info" onclick="showPermissionsMatrix()">
+                {% if session.get('language', 'ar') == 'ar' %}
+                    <i class="fas fa-table"></i> مصفوفة الصلاحيات
+                {% else %}
+                    <i class="fas fa-table"></i> Permissions Matrix
+                {% endif %}
+            </button>
+        </div>
+    </div>
+
+    <!-- Roles Cards -->
+    <div class="row" id="roles-container">
+        <!-- Roles will be loaded here -->
+    </div>
+</div>
+
+<!-- Add/Edit Role Modal -->
+<div class="modal fade" id="roleModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="roleModalTitle">
+                    {% if session.get('language', 'ar') == 'ar' %}
+                        <i class="fas fa-plus"></i> إضافة دور جديد
+                    {% else %}
+                        <i class="fas fa-plus"></i> Add New Role
+                    {% endif %}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="role-form">
+                    <input type="hidden" id="role-id">
+                    
+                    <!-- Basic Info -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card bg-light">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        {% if session.get('language', 'ar') == 'ar' %}معلومات الدور الأساسية{% else %}Basic Role Information{% endif %}
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <label class="form-label">
+                                                {% if session.get('language', 'ar') == 'ar' %}اسم الدور (إنجليزي){% else %}Role Name (English){% endif %}
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" id="role-name" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">
+                                                {% if session.get('language', 'ar') == 'ar' %}اسم الدور (عربي){% else %}Role Name (Arabic){% endif %}
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="text" class="form-control" id="role-name-ar" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">
+                                                {% if session.get('language', 'ar') == 'ar' %}الحالة{% else %}Status{% endif %}
+                                            </label>
+                                            <div class="form-check form-switch mt-2">
+                                                <input class="form-check-input" type="checkbox" id="role-active" checked>
+                                                <label class="form-check-label" for="role-active">
+                                                    {% if session.get('language', 'ar') == 'ar' %}نشط{% else %}Active{% endif %}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="col-md-12">
+                                            <label class="form-label">
+                                                {% if session.get('language', 'ar') == 'ar' %}الوصف{% else %}Description{% endif %}
+                                            </label>
+                                            <textarea class="form-control" id="role-description" rows="2"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Screen Access Permissions -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0">
+                                        {% if session.get('language', 'ar') == 'ar' %}صلاحيات الوصول للشاشات{% else %}Screen Access Permissions{% endif %}
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="can-access-sales">
+                                                <label class="form-check-label" for="can-access-sales">
+                                                    <i class="fas fa-shopping-cart text-primary"></i>
+                                                    {% if session.get('language', 'ar') == 'ar' %}المبيعات{% else %}Sales{% endif %}
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="can-access-purchases">
+                                                <label class="form-check-label" for="can-access-purchases">
+                                                    <i class="fas fa-shopping-bag text-success"></i>
+                                                    {% if session.get('language', 'ar') == 'ar' %}المشتريات{% else %}Purchases{% endif %}
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="can-access-inventory">
+                                                <label class="form-check-label" for="can-access-inventory">
+                                                    <i class="fas fa-boxes text-warning"></i>
+                                                    {% if session.get('language', 'ar') == 'ar' %}المخزون{% else %}Inventory{% endif %}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="can-access-reports">
+                                                <label class="form-check-label" for="can-access-reports">
+                                                    <i class="fas fa-chart-bar text-info"></i>
+                                                    {% if session.get('language', 'ar') == 'ar' %}التقارير{% else %}Reports{% endif %}
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="can-access-employees">
+                                                <label class="form-check-label" for="can-access-employees">
+                                                    <i class="fas fa-users text-secondary"></i>
+                                                    {% if session.get('language', 'ar') == 'ar' %}الموظفين والرواتب{% else %}Employees{% endif %}
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="can-access-financial-statements">
+                                                <label class="form-check-label" for="can-access-financial-statements">
+                                                    <i class="fas fa-chart-line text-primary"></i>
+                                                    {% if session.get('language', 'ar') == 'ar' %}القوائم المالية{% else %}Financial Statements{% endif %}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="can-access-taxes">
+                                                <label class="form-check-label" for="can-access-taxes">
+                                                    <i class="fas fa-percentage text-danger"></i>
+                                                    {% if session.get('language', 'ar') == 'ar' %}الضرائب{% else %}Taxes{% endif %}
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="can-access-expenses">
+                                                <label class="form-check-label" for="can-access-expenses">
+                                                    <i class="fas fa-receipt text-warning"></i>
+                                                    {% if session.get('language', 'ar') == 'ar' %}المصروفات{% else %}Expenses{% endif %}
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="can-access-settings">
+                                                <label class="form-check-label" for="can-access-settings">
+                                                    <i class="fas fa-cog text-dark"></i>
+                                                    {% if session.get('language', 'ar') == 'ar' %}الإعدادات{% else %}Settings{% endif %}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- CRUD Permissions -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0">
+                                        {% if session.get('language', 'ar') == 'ar' %}صلاحيات العمليات{% else %}Operation Permissions{% endif %}
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="can-create">
+                                                <label class="form-check-label" for="can-create">
+                                                    <i class="fas fa-plus text-success"></i>
+                                                    {% if session.get('language', 'ar') == 'ar' %}إضافة{% else %}Create{% endif %}
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="can-edit">
+                                                <label class="form-check-label" for="can-edit">
+                                                    <i class="fas fa-edit text-primary"></i>
+                                                    {% if session.get('language', 'ar') == 'ar' %}تعديل{% else %}Edit{% endif %}
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="can-delete">
+                                                <label class="form-check-label" for="can-delete">
+                                                    <i class="fas fa-trash text-danger"></i>
+                                                    {% if session.get('language', 'ar') == 'ar' %}حذف{% else %}Delete{% endif %}
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="can-print">
+                                                <label class="form-check-label" for="can-print">
+                                                    <i class="fas fa-print text-info"></i>
+                                                    {% if session.get('language', 'ar') == 'ar' %}طباعة{% else %}Print{% endif %}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {% if session.get('language', 'ar') == 'ar' %}إلغاء{% else %}Cancel{% endif %}
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveRole()">
+                    {% if session.get('language', 'ar') == 'ar' %}حفظ{% else %}Save{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Global variables
+let rolesData = [];
+let currentLanguage = '{{ session.get("language", "ar") }}';
+let editingRoleId = null;
+
+// Initialize page
+$(document).ready(function() {
+    loadRolesData();
+});
+
+// Load roles data
+function loadRolesData() {
+    // Sample roles data with permissions
+    rolesData = [
+        {
+            id: 1,
+            name: 'admin',
+            name_ar: 'مشرف عام',
+            description: 'صلاحيات كاملة لجميع أجزاء النظام',
+            is_active: true,
+            // All permissions true for admin
+            can_access_sales: true,
+            can_access_purchases: true,
+            can_access_inventory: true,
+            can_access_reports: true,
+            can_access_employees: true,
+            can_access_financial_statements: true,
+            can_access_taxes: true,
+            can_access_expenses: true,
+            can_access_settings: true,
+            can_create: true,
+            can_edit: true,
+            can_delete: true,
+            can_print: true,
+            users_count: 1
+        },
+        {
+            id: 2,
+            name: 'manager',
+            name_ar: 'مدير',
+            description: 'صلاحيات إدارية مع قيود محددة',
+            is_active: true,
+            can_access_sales: true,
+            can_access_purchases: true,
+            can_access_inventory: true,
+            can_access_reports: true,
+            can_access_employees: true,
+            can_access_financial_statements: true,
+            can_access_taxes: false,
+            can_access_expenses: true,
+            can_access_settings: false,
+            can_create: true,
+            can_edit: true,
+            can_delete: false,
+            can_print: true,
+            users_count: 0
+        },
+        {
+            id: 3,
+            name: 'accountant',
+            name_ar: 'محاسب',
+            description: 'صلاحيات محاسبية ومالية',
+            is_active: true,
+            can_access_sales: true,
+            can_access_purchases: true,
+            can_access_inventory: true,
+            can_access_reports: true,
+            can_access_employees: false,
+            can_access_financial_statements: true,
+            can_access_taxes: true,
+            can_access_expenses: true,
+            can_access_settings: false,
+            can_create: true,
+            can_edit: true,
+            can_delete: false,
+            can_print: true,
+            users_count: 1
+        },
+        {
+            id: 4,
+            name: 'employee',
+            name_ar: 'موظف',
+            description: 'صلاحيات محدودة للعمليات الأساسية',
+            is_active: true,
+            can_access_sales: true,
+            can_access_purchases: false,
+            can_access_inventory: true,
+            can_access_reports: false,
+            can_access_employees: false,
+            can_access_financial_statements: false,
+            can_access_taxes: false,
+            can_access_expenses: false,
+            can_access_settings: false,
+            can_create: true,
+            can_edit: false,
+            can_delete: false,
+            can_print: true,
+            users_count: 1
+        },
+        {
+            id: 5,
+            name: 'viewer',
+            name_ar: 'مراقب',
+            description: 'صلاحيات عرض فقط',
+            is_active: true,
+            can_access_sales: true,
+            can_access_purchases: true,
+            can_access_inventory: true,
+            can_access_reports: true,
+            can_access_employees: false,
+            can_access_financial_statements: true,
+            can_access_taxes: false,
+            can_access_expenses: true,
+            can_access_settings: false,
+            can_create: false,
+            can_edit: false,
+            can_delete: false,
+            can_print: true,
+            users_count: 0
+        }
+    ];
+
+    updateRolesDisplay();
+}
+
+// Update roles display
+function updateRolesDisplay() {
+    const container = document.getElementById('roles-container');
+    container.innerHTML = '';
+
+    rolesData.forEach(role => {
+        const card = createRoleCard(role);
+        container.appendChild(card);
+    });
+}
+
+// Create role card
+function createRoleCard(role) {
+    const col = document.createElement('div');
+    col.className = 'col-md-6 col-lg-4 mb-4';
+
+    const statusBadge = role.is_active ?
+        '<span class="badge bg-success">نشط</span>' :
+        '<span class="badge bg-danger">غير نشط</span>';
+
+    // Count permissions
+    const accessPermissions = [
+        'can_access_sales', 'can_access_purchases', 'can_access_inventory',
+        'can_access_reports', 'can_access_employees', 'can_access_financial_statements',
+        'can_access_taxes', 'can_access_expenses', 'can_access_settings'
+    ];
+
+    const crudPermissions = ['can_create', 'can_edit', 'can_delete', 'can_print'];
+
+    const accessCount = accessPermissions.filter(perm => role[perm]).length;
+    const crudCount = crudPermissions.filter(perm => role[perm]).length;
+
+    col.innerHTML = `
+        <div class="card h-100 ${role.is_active ? '' : 'opacity-75'}">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="fas fa-user-shield text-primary"></i>
+                    ${role.name_ar}
+                </h6>
+                ${statusBadge}
+            </div>
+            <div class="card-body">
+                <p class="text-muted small">${role.description}</p>
+
+                <div class="row text-center mb-3">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h5 class="text-primary mb-0">${accessCount}</h5>
+                            <small class="text-muted">شاشات</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h5 class="text-success mb-0">${crudCount}</h5>
+                        <small class="text-muted">عمليات</small>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <small class="text-muted">المستخدمين: </small>
+                    <span class="badge bg-info">${role.users_count}</span>
+                </div>
+
+                <!-- Quick permissions preview -->
+                <div class="mb-3">
+                    <div class="d-flex flex-wrap gap-1">
+                        ${role.can_access_sales ? '<span class="badge bg-primary">مبيعات</span>' : ''}
+                        ${role.can_access_purchases ? '<span class="badge bg-success">مشتريات</span>' : ''}
+                        ${role.can_access_inventory ? '<span class="badge bg-warning">مخزون</span>' : ''}
+                        ${role.can_access_reports ? '<span class="badge bg-info">تقارير</span>' : ''}
+                        ${role.can_access_financial_statements ? '<span class="badge bg-primary">قوائم مالية</span>' : ''}
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="btn-group w-100">
+                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="editRole(${role.id})">
+                        <i class="fas fa-edit"></i> تعديل
+                    </button>
+                    <button type="button" class="btn btn-outline-info btn-sm" onclick="viewRoleDetails(${role.id})">
+                        <i class="fas fa-eye"></i> عرض
+                    </button>
+                    ${role.name !== 'admin' ? `
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteRole(${role.id})">
+                            <i class="fas fa-trash"></i> حذف
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+
+    return col;
+}
+
+// Show add role modal
+function showAddRoleModal() {
+    editingRoleId = null;
+    document.getElementById('roleModalTitle').innerHTML =
+        '<i class="fas fa-plus"></i> إضافة دور جديد';
+
+    // Clear form
+    document.getElementById('role-form').reset();
+    document.getElementById('role-id').value = '';
+    document.getElementById('role-active').checked = true;
+
+    // Clear all checkboxes
+    const checkboxes = document.querySelectorAll('#roleModal input[type="checkbox"]');
+    checkboxes.forEach(cb => cb.checked = false);
+    document.getElementById('role-active').checked = true;
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('roleModal'));
+    modal.show();
+}
+
+// Edit role
+function editRole(roleId) {
+    const role = rolesData.find(r => r.id === roleId);
+    if (!role) return;
+
+    editingRoleId = roleId;
+    document.getElementById('roleModalTitle').innerHTML =
+        '<i class="fas fa-edit"></i> تعديل الدور';
+
+    // Fill basic info
+    document.getElementById('role-id').value = role.id;
+    document.getElementById('role-name').value = role.name;
+    document.getElementById('role-name-ar').value = role.name_ar;
+    document.getElementById('role-description').value = role.description || '';
+    document.getElementById('role-active').checked = role.is_active;
+
+    // Fill permissions
+    const permissions = [
+        'can_access_sales', 'can_access_purchases', 'can_access_inventory',
+        'can_access_reports', 'can_access_employees', 'can_access_financial_statements',
+        'can_access_taxes', 'can_access_expenses', 'can_access_settings',
+        'can_create', 'can_edit', 'can_delete', 'can_print'
+    ];
+
+    permissions.forEach(permission => {
+        const checkbox = document.getElementById(permission.replace('_', '-'));
+        if (checkbox) {
+            checkbox.checked = role[permission] || false;
+        }
+    });
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('roleModal'));
+    modal.show();
+}
+
+// Save role
+function saveRole() {
+    const form = document.getElementById('role-form');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    const roleData = {
+        name: document.getElementById('role-name').value,
+        name_ar: document.getElementById('role-name-ar').value,
+        description: document.getElementById('role-description').value,
+        is_active: document.getElementById('role-active').checked,
+
+        // Access permissions
+        can_access_sales: document.getElementById('can-access-sales').checked,
+        can_access_purchases: document.getElementById('can-access-purchases').checked,
+        can_access_inventory: document.getElementById('can-access-inventory').checked,
+        can_access_reports: document.getElementById('can-access-reports').checked,
+        can_access_employees: document.getElementById('can-access-employees').checked,
+        can_access_financial_statements: document.getElementById('can-access-financial-statements').checked,
+        can_access_taxes: document.getElementById('can-access-taxes').checked,
+        can_access_expenses: document.getElementById('can-access-expenses').checked,
+        can_access_settings: document.getElementById('can-access-settings').checked,
+
+        // CRUD permissions
+        can_create: document.getElementById('can-create').checked,
+        can_edit: document.getElementById('can-edit').checked,
+        can_delete: document.getElementById('can-delete').checked,
+        can_print: document.getElementById('can-print').checked
+    };
+
+    if (editingRoleId) {
+        // Update existing role
+        const roleIndex = rolesData.findIndex(r => r.id === editingRoleId);
+        if (roleIndex !== -1) {
+            rolesData[roleIndex] = { ...rolesData[roleIndex], ...roleData };
+        }
+        showToast('تم تحديث الدور بنجاح', 'success');
+    } else {
+        // Add new role
+        const newRole = {
+            id: Math.max(...rolesData.map(r => r.id)) + 1,
+            ...roleData,
+            users_count: 0
+        };
+        rolesData.push(newRole);
+        showToast('تم إضافة الدور بنجاح', 'success');
+    }
+
+    updateRolesDisplay();
+
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('roleModal'));
+    modal.hide();
+}
+
+// View role details
+function viewRoleDetails(roleId) {
+    const role = rolesData.find(r => r.id === roleId);
+    if (!role) return;
+
+    const permissions = {
+        access: [
+            { key: 'can_access_sales', name: 'المبيعات', icon: 'shopping-cart' },
+            { key: 'can_access_purchases', name: 'المشتريات', icon: 'shopping-bag' },
+            { key: 'can_access_inventory', name: 'المخزون', icon: 'boxes' },
+            { key: 'can_access_reports', name: 'التقارير', icon: 'chart-bar' },
+            { key: 'can_access_employees', name: 'الموظفين', icon: 'users' },
+            { key: 'can_access_financial_statements', name: 'القوائم المالية', icon: 'chart-line' },
+            { key: 'can_access_taxes', name: 'الضرائب', icon: 'percentage' },
+            { key: 'can_access_expenses', name: 'المصروفات', icon: 'receipt' },
+            { key: 'can_access_settings', name: 'الإعدادات', icon: 'cog' }
+        ],
+        crud: [
+            { key: 'can_create', name: 'إضافة', icon: 'plus', color: 'success' },
+            { key: 'can_edit', name: 'تعديل', icon: 'edit', color: 'primary' },
+            { key: 'can_delete', name: 'حذف', icon: 'trash', color: 'danger' },
+            { key: 'can_print', name: 'طباعة', icon: 'print', color: 'info' }
+        ]
+    };
+
+    let accessList = '';
+    let crudList = '';
+
+    permissions.access.forEach(perm => {
+        const hasPermission = role[perm.key];
+        accessList += `
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>
+                    <i class="fas fa-${perm.icon} me-2"></i>
+                    ${perm.name}
+                </span>
+                <span class="badge bg-${hasPermission ? 'success' : 'secondary'}">
+                    ${hasPermission ? 'مسموح' : 'غير مسموح'}
+                </span>
+            </li>
+        `;
+    });
+
+    permissions.crud.forEach(perm => {
+        const hasPermission = role[perm.key];
+        crudList += `
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>
+                    <i class="fas fa-${perm.icon} me-2"></i>
+                    ${perm.name}
+                </span>
+                <span class="badge bg-${hasPermission ? perm.color : 'secondary'}">
+                    ${hasPermission ? 'مسموح' : 'غير مسموح'}
+                </span>
+            </li>
+        `;
+    });
+
+    const modalContent = `
+        <div class="modal fade" id="roleDetailsModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-info text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-eye"></i> تفاصيل الدور: ${role.name_ar}
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <strong>اسم الدور:</strong> ${role.name_ar} (${role.name})
+                            </div>
+                            <div class="col-md-6">
+                                <strong>الحالة:</strong>
+                                <span class="badge bg-${role.is_active ? 'success' : 'danger'}">
+                                    ${role.is_active ? 'نشط' : 'غير نشط'}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <strong>الوصف:</strong> ${role.description || 'لا يوجد وصف'}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>صلاحيات الوصول للشاشات:</h6>
+                                <ul class="list-group list-group-flush">
+                                    ${accessList}
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>صلاحيات العمليات:</h6>
+                                <ul class="list-group list-group-flush">
+                                    ${crudList}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                        <button type="button" class="btn btn-primary" onclick="editRole(${role.id}); bootstrap.Modal.getInstance(document.getElementById('roleDetailsModal')).hide();">
+                            <i class="fas fa-edit"></i> تعديل
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Remove existing modal if any
+    const existingModal = document.getElementById('roleDetailsModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalContent);
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('roleDetailsModal'));
+    modal.show();
+}
+
+// Delete role
+function deleteRole(roleId) {
+    const role = rolesData.find(r => r.id === roleId);
+    if (!role) return;
+
+    if (role.users_count > 0) {
+        alert(`لا يمكن حذف الدور "${role.name_ar}" لأنه مرتبط بـ ${role.users_count} مستخدم`);
+        return;
+    }
+
+    if (confirm(`هل تريد حذف الدور "${role.name_ar}"؟\nهذا الإجراء لا يمكن التراجع عنه.`)) {
+        rolesData = rolesData.filter(r => r.id !== roleId);
+        updateRolesDisplay();
+        showToast('تم حذف الدور بنجاح', 'success');
+    }
+}
+
+// Show permissions matrix
+function showPermissionsMatrix() {
+    alert('سيتم عرض مصفوفة الصلاحيات قريباً');
+}
+
+// Show toast notification
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type} border-0 position-fixed`;
+    toast.style.cssText = 'top: 20px; left: 20px; z-index: 9999;';
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
+                ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+
+    document.body.appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+
+    toast.addEventListener('hidden.bs.toast', function() {
+        document.body.removeChild(toast);
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,564 @@
+{% extends "base_simple.html" %}
+
+{% block title %}
+    {% if session.get('language', 'ar') == 'ar' %}
+        إدارة الطلبيات - نظام المحاسبة
+    {% else %}
+        Orders Management - Accounting System
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-shopping-cart me-2"></i>
+        {% if session.get('language', 'ar') == 'ar' %}
+            إدارة الطلبيات
+        {% else %}
+            Orders Management
+        {% endif %}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-primary" onclick="createNewOrder()">
+                <i class="fas fa-plus me-1"></i>
+                {% if session.get('language', 'ar') == 'ar' %}طلبية جديدة{% else %}New Order{% endif %}
+            </button>
+            <button type="button" class="btn btn-sm btn-success" onclick="exportOrders()">
+                <i class="fas fa-download me-1"></i>
+                {% if session.get('language', 'ar') == 'ar' %}تصدير{% else %}Export{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Orders Statistics -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-shopping-cart fa-2x text-primary mb-2"></i>
+                <h4 class="text-primary">1,234</h4>
+                <p class="card-text">
+                    {% if session.get('language', 'ar') == 'ar' %}إجمالي الطلبيات{% else %}Total Orders{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                <h4 class="text-warning">45</h4>
+                <p class="card-text">
+                    {% if session.get('language', 'ar') == 'ar' %}قيد الانتظار{% else %}Pending{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                <h4 class="text-success">1,156</h4>
+                <p class="card-text">
+                    {% if session.get('language', 'ar') == 'ar' %}مكتملة{% else %}Completed{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-times-circle fa-2x text-danger mb-2"></i>
+                <h4 class="text-danger">33</h4>
+                <p class="card-text">
+                    {% if session.get('language', 'ar') == 'ar' %}ملغية{% else %}Cancelled{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filter -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="input-group">
+            <input type="text" class="form-control" id="searchOrders" placeholder="{% if session.get('language', 'ar') == 'ar' %}البحث في الطلبيات...{% else %}Search orders...{% endif %}">
+            <button class="btn btn-outline-secondary" type="button">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <select class="form-select" id="filterStatus">
+            <option value="">{% if session.get('language', 'ar') == 'ar' %}جميع الحالات{% else %}All Status{% endif %}</option>
+            <option value="pending">{% if session.get('language', 'ar') == 'ar' %}قيد الانتظار{% else %}Pending{% endif %}</option>
+            <option value="processing">{% if session.get('language', 'ar') == 'ar' %}قيد التجهيز{% else %}Processing{% endif %}</option>
+            <option value="shipped">{% if session.get('language', 'ar') == 'ar' %}تم الشحن{% else %}Shipped{% endif %}</option>
+            <option value="delivered">{% if session.get('language', 'ar') == 'ar' %}تم التسليم{% else %}Delivered{% endif %}</option>
+            <option value="cancelled">{% if session.get('language', 'ar') == 'ar' %}ملغية{% else %}Cancelled{% endif %}</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select class="form-select" id="filterPayment">
+            <option value="">{% if session.get('language', 'ar') == 'ar' %}جميع المدفوعات{% else %}All Payments{% endif %}</option>
+            <option value="paid">{% if session.get('language', 'ar') == 'ar' %}مدفوعة{% else %}Paid{% endif %}</option>
+            <option value="unpaid">{% if session.get('language', 'ar') == 'ar' %}غير مدفوعة{% else %}Unpaid{% endif %}</option>
+            <option value="partial">{% if session.get('language', 'ar') == 'ar' %}مدفوعة جزئياً{% else %}Partially Paid{% endif %}</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <input type="date" class="form-control" id="filterDate" placeholder="{% if session.get('language', 'ar') == 'ar' %}التاريخ{% else %}Date{% endif %}">
+    </div>
+    <div class="col-md-2">
+        <select class="form-select" id="sortBy">
+            <option value="date_desc">{% if session.get('language', 'ar') == 'ar' %}الأحدث أولاً{% else %}Newest First{% endif %}</option>
+            <option value="date_asc">{% if session.get('language', 'ar') == 'ar' %}الأقدم أولاً{% else %}Oldest First{% endif %}</option>
+            <option value="amount_desc">{% if session.get('language', 'ar') == 'ar' %}أعلى قيمة{% else %}Highest Amount{% endif %}</option>
+            <option value="amount_asc">{% if session.get('language', 'ar') == 'ar' %}أقل قيمة{% else %}Lowest Amount{% endif %}</option>
+        </select>
+    </div>
+    <div class="col-md-1">
+        <button type="button" class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+            <i class="fas fa-undo"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Orders Table -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}رقم الطلبية{% else %}Order #{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}العميل{% else %}Customer{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}التاريخ{% else %}Date{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الأصناف{% else %}Items{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}المبلغ{% else %}Amount{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}حالة الطلبية{% else %}Order Status{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}حالة الدفع{% else %}Payment Status{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}إجراءات{% else %}Actions{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>#ORD-001234</strong></td>
+                        <td>أحمد محمد السعيد</td>
+                        <td>2024-01-20 14:30</td>
+                        <td>
+                            <span class="badge bg-info">3 أصناف</span>
+                        </td>
+                        <td><strong>1,250.00 ريال</strong></td>
+                        <td>
+                            <span class="badge bg-success">تم التسليم</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-success">مدفوعة</span>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="viewOrder('ORD-001234')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-warning" onclick="editOrder('ORD-001234')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-info" onclick="printOrder('ORD-001234')">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" onclick="duplicateOrder('ORD-001234')">
+                                            <i class="fas fa-copy me-2"></i>نسخ
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="cancelOrder('ORD-001234')">
+                                            <i class="fas fa-times me-2"></i>إلغاء
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="#" onclick="deleteOrder('ORD-001234')">
+                                            <i class="fas fa-trash me-2"></i>حذف
+                                        </a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>#ORD-001233</strong></td>
+                        <td>شركة الأطعمة المتميزة</td>
+                        <td>2024-01-20 12:15</td>
+                        <td>
+                            <span class="badge bg-info">7 أصناف</span>
+                        </td>
+                        <td><strong>3,750.00 ريال</strong></td>
+                        <td>
+                            <span class="badge bg-warning">قيد التجهيز</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-warning">مدفوعة جزئياً</span>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="viewOrder('ORD-001233')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-warning" onclick="editOrder('ORD-001233')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-info" onclick="printOrder('ORD-001233')">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" onclick="duplicateOrder('ORD-001233')">
+                                            <i class="fas fa-copy me-2"></i>نسخ
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="cancelOrder('ORD-001233')">
+                                            <i class="fas fa-times me-2"></i>إلغاء
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="#" onclick="deleteOrder('ORD-001233')">
+                                            <i class="fas fa-trash me-2"></i>حذف
+                                        </a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>#ORD-001232</strong></td>
+                        <td>فاطمة علي الزهراني</td>
+                        <td>2024-01-19 16:45</td>
+                        <td>
+                            <span class="badge bg-info">2 أصناف</span>
+                        </td>
+                        <td><strong>850.00 ريال</strong></td>
+                        <td>
+                            <span class="badge bg-primary">قيد الانتظار</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-danger">غير مدفوعة</span>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="viewOrder('ORD-001232')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-warning" onclick="editOrder('ORD-001232')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-info" onclick="printOrder('ORD-001232')">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" onclick="duplicateOrder('ORD-001232')">
+                                            <i class="fas fa-copy me-2"></i>نسخ
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="cancelOrder('ORD-001232')">
+                                            <i class="fas fa-times me-2"></i>إلغاء
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="#" onclick="deleteOrder('ORD-001232')">
+                                            <i class="fas fa-trash me-2"></i>حذف
+                                        </a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>#ORD-001231</strong></td>
+                        <td>محمد عبدالله القحطاني</td>
+                        <td>2024-01-19 14:20</td>
+                        <td>
+                            <span class="badge bg-info">1 صنف</span>
+                        </td>
+                        <td><strong>3,500.00 ريال</strong></td>
+                        <td>
+                            <span class="badge bg-danger">ملغية</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">مسترد</span>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="viewOrder('ORD-001231')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-warning" onclick="editOrder('ORD-001231')" disabled>
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-info" onclick="printOrder('ORD-001231')">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" onclick="duplicateOrder('ORD-001231')">
+                                            <i class="fas fa-copy me-2"></i>نسخ
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="#" onclick="deleteOrder('ORD-001231')">
+                                            <i class="fas fa-trash me-2"></i>حذف
+                                        </a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1">السابق</a>
+                </li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item">
+                    <a class="page-link" href="#">التالي</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- Order Details Modal -->
+<div class="modal fade" id="orderDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {% if session.get('language', 'ar') == 'ar' %}تفاصيل الطلبية{% else %}Order Details{% endif %}
+                    <span id="orderNumber" class="text-muted"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="orderDetailsContent">
+                <!-- Order details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {% if session.get('language', 'ar') == 'ar' %}إغلاق{% else %}Close{% endif %}
+                </button>
+                <button type="button" class="btn btn-primary" onclick="printOrderDetails()">
+                    <i class="fas fa-print me-1"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}طباعة{% else %}Print{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Order Status Modal -->
+<div class="modal fade" id="updateStatusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {% if session.get('language', 'ar') == 'ar' %}تحديث حالة الطلبية{% else %}Update Order Status{% endif %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="updateStatusForm">
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}حالة الطلبية{% else %}Order Status{% endif %}
+                        </label>
+                        <select class="form-select" name="order_status" required>
+                            <option value="pending">{% if session.get('language', 'ar') == 'ar' %}قيد الانتظار{% else %}Pending{% endif %}</option>
+                            <option value="processing">{% if session.get('language', 'ar') == 'ar' %}قيد التجهيز{% else %}Processing{% endif %}</option>
+                            <option value="shipped">{% if session.get('language', 'ar') == 'ar' %}تم الشحن{% else %}Shipped{% endif %}</option>
+                            <option value="delivered">{% if session.get('language', 'ar') == 'ar' %}تم التسليم{% else %}Delivered{% endif %}</option>
+                            <option value="cancelled">{% if session.get('language', 'ar') == 'ar' %}ملغية{% else %}Cancelled{% endif %}</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}حالة الدفع{% else %}Payment Status{% endif %}
+                        </label>
+                        <select class="form-select" name="payment_status" required>
+                            <option value="unpaid">{% if session.get('language', 'ar') == 'ar' %}غير مدفوعة{% else %}Unpaid{% endif %}</option>
+                            <option value="partial">{% if session.get('language', 'ar') == 'ar' %}مدفوعة جزئياً{% else %}Partially Paid{% endif %}</option>
+                            <option value="paid">{% if session.get('language', 'ar') == 'ar' %}مدفوعة{% else %}Paid{% endif %}</option>
+                            <option value="refunded">{% if session.get('language', 'ar') == 'ar' %}مسترد{% else %}Refunded{% endif %}</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}ملاحظات{% else %}Notes{% endif %}
+                        </label>
+                        <textarea class="form-control" name="notes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {% if session.get('language', 'ar') == 'ar' %}إلغاء{% else %}Cancel{% endif %}
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveStatusUpdate()">
+                    {% if session.get('language', 'ar') == 'ar' %}حفظ{% else %}Save{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function createNewOrder() {
+    // Redirect to new order page or open modal
+    window.location.href = '/new-order';
+}
+
+function viewOrder(orderNumber) {
+    // Load order details in modal
+    document.getElementById('orderNumber').textContent = '#' + orderNumber;
+    
+    // Sample order details
+    const orderDetails = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6>معلومات العميل</h6>
+                <p><strong>الاسم:</strong> أحمد محمد السعيد</p>
+                <p><strong>الهاتف:</strong> +966 50 123 4567</p>
+                <p><strong>العنوان:</strong> الرياض، المملكة العربية السعودية</p>
+            </div>
+            <div class="col-md-6">
+                <h6>معلومات الطلبية</h6>
+                <p><strong>رقم الطلبية:</strong> #${orderNumber}</p>
+                <p><strong>التاريخ:</strong> 2024-01-20 14:30</p>
+                <p><strong>الحالة:</strong> <span class="badge bg-success">تم التسليم</span></p>
+            </div>
+        </div>
+        <hr>
+        <h6>أصناف الطلبية</h6>
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>الصنف</th>
+                        <th>الكمية</th>
+                        <th>السعر</th>
+                        <th>الإجمالي</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>iPhone 14 Pro</td>
+                        <td>1</td>
+                        <td>3,500.00 ريال</td>
+                        <td>3,500.00 ريال</td>
+                    </tr>
+                    <tr>
+                        <td>برياني دجاج</td>
+                        <td>2</td>
+                        <td>25.00 ريال</td>
+                        <td>50.00 ريال</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="3">الإجمالي</th>
+                        <th>3,550.00 ريال</th>
+                    </tr>
+                    <tr>
+                        <th colspan="3">ضريبة القيمة المضافة (15%)</th>
+                        <th>532.50 ريال</th>
+                    </tr>
+                    <tr>
+                        <th colspan="3">المجموع الكلي</th>
+                        <th>4,082.50 ريال</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    `;
+    
+    document.getElementById('orderDetailsContent').innerHTML = orderDetails;
+    
+    const modal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
+    modal.show();
+}
+
+function editOrder(orderNumber) {
+    // Redirect to edit order page
+    window.location.href = '/edit-order/' + orderNumber;
+}
+
+function printOrder(orderNumber) {
+    alert('طباعة الطلبية: ' + orderNumber);
+}
+
+function duplicateOrder(orderNumber) {
+    if (confirm('هل تريد نسخ هذه الطلبية؟')) {
+        alert('تم نسخ الطلبية: ' + orderNumber);
+    }
+}
+
+function cancelOrder(orderNumber) {
+    if (confirm('هل تريد إلغاء هذه الطلبية؟')) {
+        alert('تم إلغاء الطلبية: ' + orderNumber);
+    }
+}
+
+function deleteOrder(orderNumber) {
+    if (confirm('هل تريد حذف هذه الطلبية نهائياً؟')) {
+        alert('تم حذف الطلبية: ' + orderNumber);
+    }
+}
+
+function updateOrderStatus(orderNumber) {
+    const modal = new bootstrap.Modal(document.getElementById('updateStatusModal'));
+    modal.show();
+}
+
+function saveStatusUpdate() {
+    const form = document.getElementById('updateStatusForm');
+    const formData = new FormData(form);
+    
+    alert('تم تحديث حالة الطلبية بنجاح');
+    
+    const modal = bootstrap.Modal.getInstance(document.getElementById('updateStatusModal'));
+    modal.hide();
+    form.reset();
+}
+
+function exportOrders() {
+    alert('تصدير قائمة الطلبيات');
+}
+
+function resetFilters() {
+    document.getElementById('searchOrders').value = '';
+    document.getElementById('filterStatus').value = '';
+    document.getElementById('filterPayment').value = '';
+    document.getElementById('filterDate').value = '';
+    document.getElementById('sortBy').value = 'date_desc';
+}
+
+function printOrderDetails() {
+    window.print();
+}
+</script>
+{% endblock %}

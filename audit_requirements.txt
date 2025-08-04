@@ -1,0 +1,23 @@
+# متطلبات أداة المراجعة الذكية
+# Smart Audit Tool Requirements
+
+# واجهة المستخدم الرسومية
+tkinter  # مدمج مع Python
+
+# معالجة البيانات
+pandas>=1.3.0
+openpyxl>=3.0.7
+
+# إنشاء تقارير PDF
+reportlab>=3.6.0
+
+# معالجة النصوص والتعبيرات النمطية
+regex>=2021.8.3
+
+# أدوات إضافية
+pathlib  # مدمج مع Python
+datetime  # مدمج مع Python
+json  # مدمج مع Python
+re  # مدمج مع Python
+os  # مدمج مع Python
+typing  # مدمج مع Python

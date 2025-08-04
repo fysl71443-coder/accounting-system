@@ -1,0 +1,518 @@
+{% extends "base_simple_test.html" %}
+
+{% block title %}
+    {% if session.get('language', 'ar') == 'ar' %}
+        إدارة المستخدمين
+    {% else %}
+        User Management
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            {% if session.get('language', 'ar') == 'ar' %}
+                <i class="fas fa-users"></i> إدارة المستخدمين
+            {% else %}
+                <i class="fas fa-users"></i> User Management
+            {% endif %}
+        </h1>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-primary" onclick="showAddUserModal()">
+                {% if session.get('language', 'ar') == 'ar' %}
+                    <i class="fas fa-user-plus"></i> إضافة مستخدم
+                {% else %}
+                    <i class="fas fa-user-plus"></i> Add User
+                {% endif %}
+            </button>
+            <button type="button" class="btn btn-success" onclick="exportUsers()">
+                {% if session.get('language', 'ar') == 'ar' %}
+                    <i class="fas fa-download"></i> تصدير
+                {% else %}
+                    <i class="fas fa-download"></i> Export
+                {% endif %}
+            </button>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            قائمة المستخدمين
+                        {% else %}
+                            Users List
+                        {% endif %}
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>
+                                        {% if session.get('language', 'ar') == 'ar' %}الرقم{% else %}ID{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if session.get('language', 'ar') == 'ar' %}اسم المستخدم{% else %}Username{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if session.get('language', 'ar') == 'ar' %}الاسم الكامل{% else %}Full Name{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if session.get('language', 'ar') == 'ar' %}البريد الإلكتروني{% else %}Email{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if session.get('language', 'ar') == 'ar' %}الدور{% else %}Role{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if session.get('language', 'ar') == 'ar' %}الحالة{% else %}Status{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if session.get('language', 'ar') == 'ar' %}آخر دخول{% else %}Last Login{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if session.get('language', 'ar') == 'ar' %}إجراءات{% else %}Actions{% endif %}
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-tbody">
+                                <!-- Users will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit User Modal -->
+<div class="modal fade" id="userModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="userModalTitle">
+                    {% if session.get('language', 'ar') == 'ar' %}
+                        <i class="fas fa-user-plus"></i> إضافة مستخدم جديد
+                    {% else %}
+                        <i class="fas fa-user-plus"></i> Add New User
+                    {% endif %}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="user-form">
+                    <input type="hidden" id="user-id">
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}اسم المستخدم{% else %}Username{% endif %}
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="username" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}الاسم الكامل{% else %}Full Name{% endif %}
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="full-name" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}البريد الإلكتروني{% else %}Email{% endif %}
+                            </label>
+                            <input type="email" class="form-control" id="email">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}الدور{% else %}Role{% endif %}
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="role-select" required>
+                                <option value="">
+                                    {% if session.get('language', 'ar') == 'ar' %}اختر الدور{% else %}Select Role{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}كلمة المرور{% else %}Password{% endif %}
+                                <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="password" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword()">
+                                    <i class="fas fa-eye" id="password-toggle-icon"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}تأكيد كلمة المرور{% else %}Confirm Password{% endif %}
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="password" class="form-control" id="confirm-password" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is-active" checked>
+                                <label class="form-check-label" for="is-active">
+                                    {% if session.get('language', 'ar') == 'ar' %}
+                                        المستخدم نشط
+                                    {% else %}
+                                        User is Active
+                                    {% endif %}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {% if session.get('language', 'ar') == 'ar' %}إلغاء{% else %}Cancel{% endif %}
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveUser()">
+                    {% if session.get('language', 'ar') == 'ar' %}حفظ{% else %}Save{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Global variables
+let usersData = [];
+let rolesData = [];
+let currentLanguage = '{{ session.get("language", "ar") }}';
+let editingUserId = null;
+
+// Initialize page
+$(document).ready(function() {
+    loadRolesData();
+    loadUsersData();
+});
+
+// Load roles data
+function loadRolesData() {
+    // Simplified roles data for current system
+    rolesData = [
+        {
+            id: 'admin',
+            name: 'admin',
+            name_ar: 'مشرف عام',
+            description: 'صلاحيات كاملة لجميع أجزاء النظام'
+        },
+        {
+            id: 'user',
+            name: 'user',
+            name_ar: 'موظف',
+            description: 'صلاحيات محدودة للعمليات الأساسية'
+        }
+    ];
+
+    updateRolesDropdown();
+}
+
+// Update roles dropdown
+function updateRolesDropdown() {
+    const roleSelect = document.getElementById('role-select');
+    roleSelect.innerHTML = '<option value="">اختر الدور</option>';
+    
+    rolesData.forEach(role => {
+        const option = document.createElement('option');
+        option.value = role.id;
+        option.textContent = currentLanguage === 'ar' ? role.name_ar : role.name;
+        roleSelect.appendChild(option);
+    });
+}
+
+// Load users data
+function loadUsersData() {
+    // Simplified users data for current system
+    usersData = [
+        {
+            id: 1,
+            username: 'admin',
+            full_name: 'مدير النظام',
+            email: 'admin@example.com',
+            role: 'admin',
+            role_name: 'مشرف عام',
+            is_active: true,
+            last_login: '2025-08-04 10:30:00',
+            created_at: '2025-01-01 00:00:00'
+        }
+    ];
+
+    updateUsersTable();
+}
+
+// Update users table
+function updateUsersTable() {
+    const tbody = document.getElementById('users-tbody');
+    tbody.innerHTML = '';
+    
+    usersData.forEach(user => {
+        const row = document.createElement('tr');
+        
+        const statusBadge = user.is_active ? 
+            '<span class="badge bg-success">نشط</span>' : 
+            '<span class="badge bg-danger">غير نشط</span>';
+        
+        const lastLogin = user.last_login ? 
+            new Date(user.last_login).toLocaleDateString('ar-SA') : 
+            'لم يسجل دخول';
+        
+        row.innerHTML = `
+            <td>${user.id}</td>
+            <td><strong>${user.username}</strong></td>
+            <td>${user.full_name}</td>
+            <td>${user.email || '-'}</td>
+            <td><span class="badge bg-primary">${user.role_name}</span></td>
+            <td>${statusBadge}</td>
+            <td>${lastLogin}</td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-primary" onclick="editUser(${user.id})" title="تعديل">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-warning" onclick="resetPassword(${user.id})" title="إعادة تعيين كلمة المرور">
+                        <i class="fas fa-key"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" onclick="deleteUser(${user.id})" title="حذف">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+}
+
+// Show add user modal
+function showAddUserModal() {
+    editingUserId = null;
+    document.getElementById('userModalTitle').innerHTML =
+        '<i class="fas fa-user-plus"></i> إضافة مستخدم جديد';
+
+    // Clear form
+    document.getElementById('user-form').reset();
+    document.getElementById('user-id').value = '';
+    document.getElementById('is-active').checked = true;
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('userModal'));
+    modal.show();
+}
+
+// Edit user
+function editUser(userId) {
+    const user = usersData.find(u => u.id === userId);
+    if (!user) return;
+
+    editingUserId = userId;
+    document.getElementById('userModalTitle').innerHTML =
+        '<i class="fas fa-user-edit"></i> تعديل المستخدم';
+
+    // Fill form
+    document.getElementById('user-id').value = user.id;
+    document.getElementById('username').value = user.username;
+    document.getElementById('full-name').value = user.full_name;
+    document.getElementById('email').value = user.email || '';
+    document.getElementById('role-select').value = user.role;
+    document.getElementById('is-active').checked = user.is_active;
+
+    // Make password optional for editing
+    document.getElementById('password').required = false;
+    document.getElementById('confirm-password').required = false;
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('userModal'));
+    modal.show();
+}
+
+// Save user
+function saveUser() {
+    const form = document.getElementById('user-form');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm-password').value;
+
+    // Check password match for new users or when password is provided
+    if ((editingUserId === null || password) && password !== confirmPassword) {
+        alert('كلمات المرور غير متطابقة');
+        return;
+    }
+
+    const userData = {
+        username: document.getElementById('username').value,
+        full_name: document.getElementById('full-name').value,
+        email: document.getElementById('email').value,
+        role: document.getElementById('role-select').value,
+        role_name: rolesData.find(r => r.id === document.getElementById('role-select').value)?.name_ar || '',
+        is_active: document.getElementById('is-active').checked
+    };
+
+    if (password) {
+        userData.password = password;
+    }
+
+    if (editingUserId) {
+        // Update existing user
+        const userIndex = usersData.findIndex(u => u.id === editingUserId);
+        if (userIndex !== -1) {
+            usersData[userIndex] = { ...usersData[userIndex], ...userData };
+            usersData[userIndex].role_name = rolesData.find(r => r.id === userData.role_id)?.name_ar || '';
+        }
+        showToast('تم تحديث المستخدم بنجاح', 'success');
+    } else {
+        // Add new user
+        const newUser = {
+            id: Math.max(...usersData.map(u => u.id)) + 1,
+            ...userData,
+            role_name: rolesData.find(r => r.id === userData.role_id)?.name_ar || '',
+            last_login: null,
+            created_at: new Date().toISOString()
+        };
+        usersData.push(newUser);
+        showToast('تم إضافة المستخدم بنجاح', 'success');
+    }
+
+    updateUsersTable();
+
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('userModal'));
+    modal.hide();
+}
+
+// Reset password
+function resetPassword(userId) {
+    const user = usersData.find(u => u.id === userId);
+    if (!user) return;
+
+    if (confirm(`هل تريد إعادة تعيين كلمة مرور المستخدم "${user.username}"؟`)) {
+        const newPassword = prompt('أدخل كلمة المرور الجديدة:');
+        if (newPassword && newPassword.length >= 6) {
+            showToast(`تم إعادة تعيين كلمة مرور المستخدم "${user.username}" بنجاح`, 'success');
+        } else if (newPassword) {
+            alert('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+        }
+    }
+}
+
+// Delete user
+function deleteUser(userId) {
+    const user = usersData.find(u => u.id === userId);
+    if (!user) return;
+
+    if (user.username === 'admin') {
+        alert('لا يمكن حذف المستخدم المشرف');
+        return;
+    }
+
+    if (confirm(`هل تريد حذف المستخدم "${user.username}"؟\nهذا الإجراء لا يمكن التراجع عنه.`)) {
+        usersData = usersData.filter(u => u.id !== userId);
+        updateUsersTable();
+        showToast('تم حذف المستخدم بنجاح', 'success');
+    }
+}
+
+// Toggle password visibility
+function togglePassword() {
+    const passwordInput = document.getElementById('password');
+    const toggleIcon = document.getElementById('password-toggle-icon');
+
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleIcon.className = 'fas fa-eye-slash';
+    } else {
+        passwordInput.type = 'password';
+        toggleIcon.className = 'fas fa-eye';
+    }
+}
+
+// Export users
+function exportUsers() {
+    const csvData = generateUsersCSV();
+
+    const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `users_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+
+    showToast('تم تصدير قائمة المستخدمين بنجاح', 'success');
+}
+
+// Generate users CSV
+function generateUsersCSV() {
+    let csv = '\uFEFF'; // BOM for UTF-8
+    csv += 'الرقم,اسم المستخدم,الاسم الكامل,البريد الإلكتروني,الدور,الحالة,آخر دخول,تاريخ الإنشاء\n';
+
+    usersData.forEach(user => {
+        csv += `"${user.id}",`;
+        csv += `"${user.username}",`;
+        csv += `"${user.full_name}",`;
+        csv += `"${user.email || '-'}",`;
+        csv += `"${user.role_name}",`;
+        csv += `"${user.is_active ? 'نشط' : 'غير نشط'}",`;
+        csv += `"${user.last_login ? new Date(user.last_login).toLocaleDateString('ar-SA') : 'لم يسجل دخول'}",`;
+        csv += `"${new Date(user.created_at).toLocaleDateString('ar-SA')}"\n`;
+    });
+
+    return csv;
+}
+
+// Show toast notification
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type} border-0 position-fixed`;
+    toast.style.cssText = 'top: 20px; left: 20px; z-index: 9999;';
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
+                ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+
+    document.body.appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+
+    toast.addEventListener('hidden.bs.toast', function() {
+        document.body.removeChild(toast);
+    });
+}
+</script>
+{% endblock %}

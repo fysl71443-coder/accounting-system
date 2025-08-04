@@ -1,0 +1,1476 @@
+{% extends "base_simple_test.html" %}
+
+{% block title %}
+    {% if session.get('language', 'ar') == 'ar' %}
+        إدارة المشتريات
+    {% else %}
+        Purchases Management
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            {% if session.get('language', 'ar') == 'ar' %}
+                <i class="fas fa-shopping-cart"></i> إدارة المشتريات
+            {% else %}
+                <i class="fas fa-shopping-cart"></i> Purchases Management
+            {% endif %}
+        </h1>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-primary" onclick="showNewPurchaseModal()">
+                {% if session.get('language', 'ar') == 'ar' %}
+                    <i class="fas fa-plus"></i> فاتورة جديدة
+                {% else %}
+                    <i class="fas fa-plus"></i> New Invoice
+                {% endif %}
+            </button>
+            <button type="button" class="btn btn-success" onclick="exportPurchases()">
+                {% if session.get('language', 'ar') == 'ar' %}
+                    <i class="fas fa-download"></i> تصدير
+                {% else %}
+                    <i class="fas fa-download"></i> Export
+                {% endif %}
+            </button>
+            <button type="button" class="btn btn-info" onclick="generatePurchaseReport()">
+                {% if session.get('language', 'ar') == 'ar' %}
+                    <i class="fas fa-chart-bar"></i> تقرير
+                {% else %}
+                    <i class="fas fa-chart-bar"></i> Report
+                {% endif %}
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-4 border-primary h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-primary mb-1">
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                إجمالي المشتريات
+                            {% else %}
+                                Total Purchases
+                            {% endif %}
+                        </h6>
+                        <h3 class="mb-0" id="total-purchases">0.00 ريال</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-shopping-cart fa-2x opacity-75 text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-4 border-success h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-success mb-1">
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                المدفوع
+                            {% else %}
+                                Paid
+                            {% endif %}
+                        </h6>
+                        <h3 class="mb-0" id="paid-purchases">0.00 ريال</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x opacity-75 text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-4 border-warning h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-warning mb-1">
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                المستحق
+                            {% else %}
+                                Pending
+                            {% endif %}
+                        </h6>
+                        <h3 class="mb-0" id="pending-purchases">0.00 ريال</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-clock fa-2x opacity-75 text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-4 border-info h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-info mb-1">
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                عدد الفواتير
+                            {% else %}
+                                Invoices Count
+                            {% endif %}
+                        </h6>
+                        <h3 class="mb-0" id="invoices-count">0</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-file-invoice fa-2x opacity-75 text-info"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            فلترة المشتريات
+                        {% else %}
+                            Filter Purchases
+                        {% endif %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}من تاريخ{% else %}From Date{% endif %}
+                            </label>
+                            <input type="date" class="form-control" id="from-date">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}إلى تاريخ{% else %}To Date{% endif %}
+                            </label>
+                            <input type="date" class="form-control" id="to-date">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}المورد{% else %}Supplier{% endif %}
+                            </label>
+                            <select class="form-select" id="filter-supplier">
+                                <option value="all">
+                                    {% if session.get('language', 'ar') == 'ar' %}جميع الموردين{% else %}All Suppliers{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}حالة الدفع{% else %}Payment Status{% endif %}
+                            </label>
+                            <select class="form-select" id="filter-status">
+                                <option value="all">
+                                    {% if session.get('language', 'ar') == 'ar' %}جميع الحالات{% else %}All Status{% endif %}
+                                </option>
+                                <option value="paid">
+                                    {% if session.get('language', 'ar') == 'ar' %}مدفوع{% else %}Paid{% endif %}
+                                </option>
+                                <option value="pending">
+                                    {% if session.get('language', 'ar') == 'ar' %}مستحق{% else %}Pending{% endif %}
+                                </option>
+                                <option value="partial">
+                                    {% if session.get('language', 'ar') == 'ar' %}مدفوع جزئياً{% else %}Partially Paid{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <button type="button" class="btn btn-primary" onclick="filterPurchases()">
+                                <i class="fas fa-search"></i>
+                                {% if session.get('language', 'ar') == 'ar' %}بحث{% else %}Search{% endif %}
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="clearFilters()">
+                                <i class="fas fa-times"></i>
+                                {% if session.get('language', 'ar') == 'ar' %}مسح{% else %}Clear{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Purchases Table -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            قائمة فواتير المشتريات
+                        {% else %}
+                            Purchase Invoices List
+                        {% endif %}
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>
+                                        {% if session.get('language', 'ar') == 'ar' %}رقم الفاتورة{% else %}Invoice No{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if session.get('language', 'ar') == 'ar' %}التاريخ{% else %}Date{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if session.get('language', 'ar') == 'ar' %}المورد{% else %}Supplier{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if session.get('language', 'ar') == 'ar' %}المبلغ قبل الضريبة{% else %}Amount Before VAT{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if session.get('language', 'ar') == 'ar' %}الضريبة{% else %}VAT{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if session.get('language', 'ar') == 'ar' %}الإجمالي{% else %}Total{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if session.get('language', 'ar') == 'ar' %}طريقة الدفع{% else %}Payment Method{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if session.get('language', 'ar') == 'ar' %}الحالة{% else %}Status{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if session.get('language', 'ar') == 'ar' %}إجراءات{% else %}Actions{% endif %}
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="purchases-tbody">
+                                <!-- Purchase invoices will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- New Purchase Invoice Modal -->
+<div class="modal fade" id="newPurchaseModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    {% if session.get('language', 'ar') == 'ar' %}
+                        <i class="fas fa-plus"></i> فاتورة مشتريات جديدة
+                    {% else %}
+                        <i class="fas fa-plus"></i> New Purchase Invoice
+                    {% endif %}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="purchase-form">
+                    <!-- Invoice Header -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card bg-light">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        {% if session.get('language', 'ar') == 'ar' %}معلومات الفاتورة{% else %}Invoice Information{% endif %}
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <label class="form-label">
+                                                {% if session.get('language', 'ar') == 'ar' %}رقم الفاتورة{% else %}Invoice Number{% endif %}
+                                            </label>
+                                            <input type="text" class="form-control" id="invoice-number" readonly>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">
+                                                {% if session.get('language', 'ar') == 'ar' %}التاريخ{% else %}Date{% endif %}
+                                            </label>
+                                            <input type="date" class="form-control" id="invoice-date" required>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">
+                                                {% if session.get('language', 'ar') == 'ar' %}المورد{% else %}Supplier{% endif %}
+                                            </label>
+                                            <select class="form-select" id="supplier-select" required>
+                                                <option value="">
+                                                    {% if session.get('language', 'ar') == 'ar' %}اختر المورد{% else %}Select Supplier{% endif %}
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">
+                                                {% if session.get('language', 'ar') == 'ar' %}طريقة الدفع{% else %}Payment Method{% endif %}
+                                            </label>
+                                            <select class="form-select" id="payment-method" required>
+                                                <option value="CASH">
+                                                    {% if session.get('language', 'ar') == 'ar' %}نقدي{% else %}Cash{% endif %}
+                                                </option>
+                                                <option value="MADA">مدى - MADA</option>
+                                                <option value="VISA">فيزا - VISA</option>
+                                                <option value="MASTERCARD">ماستركارد - MASTERCARD</option>
+                                                <option value="BANK">
+                                                    {% if session.get('language', 'ar') == 'ar' %}تحويل بنكي{% else %}Bank Transfer{% endif %}
+                                                </option>
+                                                <option value="CREDIT">
+                                                    {% if session.get('language', 'ar') == 'ar' %}آجل{% else %}Credit{% endif %}
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Products Section -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">
+                                        {% if session.get('language', 'ar') == 'ar' %}أصناف الفاتورة{% else %}Invoice Items{% endif %}
+                                    </h6>
+                                    <button type="button" class="btn btn-sm btn-success" onclick="addProductRow()">
+                                        <i class="fas fa-plus"></i>
+                                        {% if session.get('language', 'ar') == 'ar' %}إضافة صنف{% else %}Add Item{% endif %}
+                                    </button>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered mb-0" id="products-table">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th style="width: 30%">
+                                                        {% if session.get('language', 'ar') == 'ar' %}اسم المنتج{% else %}Product Name{% endif %}
+                                                    </th>
+                                                    <th style="width: 15%">
+                                                        {% if session.get('language', 'ar') == 'ar' %}الكمية{% else %}Quantity{% endif %}
+                                                    </th>
+                                                    <th style="width: 15%">
+                                                        {% if session.get('language', 'ar') == 'ar' %}الوحدة{% else %}Unit{% endif %}
+                                                    </th>
+                                                    <th style="width: 15%">
+                                                        {% if session.get('language', 'ar') == 'ar' %}سعر الوحدة{% else %}Unit Price{% endif %}
+                                                    </th>
+                                                    <th style="width: 15%">
+                                                        {% if session.get('language', 'ar') == 'ar' %}الإجمالي{% else %}Total{% endif %}
+                                                    </th>
+                                                    <th style="width: 10%">
+                                                        {% if session.get('language', 'ar') == 'ar' %}إجراء{% else %}Action{% endif %}
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="products-tbody">
+                                                <!-- Product rows will be added here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Invoice Totals -->
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        {% if session.get('language', 'ar') == 'ar' %}ملاحظات{% else %}Notes{% endif %}
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <textarea class="form-control" id="invoice-notes" rows="4" placeholder="{% if session.get('language', 'ar') == 'ar' %}أدخل أي ملاحظات إضافية...{% else %}Enter any additional notes...{% endif %}"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0">
+                                        {% if session.get('language', 'ar') == 'ar' %}إجماليات الفاتورة{% else %}Invoice Totals{% endif %}
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm mb-0">
+                                        <tr>
+                                            <td>
+                                                {% if session.get('language', 'ar') == 'ar' %}المجموع قبل الضريبة:{% else %}Subtotal:{% endif %}
+                                            </td>
+                                            <td class="text-end" id="subtotal">0.00 ريال</td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                {% if session.get('language', 'ar') == 'ar' %}ضريبة القيمة المضافة (15%):{% else %}VAT (15%):{% endif %}
+                                            </td>
+                                            <td class="text-end" id="vat-amount">0.00 ريال</td>
+                                        </tr>
+                                        <tr class="table-primary">
+                                            <td><strong>
+                                                {% if session.get('language', 'ar') == 'ar' %}الإجمالي النهائي:{% else %}Grand Total:{% endif %}
+                                            </strong></td>
+                                            <td class="text-end"><strong id="grand-total">0.00 ريال</strong></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {% if session.get('language', 'ar') == 'ar' %}إلغاء{% else %}Cancel{% endif %}
+                </button>
+                <button type="button" class="btn btn-success" onclick="savePurchaseInvoice()">
+                    {% if session.get('language', 'ar') == 'ar' %}حفظ الفاتورة{% else %}Save Invoice{% endif %}
+                </button>
+                <button type="button" class="btn btn-primary" onclick="savePurchaseInvoice(true)">
+                    {% if session.get('language', 'ar') == 'ar' %}حفظ وطباعة{% else %}Save & Print{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Global variables
+let purchasesData = [];
+let suppliersData = [];
+let productsData = [];
+let currentLanguage = '{{ session.get("language", "ar") }}';
+let productRowCounter = 0;
+
+// Initialize page
+$(document).ready(function() {
+    loadSuppliersData();
+    loadProductsData();
+    loadPurchasesData();
+    setCurrentDate();
+    generateInvoiceNumber();
+});
+
+// Set current date
+function setCurrentDate() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('invoice-date').value = today;
+    document.getElementById('from-date').value = today;
+    document.getElementById('to-date').value = today;
+}
+
+// Generate invoice number
+function generateInvoiceNumber() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+
+    const invoiceNumber = `PUR-${year}${month}${day}-${random}`;
+    document.getElementById('invoice-number').value = invoiceNumber;
+}
+
+// Load suppliers data
+function loadSuppliersData() {
+    // Sample suppliers data
+    suppliersData = [
+        {
+            id: 1,
+            name: 'شركة المواد الغذائية المتحدة',
+            name_en: 'United Food Materials Company',
+            contact: '0112345678',
+            email: 'info@ufmc.com'
+        },
+        {
+            id: 2,
+            name: 'مؤسسة الخضار والفواكه',
+            name_en: 'Vegetables & Fruits Est.',
+            contact: '0112345679',
+            email: 'sales@vfest.com'
+        },
+        {
+            id: 3,
+            name: 'شركة اللحوم الطازجة',
+            name_en: 'Fresh Meat Company',
+            contact: '0112345680',
+            email: 'orders@freshmeats.com'
+        },
+        {
+            id: 4,
+            name: 'مصنع الألبان الذهبية',
+            name_en: 'Golden Dairy Factory',
+            contact: '0112345681',
+            email: 'info@goldendairy.com'
+        },
+        {
+            id: 5,
+            name: 'شركة التوابل والبهارات',
+            name_en: 'Spices & Seasonings Co.',
+            contact: '0112345682',
+            email: 'sales@spicescompany.com'
+        }
+    ];
+
+    updateSuppliersDropdown();
+}
+
+// Update suppliers dropdown
+function updateSuppliersDropdown() {
+    const supplierSelect = document.getElementById('supplier-select');
+    const filterSupplier = document.getElementById('filter-supplier');
+
+    // Clear existing options (except first)
+    supplierSelect.innerHTML = '<option value="">اختر المورد</option>';
+    filterSupplier.innerHTML = '<option value="all">جميع الموردين</option>';
+
+    suppliersData.forEach(supplier => {
+        const supplierName = currentLanguage === 'ar' ? supplier.name : supplier.name_en;
+
+        // Add to main dropdown
+        const option1 = document.createElement('option');
+        option1.value = supplier.id;
+        option1.textContent = supplierName;
+        supplierSelect.appendChild(option1);
+
+        // Add to filter dropdown
+        const option2 = document.createElement('option');
+        option2.value = supplier.id;
+        option2.textContent = supplierName;
+        filterSupplier.appendChild(option2);
+    });
+}
+
+// Load products data
+function loadProductsData() {
+    // Sample products data
+    productsData = [
+        {
+            id: 1,
+            name: 'أرز بسمتي',
+            name_en: 'Basmati Rice',
+            unit: 'كيس 25 كيلو',
+            unit_en: '25kg Bag',
+            cost_price: 85.00
+        },
+        {
+            id: 2,
+            name: 'زيت الطبخ',
+            name_en: 'Cooking Oil',
+            unit: 'جالون 4 لتر',
+            unit_en: '4L Gallon',
+            cost_price: 32.50
+        },
+        {
+            id: 3,
+            name: 'دجاج طازج',
+            name_en: 'Fresh Chicken',
+            unit: 'كيلو',
+            unit_en: 'Kg',
+            cost_price: 18.00
+        },
+        {
+            id: 4,
+            name: 'طماطم',
+            name_en: 'Tomatoes',
+            unit: 'كيلو',
+            unit_en: 'Kg',
+            cost_price: 4.50
+        },
+        {
+            id: 5,
+            name: 'بصل',
+            name_en: 'Onions',
+            unit: 'كيلو',
+            unit_en: 'Kg',
+            cost_price: 3.20
+        },
+        {
+            id: 6,
+            name: 'لحم بقري',
+            name_en: 'Beef',
+            unit: 'كيلو',
+            unit_en: 'Kg',
+            cost_price: 45.00
+        },
+        {
+            id: 7,
+            name: 'حليب طازج',
+            name_en: 'Fresh Milk',
+            unit: 'لتر',
+            unit_en: 'Liter',
+            cost_price: 6.50
+        },
+        {
+            id: 8,
+            name: 'دقيق أبيض',
+            name_en: 'White Flour',
+            unit: 'كيس 50 كيلو',
+            unit_en: '50kg Bag',
+            cost_price: 95.00
+        }
+    ];
+}
+
+// Load purchases data
+function loadPurchasesData() {
+    // Sample purchases data
+    purchasesData = [
+        {
+            id: 1,
+            invoice_number: 'PUR-20250804-001',
+            date: '2025-08-04',
+            supplier_id: 1,
+            supplier_name: 'شركة المواد الغذائية المتحدة',
+            subtotal: 2500.00,
+            vat_amount: 375.00,
+            total: 2875.00,
+            payment_method: 'BANK',
+            status: 'paid',
+            items: [
+                {product_name: 'أرز بسمتي', quantity: 20, unit: 'كيس', unit_price: 85.00, total: 1700.00},
+                {product_name: 'زيت الطبخ', quantity: 25, unit: 'جالون', unit_price: 32.00, total: 800.00}
+            ]
+        },
+        {
+            id: 2,
+            invoice_number: 'PUR-20250803-002',
+            date: '2025-08-03',
+            supplier_id: 2,
+            supplier_name: 'مؤسسة الخضار والفواكه',
+            subtotal: 850.00,
+            vat_amount: 127.50,
+            total: 977.50,
+            payment_method: 'CASH',
+            status: 'paid',
+            items: [
+                {product_name: 'طماطم', quantity: 100, unit: 'كيلو', unit_price: 4.50, total: 450.00},
+                {product_name: 'بصل', quantity: 125, unit: 'كيلو', unit_price: 3.20, total: 400.00}
+            ]
+        },
+        {
+            id: 3,
+            invoice_number: 'PUR-20250802-003',
+            date: '2025-08-02',
+            supplier_id: 3,
+            supplier_name: 'شركة اللحوم الطازجة',
+            subtotal: 1800.00,
+            vat_amount: 270.00,
+            total: 2070.00,
+            payment_method: 'CREDIT',
+            status: 'pending',
+            items: [
+                {product_name: 'دجاج طازج', quantity: 50, unit: 'كيلو', unit_price: 18.00, total: 900.00},
+                {product_name: 'لحم بقري', quantity: 20, unit: 'كيلو', unit_price: 45.00, total: 900.00}
+            ]
+        }
+    ];
+
+    updatePurchasesTable();
+    updateSummaryCards();
+}
+
+// Update purchases table
+function updatePurchasesTable() {
+    const tbody = document.getElementById('purchases-tbody');
+    tbody.innerHTML = '';
+
+    purchasesData.forEach(purchase => {
+        const row = document.createElement('tr');
+
+        const statusText = getStatusText(purchase.status);
+        const statusClass = getStatusClass(purchase.status);
+        const paymentMethodText = getPaymentMethodText(purchase.payment_method);
+
+        row.innerHTML = `
+            <td><strong>${purchase.invoice_number}</strong></td>
+            <td>${formatDate(purchase.date)}</td>
+            <td>${purchase.supplier_name}</td>
+            <td class="text-end">${formatCurrency(purchase.subtotal)}</td>
+            <td class="text-end">${formatCurrency(purchase.vat_amount)}</td>
+            <td class="text-end"><strong>${formatCurrency(purchase.total)}</strong></td>
+            <td><span class="badge bg-info">${paymentMethodText}</span></td>
+            <td><span class="badge bg-${statusClass}">${statusText}</span></td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-primary" onclick="viewPurchase(${purchase.id})" title="عرض">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-success" onclick="editPurchase(${purchase.id})" title="تعديل">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-info" onclick="printPurchase(${purchase.id})" title="طباعة">
+                        <i class="fas fa-print"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" onclick="deletePurchase(${purchase.id})" title="حذف">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+
+        tbody.appendChild(row);
+    });
+}
+
+// Update summary cards
+function updateSummaryCards() {
+    let totalPurchases = 0;
+    let paidPurchases = 0;
+    let pendingPurchases = 0;
+
+    purchasesData.forEach(purchase => {
+        totalPurchases += purchase.total;
+
+        if (purchase.status === 'paid') {
+            paidPurchases += purchase.total;
+        } else {
+            pendingPurchases += purchase.total;
+        }
+    });
+
+    document.getElementById('total-purchases').textContent = formatCurrency(totalPurchases);
+    document.getElementById('paid-purchases').textContent = formatCurrency(paidPurchases);
+    document.getElementById('pending-purchases').textContent = formatCurrency(pendingPurchases);
+    document.getElementById('invoices-count').textContent = purchasesData.length;
+}
+
+// Show new purchase modal
+function showNewPurchaseModal() {
+    generateInvoiceNumber();
+    setCurrentDate();
+    clearProductRows();
+    addProductRow(); // Add first row
+
+    const modal = new bootstrap.Modal(document.getElementById('newPurchaseModal'));
+    modal.show();
+}
+
+// Add product row
+function addProductRow() {
+    productRowCounter++;
+    const tbody = document.getElementById('products-tbody');
+    const row = document.createElement('tr');
+    row.id = `product-row-${productRowCounter}`;
+
+    row.innerHTML = `
+        <td>
+            <select class="form-select product-select" onchange="updateProductInfo(${productRowCounter})" required>
+                <option value="">اختر المنتج</option>
+                ${productsData.map(product =>
+                    `<option value="${product.id}" data-price="${product.cost_price}" data-unit="${currentLanguage === 'ar' ? product.unit : product.unit_en}">
+                        ${currentLanguage === 'ar' ? product.name : product.name_en}
+                    </option>`
+                ).join('')}
+            </select>
+        </td>
+        <td>
+            <input type="number" class="form-control quantity-input" min="1" step="0.01" onchange="calculateRowTotal(${productRowCounter})" required>
+        </td>
+        <td>
+            <input type="text" class="form-control unit-input" readonly>
+        </td>
+        <td>
+            <input type="number" class="form-control price-input" min="0" step="0.01" onchange="calculateRowTotal(${productRowCounter})" required>
+        </td>
+        <td>
+            <input type="number" class="form-control total-input" readonly>
+        </td>
+        <td>
+            <button type="button" class="btn btn-sm btn-danger" onclick="removeProductRow(${productRowCounter})">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
+
+    tbody.appendChild(row);
+}
+
+// Update product info when product is selected
+function updateProductInfo(rowId) {
+    const row = document.getElementById(`product-row-${rowId}`);
+    const productSelect = row.querySelector('.product-select');
+    const selectedOption = productSelect.options[productSelect.selectedIndex];
+
+    if (selectedOption.value) {
+        const price = parseFloat(selectedOption.dataset.price);
+        const unit = selectedOption.dataset.unit;
+
+        row.querySelector('.price-input').value = price.toFixed(2);
+        row.querySelector('.unit-input').value = unit;
+
+        calculateRowTotal(rowId);
+    }
+}
+
+// Calculate row total
+function calculateRowTotal(rowId) {
+    const row = document.getElementById(`product-row-${rowId}`);
+    const quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
+    const price = parseFloat(row.querySelector('.price-input').value) || 0;
+    const total = quantity * price;
+
+    row.querySelector('.total-input').value = total.toFixed(2);
+
+    calculateInvoiceTotals();
+}
+
+// Remove product row
+function removeProductRow(rowId) {
+    const row = document.getElementById(`product-row-${rowId}`);
+    if (row) {
+        row.remove();
+        calculateInvoiceTotals();
+    }
+}
+
+// Clear all product rows
+function clearProductRows() {
+    const tbody = document.getElementById('products-tbody');
+    tbody.innerHTML = '';
+    productRowCounter = 0;
+}
+
+// Calculate invoice totals
+function calculateInvoiceTotals() {
+    const totalInputs = document.querySelectorAll('.total-input');
+    let subtotal = 0;
+
+    totalInputs.forEach(input => {
+        subtotal += parseFloat(input.value) || 0;
+    });
+
+    const vatAmount = subtotal * 0.15; // 15% VAT
+    const grandTotal = subtotal + vatAmount;
+
+    document.getElementById('subtotal').textContent = formatCurrency(subtotal);
+    document.getElementById('vat-amount').textContent = formatCurrency(vatAmount);
+    document.getElementById('grand-total').textContent = formatCurrency(grandTotal);
+}
+
+// Save purchase invoice
+function savePurchaseInvoice(printAfterSave = false) {
+    const form = document.getElementById('purchase-form');
+
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    // Collect form data
+    const invoiceData = {
+        invoice_number: document.getElementById('invoice-number').value,
+        date: document.getElementById('invoice-date').value,
+        supplier_id: parseInt(document.getElementById('supplier-select').value),
+        payment_method: document.getElementById('payment-method').value,
+        notes: document.getElementById('invoice-notes').value,
+        items: []
+    };
+
+    // Collect product items
+    const productRows = document.querySelectorAll('#products-tbody tr');
+    productRows.forEach(row => {
+        const productSelect = row.querySelector('.product-select');
+        const quantity = parseFloat(row.querySelector('.quantity-input').value);
+        const price = parseFloat(row.querySelector('.price-input').value);
+        const total = parseFloat(row.querySelector('.total-input').value);
+
+        if (productSelect.value && quantity && price) {
+            const selectedOption = productSelect.options[productSelect.selectedIndex];
+            invoiceData.items.push({
+                product_id: parseInt(productSelect.value),
+                product_name: selectedOption.text,
+                quantity: quantity,
+                unit: row.querySelector('.unit-input').value,
+                unit_price: price,
+                total: total
+            });
+        }
+    });
+
+    if (invoiceData.items.length === 0) {
+        alert(currentLanguage === 'ar' ? 'يرجى إضافة منتج واحد على الأقل' : 'Please add at least one product');
+        return;
+    }
+
+    // Calculate totals
+    const subtotal = invoiceData.items.reduce((sum, item) => sum + item.total, 0);
+    const vatAmount = subtotal * 0.15;
+    const grandTotal = subtotal + vatAmount;
+
+    invoiceData.subtotal = subtotal;
+    invoiceData.vat_amount = vatAmount;
+    invoiceData.total = grandTotal;
+
+    // Get supplier name
+    const supplierName = suppliersData.find(s => s.id === invoiceData.supplier_id);
+    invoiceData.supplier_name = currentLanguage === 'ar' ? supplierName.name : supplierName.name_en;
+    invoiceData.status = invoiceData.payment_method === 'CREDIT' ? 'pending' : 'paid';
+
+    // Add to purchases data
+    invoiceData.id = purchasesData.length + 1;
+    purchasesData.push(invoiceData);
+
+    // Update display
+    updatePurchasesTable();
+    updateSummaryCards();
+
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('newPurchaseModal'));
+    modal.hide();
+
+    // Clear form
+    form.reset();
+    clearProductRows();
+
+    alert(currentLanguage === 'ar' ? 'تم حفظ الفاتورة بنجاح' : 'Invoice saved successfully');
+
+    if (printAfterSave) {
+        printPurchase(invoiceData.id);
+    }
+}
+
+// Helper functions
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('ar-SA', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(amount) + ' ريال';
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ar-SA');
+}
+
+function getStatusText(status) {
+    const statuses = {
+        'paid': currentLanguage === 'ar' ? 'مدفوع' : 'Paid',
+        'pending': currentLanguage === 'ar' ? 'مستحق' : 'Pending',
+        'partial': currentLanguage === 'ar' ? 'مدفوع جزئياً' : 'Partially Paid'
+    };
+    return statuses[status] || status;
+}
+
+function getStatusClass(status) {
+    const classes = {
+        'paid': 'success',
+        'pending': 'warning',
+        'partial': 'info'
+    };
+    return classes[status] || 'secondary';
+}
+
+function getPaymentMethodText(method) {
+    const methods = {
+        'CASH': currentLanguage === 'ar' ? 'نقدي' : 'Cash',
+        'MADA': 'مدى',
+        'VISA': 'فيزا',
+        'MASTERCARD': 'ماستركارد',
+        'BANK': currentLanguage === 'ar' ? 'تحويل بنكي' : 'Bank Transfer',
+        'CREDIT': currentLanguage === 'ar' ? 'آجل' : 'Credit'
+    };
+    return methods[method] || method;
+}
+
+// Action functions
+function viewPurchase(id) {
+    const purchase = purchasesData.find(p => p.id === id);
+    if (purchase) {
+        // Create detailed view modal
+        const modalContent = `
+            <div class="modal fade" id="viewPurchaseModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-info text-white">
+                            <h5 class="modal-title">
+                                <i class="fas fa-eye"></i> عرض فاتورة المشتريات
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <strong>رقم الفاتورة:</strong> ${purchase.invoice_number}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>التاريخ:</strong> ${formatDate(purchase.date)}
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <strong>المورد:</strong> ${purchase.supplier_name}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>طريقة الدفع:</strong> ${getPaymentMethodText(purchase.payment_method)}
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <strong>الحالة:</strong>
+                                    <span class="badge bg-${getStatusClass(purchase.status)}">${getStatusText(purchase.status)}</span>
+                                </div>
+                            </div>
+
+                            <h6>أصناف الفاتورة:</h6>
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>المنتج</th>
+                                            <th>الكمية</th>
+                                            <th>الوحدة</th>
+                                            <th>سعر الوحدة</th>
+                                            <th>الإجمالي</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${purchase.items.map(item => `
+                                            <tr>
+                                                <td>${item.product_name}</td>
+                                                <td>${item.quantity}</td>
+                                                <td>${item.unit}</td>
+                                                <td>${formatCurrency(item.unit_price)}</td>
+                                                <td>${formatCurrency(item.total)}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="4"><strong>المجموع قبل الضريبة:</strong></td>
+                                            <td><strong>${formatCurrency(purchase.subtotal)}</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="4"><strong>ضريبة القيمة المضافة (15%):</strong></td>
+                                            <td><strong>${formatCurrency(purchase.vat_amount)}</strong></td>
+                                        </tr>
+                                        <tr class="table-primary">
+                                            <td colspan="4"><strong>الإجمالي النهائي:</strong></td>
+                                            <td><strong>${formatCurrency(purchase.total)}</strong></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                            <button type="button" class="btn btn-primary" onclick="printPurchase(${purchase.id})">
+                                <i class="fas fa-print"></i> طباعة
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Remove existing modal if any
+        const existingModal = document.getElementById('viewPurchaseModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        // Add modal to body
+        document.body.insertAdjacentHTML('beforeend', modalContent);
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('viewPurchaseModal'));
+        modal.show();
+    }
+}
+
+function editPurchase(id) {
+    const purchase = purchasesData.find(p => p.id === id);
+    if (purchase) {
+        // Show confirmation
+        if (confirm(currentLanguage === 'ar' ?
+            `هل تريد تعديل الفاتورة ${purchase.invoice_number}؟` :
+            `Do you want to edit invoice ${purchase.invoice_number}?`)) {
+
+            // Here you would typically open the edit modal
+            // For now, we'll show a placeholder
+            showToast(
+                currentLanguage === 'ar' ?
+                `سيتم فتح نافذة تعديل الفاتورة ${purchase.invoice_number}` :
+                `Edit window for invoice ${purchase.invoice_number} will open`,
+                'info'
+            );
+        }
+    }
+}
+
+function printPurchase(id) {
+    const purchase = purchasesData.find(p => p.id === id);
+    if (purchase) {
+        // Generate print content
+        const printContent = generatePrintContent(purchase);
+
+        // Open print window
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+        printWindow.print();
+    }
+}
+
+function deletePurchase(id) {
+    if (confirm(currentLanguage === 'ar' ? 'هل تريد حذف هذه الفاتورة؟' : 'Are you sure you want to delete this invoice?')) {
+        purchasesData = purchasesData.filter(p => p.id !== id);
+        updatePurchasesTable();
+        updateSummaryCards();
+        alert(currentLanguage === 'ar' ? 'تم حذف الفاتورة' : 'Invoice deleted');
+    }
+}
+
+// Generate print content
+function generatePrintContent(purchase) {
+    return `
+        <!DOCTYPE html>
+        <html dir="rtl" lang="ar">
+        <head>
+            <meta charset="UTF-8">
+            <title>فاتورة مشتريات - ${purchase.invoice_number}</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .header { text-align: center; margin-bottom: 30px; }
+                .invoice-info { margin-bottom: 20px; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
+                th { background-color: #f2f2f2; }
+                .total-row { font-weight: bold; background-color: #f9f9f9; }
+                .barcode { text-align: center; margin: 20px 0; font-family: monospace; font-size: 24px; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>فاتورة مشتريات</h1>
+                <h2>Purchase Invoice</h2>
+            </div>
+
+            <div class="invoice-info">
+                <p><strong>رقم الفاتورة:</strong> ${purchase.invoice_number}</p>
+                <p><strong>التاريخ:</strong> ${formatDate(purchase.date)}</p>
+                <p><strong>المورد:</strong> ${purchase.supplier_name}</p>
+                <p><strong>طريقة الدفع:</strong> ${getPaymentMethodText(purchase.payment_method)}</p>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>المنتج</th>
+                        <th>الكمية</th>
+                        <th>الوحدة</th>
+                        <th>سعر الوحدة</th>
+                        <th>الإجمالي</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${purchase.items.map(item => `
+                        <tr>
+                            <td>${item.product_name}</td>
+                            <td>${item.quantity}</td>
+                            <td>${item.unit}</td>
+                            <td>${formatCurrency(item.unit_price)}</td>
+                            <td>${formatCurrency(item.total)}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4"><strong>المجموع قبل الضريبة:</strong></td>
+                        <td><strong>${formatCurrency(purchase.subtotal)}</strong></td>
+                    </tr>
+                    <tr>
+                        <td colspan="4"><strong>ضريبة القيمة المضافة (15%):</strong></td>
+                        <td><strong>${formatCurrency(purchase.vat_amount)}</strong></td>
+                    </tr>
+                    <tr class="total-row">
+                        <td colspan="4"><strong>الإجمالي النهائي:</strong></td>
+                        <td><strong>${formatCurrency(purchase.total)}</strong></td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <div class="barcode">
+                <p>||||| ${purchase.invoice_number} |||||</p>
+            </div>
+
+            <div style="margin-top: 50px;">
+                <p>التوقيع: ________________</p>
+                <p>التاريخ: ${new Date().toLocaleDateString('ar-SA')}</p>
+            </div>
+        </body>
+        </html>
+    `;
+}
+
+// Filter and export functions
+function filterPurchases() {
+    const fromDate = document.getElementById('from-date').value;
+    const toDate = document.getElementById('to-date').value;
+    const supplier = document.getElementById('filter-supplier').value;
+    const status = document.getElementById('filter-status').value;
+
+    console.log('Filtering purchases:', { fromDate, toDate, supplier, status });
+
+    let filteredData = [...purchasesData];
+
+    // Filter by date
+    if (fromDate) {
+        filteredData = filteredData.filter(p => p.date >= fromDate);
+    }
+    if (toDate) {
+        filteredData = filteredData.filter(p => p.date <= toDate);
+    }
+
+    // Filter by supplier
+    if (supplier !== 'all') {
+        filteredData = filteredData.filter(p => p.supplier_id == supplier);
+    }
+
+    // Filter by status
+    if (status !== 'all') {
+        filteredData = filteredData.filter(p => p.status === status);
+    }
+
+    // Update display with filtered data
+    const originalData = purchasesData;
+    purchasesData = filteredData;
+    updatePurchasesTable();
+    updateSummaryCards();
+    purchasesData = originalData;
+
+    showToast(
+        currentLanguage === 'ar' ?
+        `تم العثور على ${filteredData.length} فاتورة` :
+        `Found ${filteredData.length} invoices`,
+        'info'
+    );
+}
+
+function clearFilters() {
+    document.getElementById('from-date').value = '';
+    document.getElementById('to-date').value = '';
+    document.getElementById('filter-supplier').value = 'all';
+    document.getElementById('filter-status').value = 'all';
+
+    // Reset display
+    updatePurchasesTable();
+    updateSummaryCards();
+
+    showToast(
+        currentLanguage === 'ar' ? 'تم مسح الفلاتر' : 'Filters cleared',
+        'success'
+    );
+}
+
+function exportPurchases() {
+    if (purchasesData.length === 0) {
+        alert(currentLanguage === 'ar' ? 'لا توجد بيانات للتصدير' : 'No data to export');
+        return;
+    }
+
+    // Show loading
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + (currentLanguage === 'ar' ? 'جاري التصدير...' : 'Exporting...');
+    btn.disabled = true;
+
+    setTimeout(() => {
+        // Generate CSV data
+        const csvData = generatePurchasesCSV();
+
+        // Create download link
+        const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `purchases_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        // Restore button
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+
+        showToast(
+            currentLanguage === 'ar' ? 'تم تصدير المشتريات بنجاح' : 'Purchases exported successfully',
+            'success'
+        );
+    }, 1500);
+}
+
+function generatePurchaseReport() {
+    if (purchasesData.length === 0) {
+        alert(currentLanguage === 'ar' ? 'لا توجد بيانات لإنشاء التقرير' : 'No data to generate report');
+        return;
+    }
+
+    // Show loading
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + (currentLanguage === 'ar' ? 'جاري الإنشاء...' : 'Generating...');
+    btn.disabled = true;
+
+    setTimeout(() => {
+        // Generate report
+        const reportContent = generatePurchaseReportContent();
+
+        // Open in new window
+        const reportWindow = window.open('', '_blank');
+        reportWindow.document.write(reportContent);
+        reportWindow.document.close();
+
+        // Restore button
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+
+        showToast(
+            currentLanguage === 'ar' ? 'تم إنشاء التقرير بنجاح' : 'Report generated successfully',
+            'success'
+        );
+    }, 2000);
+}
+
+// Helper functions for purchases
+function generatePurchasesCSV() {
+    let csv = '\uFEFF'; // BOM for UTF-8
+    csv += 'رقم الفاتورة,التاريخ,المورد,المبلغ قبل الضريبة,الضريبة,الإجمالي,طريقة الدفع,الحالة\n';
+
+    purchasesData.forEach(purchase => {
+        csv += `"${purchase.invoice_number}",`;
+        csv += `"${formatDate(purchase.date)}",`;
+        csv += `"${purchase.supplier_name}",`;
+        csv += `"${purchase.subtotal}",`;
+        csv += `"${purchase.vat_amount}",`;
+        csv += `"${purchase.total}",`;
+        csv += `"${getPaymentMethodText(purchase.payment_method)}",`;
+        csv += `"${getStatusText(purchase.status)}"\n`;
+    });
+
+    return csv;
+}
+
+function generatePurchaseReportContent() {
+    const totalPurchases = purchasesData.reduce((sum, p) => sum + p.total, 0);
+    const paidPurchases = purchasesData.filter(p => p.status === 'paid').reduce((sum, p) => sum + p.total, 0);
+    const pendingPurchases = purchasesData.filter(p => p.status === 'pending').reduce((sum, p) => sum + p.total, 0);
+
+    return `
+        <!DOCTYPE html>
+        <html dir="rtl" lang="ar">
+        <head>
+            <meta charset="UTF-8">
+            <title>تقرير المشتريات</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; direction: rtl; }
+                .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
+                .summary { background: #f9f9f9; padding: 20px; margin-bottom: 30px; border-radius: 5px; }
+                .summary-item { display: flex; justify-content: space-between; margin-bottom: 10px; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
+                th { background-color: #f2f2f2; font-weight: bold; }
+                .status-paid { color: green; font-weight: bold; }
+                .status-pending { color: orange; font-weight: bold; }
+                .total-row { background-color: #e8f4f8; font-weight: bold; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>تقرير المشتريات</h1>
+                <p>تاريخ الإنشاء: ${new Date().toLocaleDateString('ar-SA')}</p>
+                <p>عدد الفواتير: ${purchasesData.length}</p>
+            </div>
+
+            <div class="summary">
+                <h3>ملخص المشتريات</h3>
+                <div class="summary-item">
+                    <span>إجمالي المشتريات:</span>
+                    <span>${formatCurrency(totalPurchases)}</span>
+                </div>
+                <div class="summary-item">
+                    <span>المدفوع:</span>
+                    <span>${formatCurrency(paidPurchases)}</span>
+                </div>
+                <div class="summary-item">
+                    <span>المستحق:</span>
+                    <span>${formatCurrency(pendingPurchases)}</span>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>رقم الفاتورة</th>
+                        <th>التاريخ</th>
+                        <th>المورد</th>
+                        <th>المبلغ قبل الضريبة</th>
+                        <th>الضريبة</th>
+                        <th>الإجمالي</th>
+                        <th>طريقة الدفع</th>
+                        <th>الحالة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${purchasesData.map(purchase => `
+                        <tr>
+                            <td>${purchase.invoice_number}</td>
+                            <td>${formatDate(purchase.date)}</td>
+                            <td>${purchase.supplier_name}</td>
+                            <td>${formatCurrency(purchase.subtotal)}</td>
+                            <td>${formatCurrency(purchase.vat_amount)}</td>
+                            <td><strong>${formatCurrency(purchase.total)}</strong></td>
+                            <td>${getPaymentMethodText(purchase.payment_method)}</td>
+                            <td class="status-${purchase.status}">${getStatusText(purchase.status)}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td colspan="5"><strong>الإجمالي:</strong></td>
+                        <td><strong>${formatCurrency(totalPurchases)}</strong></td>
+                        <td colspan="2"></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </body>
+        </html>
+    `;
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type} border-0 position-fixed`;
+    toast.style.cssText = 'top: 20px; left: 20px; z-index: 9999;';
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
+                ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+
+    document.body.appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+
+    toast.addEventListener('hidden.bs.toast', function() {
+        document.body.removeChild(toast);
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,682 @@
+{% extends "base_simple.html" %}
+
+{% block title %}
+    {% if session.get('language', 'ar') == 'ar' %}
+        التقارير المالية المتقدمة
+    {% else %}
+        Advanced Financial Reports
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            {% if session.get('language', 'ar') == 'ar' %}
+                <i class="fas fa-chart-line"></i> التقارير المالية المتقدمة
+            {% else %}
+                <i class="fas fa-chart-line"></i> Advanced Financial Reports
+            {% endif %}
+        </h1>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-primary" onclick="generateReport()">
+                {% if session.get('language', 'ar') == 'ar' %}
+                    <i class="fas fa-sync-alt"></i> تحديث التقرير
+                {% else %}
+                    <i class="fas fa-sync-alt"></i> Refresh Report
+                {% endif %}
+            </button>
+            <button type="button" class="btn btn-success" onclick="exportToPDF()">
+                {% if session.get('language', 'ar') == 'ar' %}
+                    <i class="fas fa-file-pdf"></i> تصدير PDF
+                {% else %}
+                    <i class="fas fa-file-pdf"></i> Export PDF
+                {% endif %}
+            </button>
+            <button type="button" class="btn btn-info" onclick="exportToExcel()">
+                {% if session.get('language', 'ar') == 'ar' %}
+                    <i class="fas fa-file-excel"></i> تصدير Excel
+                {% else %}
+                    <i class="fas fa-file-excel"></i> Export Excel
+                {% endif %}
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="printReport()">
+                {% if session.get('language', 'ar') == 'ar' %}
+                    <i class="fas fa-print"></i> طباعة
+                {% else %}
+                    <i class="fas fa-print"></i> Print
+                {% endif %}
+            </button>
+        </div>
+    </div>
+
+    <!-- Report Filters -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-filter me-2"></i>
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            فلاتر التقرير
+                        {% else %}
+                            Report Filters
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}الفترة الزمنية{% else %}Time Period{% endif %}
+                            </label>
+                            <select class="form-select" id="period-type" onchange="toggleCustomDates()">
+                                <option value="daily">
+                                    {% if session.get('language', 'ar') == 'ar' %}تقرير يومي{% else %}Daily Report{% endif %}
+                                </option>
+                                <option value="weekly">
+                                    {% if session.get('language', 'ar') == 'ar' %}تقرير أسبوعي{% else %}Weekly Report{% endif %}
+                                </option>
+                                <option value="monthly" selected>
+                                    {% if session.get('language', 'ar') == 'ar' %}تقرير شهري{% else %}Monthly Report{% endif %}
+                                </option>
+                                <option value="yearly">
+                                    {% if session.get('language', 'ar') == 'ar' %}تقرير سنوي{% else %}Yearly Report{% endif %}
+                                </option>
+                                <option value="custom">
+                                    {% if session.get('language', 'ar') == 'ar' %}فترة مخصصة{% else %}Custom Period{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-2" id="from-date-container">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}من تاريخ{% else %}From Date{% endif %}
+                            </label>
+                            <input type="date" class="form-control" id="from-date" value="2025-08-01">
+                        </div>
+                        <div class="col-md-2" id="to-date-container">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}إلى تاريخ{% else %}To Date{% endif %}
+                            </label>
+                            <input type="date" class="form-control" id="to-date" value="2025-08-31">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}نوع التقرير{% else %}Report Type{% endif %}
+                            </label>
+                            <select class="form-select" id="report-type">
+                                <option value="all">
+                                    {% if session.get('language', 'ar') == 'ar' %}تقرير شامل{% else %}Comprehensive Report{% endif %}
+                                </option>
+                                <option value="sales">
+                                    {% if session.get('language', 'ar') == 'ar' %}المبيعات فقط{% else %}Sales Only{% endif %}
+                                </option>
+                                <option value="purchases">
+                                    {% if session.get('language', 'ar') == 'ar' %}المشتريات فقط{% else %}Purchases Only{% endif %}
+                                </option>
+                                <option value="expenses">
+                                    {% if session.get('language', 'ar') == 'ar' %}المصروفات فقط{% else %}Expenses Only{% endif %}
+                                </option>
+                                <option value="salaries">
+                                    {% if session.get('language', 'ar') == 'ar' %}الرواتب فقط{% else %}Salaries Only{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}طريقة الدفع{% else %}Payment Method{% endif %}
+                            </label>
+                            <select class="form-select" id="payment-method">
+                                <option value="all">
+                                    {% if session.get('language', 'ar') == 'ar' %}جميع الطرق{% else %}All Methods{% endif %}
+                                </option>
+                                <option value="CASH">
+                                    {% if session.get('language', 'ar') == 'ar' %}نقدي{% else %}Cash{% endif %}
+                                </option>
+                                <option value="MADA">مدى - MADA</option>
+                                <option value="VISA">فيزا - VISA</option>
+                                <option value="MASTERCARD">ماستركارد - MASTERCARD</option>
+                                <option value="BANK">
+                                    {% if session.get('language', 'ar') == 'ar' %}تحويل بنكي{% else %}Bank Transfer{% endif %}
+                                </option>
+                                <option value="CREDIT">
+                                    {% if session.get('language', 'ar') == 'ar' %}آجل{% else %}Credit{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="button" class="btn btn-primary w-100" onclick="generateReport()">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Summary -->
+    <div class="row mb-4" id="report-summary" style="display: none;">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            ملخص التقرير
+                        {% else %}
+                            Report Summary
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-2">
+                            <div class="text-center p-3 bg-success text-white rounded">
+                                <h6 class="mb-1">
+                                    {% if session.get('language', 'ar') == 'ar' %}إجمالي المبيعات{% else %}Total Sales{% endif %}
+                                </h6>
+                                <h4 class="mb-0" id="total-sales">0.00 ريال</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="text-center p-3 bg-warning text-dark rounded">
+                                <h6 class="mb-1">
+                                    {% if session.get('language', 'ar') == 'ar' %}إجمالي المشتريات{% else %}Total Purchases{% endif %}
+                                </h6>
+                                <h4 class="mb-0" id="total-purchases">0.00 ريال</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="text-center p-3 bg-danger text-white rounded">
+                                <h6 class="mb-1">
+                                    {% if session.get('language', 'ar') == 'ar' %}إجمالي المصروفات{% else %}Total Expenses{% endif %}
+                                </h6>
+                                <h4 class="mb-0" id="total-expenses">0.00 ريال</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="text-center p-3 bg-secondary text-white rounded">
+                                <h6 class="mb-1">
+                                    {% if session.get('language', 'ar') == 'ar' %}إجمالي الرواتب{% else %}Total Salaries{% endif %}
+                                </h6>
+                                <h4 class="mb-0" id="total-salaries">0.00 ريال</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="text-center p-3 bg-primary text-white rounded">
+                                <h6 class="mb-1">
+                                    {% if session.get('language', 'ar') == 'ar' %}ضريبة القيمة المضافة{% else %}VAT{% endif %}
+                                </h6>
+                                <h4 class="mb-0" id="total-vat">0.00 ريال</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="text-center p-3 bg-dark text-white rounded">
+                                <h6 class="mb-1">
+                                    {% if session.get('language', 'ar') == 'ar' %}صافي الربح/الخسارة{% else %}Net Profit/Loss{% endif %}
+                                </h6>
+                                <h4 class="mb-0" id="net-profit">0.00 ريال</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Description -->
+    <div class="row mb-4" id="report-description" style="display: none;">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-file-alt me-2"></i>
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            ملخص تنفيذي
+                        {% else %}
+                            Executive Summary
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="lead" id="report-text"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Table -->
+    <div class="row mb-4" id="report-table-container" style="display: none;">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-table me-2"></i>
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            تفاصيل التقرير
+                        {% else %}
+                            Report Details
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0" id="report-table">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>
+                                        {% if session.get('language', 'ar') == 'ar' %}التاريخ{% else %}Date{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if session.get('language', 'ar') == 'ar' %}نوع العملية{% else %}Operation Type{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if session.get('language', 'ar') == 'ar' %}اسم الحساب{% else %}Account Name{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if session.get('language', 'ar') == 'ar' %}رقم العملية{% else %}Operation Number{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if session.get('language', 'ar') == 'ar' %}المبلغ{% else %}Amount{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if session.get('language', 'ar') == 'ar' %}طريقة الدفع{% else %}Payment Method{% endif %}
+                                    </th>
+                                    <th>
+                                        {% if session.get('language', 'ar') == 'ar' %}الحالة{% else %}Status{% endif %}
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="report-tbody">
+                                <!-- Report data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Global variables
+let reportData = [];
+let currentLanguage = '{{ session.get("language", "ar") }}';
+
+// Initialize page
+$(document).ready(function() {
+    toggleCustomDates();
+    generateReport();
+});
+
+// Toggle custom date inputs based on period type
+function toggleCustomDates() {
+    const periodType = document.getElementById('period-type').value;
+    const fromContainer = document.getElementById('from-date-container');
+    const toContainer = document.getElementById('to-date-container');
+
+    if (periodType === 'custom') {
+        fromContainer.style.display = 'block';
+        toContainer.style.display = 'block';
+    } else {
+        fromContainer.style.display = 'none';
+        toContainer.style.display = 'none';
+
+        // Set dates based on period type
+        const today = new Date();
+        let fromDate, toDate;
+
+        switch (periodType) {
+            case 'daily':
+                fromDate = toDate = today.toISOString().split('T')[0];
+                break;
+            case 'weekly':
+                const weekStart = new Date(today.setDate(today.getDate() - today.getDay()));
+                const weekEnd = new Date(today.setDate(today.getDate() - today.getDay() + 6));
+                fromDate = weekStart.toISOString().split('T')[0];
+                toDate = weekEnd.toISOString().split('T')[0];
+                break;
+            case 'monthly':
+                const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+                const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                fromDate = monthStart.toISOString().split('T')[0];
+                toDate = monthEnd.toISOString().split('T')[0];
+                break;
+            case 'yearly':
+                const yearStart = new Date(today.getFullYear(), 0, 1);
+                const yearEnd = new Date(today.getFullYear(), 11, 31);
+                fromDate = yearStart.toISOString().split('T')[0];
+                toDate = yearEnd.toISOString().split('T')[0];
+                break;
+        }
+
+        document.getElementById('from-date').value = fromDate;
+        document.getElementById('to-date').value = toDate;
+    }
+}
+
+// Generate report
+function generateReport() {
+    const periodType = document.getElementById('period-type').value;
+    const fromDate = document.getElementById('from-date').value;
+    const toDate = document.getElementById('to-date').value;
+    const reportType = document.getElementById('report-type').value;
+    const paymentMethod = document.getElementById('payment-method').value;
+
+    // Show loading
+    showLoading();
+
+    // Generate sample data
+    generateSampleData(fromDate, toDate, reportType, paymentMethod);
+
+    // Update display
+    updateReportDisplay();
+
+    // Show report sections
+    document.getElementById('report-summary').style.display = 'block';
+    document.getElementById('report-description').style.display = 'block';
+    document.getElementById('report-table-container').style.display = 'block';
+
+    hideLoading();
+}
+
+// Generate sample data
+function generateSampleData(fromDate, toDate, reportType, paymentMethod) {
+    reportData = [];
+
+    // Sample transactions
+    const sampleTransactions = [
+        {
+            date: '2025-08-01',
+            type: 'sales',
+            account: 'مبيعات المطعم',
+            account_en: 'Restaurant Sales',
+            operation_number: 'INV-001',
+            amount: 1500.00,
+            payment_method: 'CASH',
+            status: 'paid'
+        },
+        {
+            date: '2025-08-01',
+            type: 'sales',
+            account: 'مبيعات المطعم',
+            account_en: 'Restaurant Sales',
+            operation_number: 'INV-002',
+            amount: 2300.00,
+            payment_method: 'MADA',
+            status: 'paid'
+        },
+        {
+            date: '2025-08-02',
+            type: 'purchases',
+            account: 'مشتريات الخضار',
+            account_en: 'Vegetable Purchases',
+            operation_number: 'PUR-001',
+            amount: 800.00,
+            payment_method: 'CASH',
+            status: 'paid'
+        },
+        {
+            date: '2025-08-02',
+            type: 'expenses',
+            account: 'فاتورة الكهرباء',
+            account_en: 'Electricity Bill',
+            operation_number: 'EXP-001',
+            amount: 450.00,
+            payment_method: 'BANK',
+            status: 'paid'
+        },
+        {
+            date: '2025-08-03',
+            type: 'salaries',
+            account: 'راتب أحمد محمد',
+            account_en: 'Ahmed Mohammed Salary',
+            operation_number: 'SAL-001',
+            amount: 3500.00,
+            payment_method: 'BANK',
+            status: 'paid'
+        },
+        {
+            date: '2025-08-03',
+            type: 'salaries',
+            account: 'راتب فاطمة علي',
+            account_en: 'Fatima Ali Salary',
+            operation_number: 'SAL-002',
+            amount: 3200.00,
+            payment_method: 'BANK',
+            status: 'pending'
+        },
+        {
+            date: '2025-08-04',
+            type: 'sales',
+            account: 'مبيعات المطعم',
+            account_en: 'Restaurant Sales',
+            operation_number: 'INV-003',
+            amount: 1800.00,
+            payment_method: 'VISA',
+            status: 'paid'
+        },
+        {
+            date: '2025-08-05',
+            type: 'purchases',
+            account: 'مشتريات اللحوم',
+            account_en: 'Meat Purchases',
+            operation_number: 'PUR-002',
+            amount: 1200.00,
+            payment_method: 'CREDIT',
+            status: 'pending'
+        }
+    ];
+
+    // Filter data based on criteria
+    reportData = sampleTransactions.filter(transaction => {
+        const transactionDate = new Date(transaction.date);
+        const from = new Date(fromDate);
+        const to = new Date(toDate);
+
+        // Date filter
+        if (transactionDate < from || transactionDate > to) {
+            return false;
+        }
+
+        // Report type filter
+        if (reportType !== 'all' && transaction.type !== reportType) {
+            return false;
+        }
+
+        // Payment method filter
+        if (paymentMethod !== 'all' && transaction.payment_method !== paymentMethod) {
+            return false;
+        }
+
+        return true;
+    });
+}
+
+// Update report display
+function updateReportDisplay() {
+    // Calculate totals
+    let totalSales = 0;
+    let totalPurchases = 0;
+    let totalExpenses = 0;
+    let totalSalaries = 0;
+    let totalVAT = 0;
+
+    reportData.forEach(transaction => {
+        const amount = transaction.amount;
+
+        switch (transaction.type) {
+            case 'sales':
+                totalSales += amount;
+                totalVAT += amount * 0.15; // 15% VAT
+                break;
+            case 'purchases':
+                totalPurchases += amount;
+                break;
+            case 'expenses':
+                totalExpenses += amount;
+                break;
+            case 'salaries':
+                totalSalaries += amount;
+                break;
+        }
+    });
+
+    const netProfit = totalSales - (totalPurchases + totalExpenses + totalSalaries);
+
+    // Update summary cards
+    document.getElementById('total-sales').textContent = formatCurrency(totalSales);
+    document.getElementById('total-purchases').textContent = formatCurrency(totalPurchases);
+    document.getElementById('total-expenses').textContent = formatCurrency(totalExpenses);
+    document.getElementById('total-salaries').textContent = formatCurrency(totalSalaries);
+    document.getElementById('total-vat').textContent = formatCurrency(totalVAT);
+    document.getElementById('net-profit').textContent = formatCurrency(netProfit);
+
+    // Update net profit color
+    const netProfitElement = document.getElementById('net-profit').parentElement;
+    if (netProfit >= 0) {
+        netProfitElement.className = 'text-center p-3 bg-success text-white rounded';
+    } else {
+        netProfitElement.className = 'text-center p-3 bg-danger text-white rounded';
+    }
+
+    // Generate report text
+    generateReportText(totalSales, totalPurchases, totalExpenses, totalSalaries, netProfit);
+
+    // Update table
+    updateReportTable();
+}
+
+// Generate report text
+function generateReportText(sales, purchases, expenses, salaries, netProfit) {
+    const fromDate = document.getElementById('from-date').value;
+    const toDate = document.getElementById('to-date').value;
+
+    let reportText = '';
+
+    if (currentLanguage === 'ar') {
+        reportText = `خلال الفترة من ${formatDate(fromDate)} إلى ${formatDate(toDate)}، بلغت المبيعات ${formatCurrency(sales)}، والمشتريات ${formatCurrency(purchases)}، والمصروفات العامة ${formatCurrency(expenses)}، والرواتب المدفوعة ${formatCurrency(salaries)}، ليكون صافي ${netProfit >= 0 ? 'الربح' : 'الخسارة'} ${formatCurrency(Math.abs(netProfit))}.`;
+    } else {
+        reportText = `Between ${formatDate(fromDate)} and ${formatDate(toDate)}, total sales reached ${formatCurrency(sales)}, purchases were ${formatCurrency(purchases)}, general expenses ${formatCurrency(expenses)}, and salaries paid ${formatCurrency(salaries)}, resulting in a net ${netProfit >= 0 ? 'profit' : 'loss'} of ${formatCurrency(Math.abs(netProfit))}.`;
+    }
+
+    document.getElementById('report-text').textContent = reportText;
+}
+
+// Update report table
+function updateReportTable() {
+    const tbody = document.getElementById('report-tbody');
+    tbody.innerHTML = '';
+
+    reportData.forEach(transaction => {
+        const row = document.createElement('tr');
+
+        const typeText = getTypeText(transaction.type);
+        const accountName = currentLanguage === 'ar' ? transaction.account : transaction.account_en;
+        const statusText = getStatusText(transaction.status);
+        const paymentMethodText = getPaymentMethodText(transaction.payment_method);
+
+        row.innerHTML = `
+            <td>${formatDate(transaction.date)}</td>
+            <td><span class="badge bg-${getTypeBadgeColor(transaction.type)}">${typeText}</span></td>
+            <td>${accountName}</td>
+            <td>${transaction.operation_number}</td>
+            <td class="text-end">${formatCurrency(transaction.amount)}</td>
+            <td><span class="badge bg-info">${paymentMethodText}</span></td>
+            <td><span class="badge bg-${getStatusBadgeColor(transaction.status)}">${statusText}</span></td>
+        `;
+
+        tbody.appendChild(row);
+    });
+}
+
+// Helper functions
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('ar-SA', {
+        style: 'currency',
+        currency: 'SAR',
+        minimumFractionDigits: 2
+    }).format(amount).replace('SAR', 'ريال');
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    if (currentLanguage === 'ar') {
+        return date.toLocaleDateString('ar-SA');
+    } else {
+        return date.toLocaleDateString('en-US');
+    }
+}
+
+function getTypeText(type) {
+    const types = {
+        'sales': currentLanguage === 'ar' ? 'مبيعات' : 'Sales',
+        'purchases': currentLanguage === 'ar' ? 'مشتريات' : 'Purchases',
+        'expenses': currentLanguage === 'ar' ? 'مصروفات' : 'Expenses',
+        'salaries': currentLanguage === 'ar' ? 'رواتب' : 'Salaries'
+    };
+    return types[type] || type;
+}
+
+function getStatusText(status) {
+    const statuses = {
+        'paid': currentLanguage === 'ar' ? 'مدفوعة' : 'Paid',
+        'pending': currentLanguage === 'ar' ? 'مستحقة' : 'Pending'
+    };
+    return statuses[status] || status;
+}
+
+function getPaymentMethodText(method) {
+    const methods = {
+        'CASH': currentLanguage === 'ar' ? 'نقدي' : 'Cash',
+        'MADA': 'مدى',
+        'VISA': 'فيزا',
+        'MASTERCARD': 'ماستركارد',
+        'BANK': currentLanguage === 'ar' ? 'تحويل بنكي' : 'Bank Transfer',
+        'CREDIT': currentLanguage === 'ar' ? 'آجل' : 'Credit'
+    };
+    return methods[method] || method;
+}
+
+function getTypeBadgeColor(type) {
+    const colors = {
+        'sales': 'success',
+        'purchases': 'warning',
+        'expenses': 'danger',
+        'salaries': 'secondary'
+    };
+    return colors[type] || 'primary';
+}
+
+function getStatusBadgeColor(status) {
+    return status === 'paid' ? 'success' : 'warning';
+}
+
+// Export functions
+function exportToPDF() {
+    alert(currentLanguage === 'ar' ? 'سيتم تصدير التقرير إلى PDF' : 'Report will be exported to PDF');
+}
+
+function exportToExcel() {
+    alert(currentLanguage === 'ar' ? 'سيتم تصدير التقرير إلى Excel' : 'Report will be exported to Excel');
+}
+
+function printReport() {
+    window.print();
+}
+
+// Loading functions
+function showLoading() {
+    // Add loading spinner if needed
+}
+
+function hideLoading() {
+    // Remove loading spinner if needed
+}
+</script>
+{% endblock %}

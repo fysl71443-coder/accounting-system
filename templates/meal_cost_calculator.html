@@ -1,0 +1,964 @@
+{% extends "base_simple.html" %}
+
+{% block title %}
+    {% if session.get('language', 'ar') == 'ar' %}
+        حساب تكلفة الوجبات
+    {% else %}
+        Meal Cost Calculator
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            {% if session.get('language', 'ar') == 'ar' %}
+                <i class="fas fa-utensils"></i> حساب تكلفة الوجبات
+            {% else %}
+                <i class="fas fa-utensils"></i> Meal Cost Calculator
+            {% endif %}
+        </h1>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-primary" onclick="calculateMealCost()">
+                {% if session.get('language', 'ar') == 'ar' %}
+                    <i class="fas fa-calculator"></i> احسب التكلفة
+                {% else %}
+                    <i class="fas fa-calculator"></i> Calculate Cost
+                {% endif %}
+            </button>
+            <button type="button" class="btn btn-success" onclick="saveMealCost()">
+                {% if session.get('language', 'ar') == 'ar' %}
+                    <i class="fas fa-save"></i> حفظ التكاليف
+                {% else %}
+                    <i class="fas fa-save"></i> Save Costs
+                {% endif %}
+            </button>
+            <button type="button" class="btn btn-warning" onclick="updatePrices()">
+                {% if session.get('language', 'ar') == 'ar' %}
+                    <i class="fas fa-sync-alt"></i> تحديث الأسعار
+                {% else %}
+                    <i class="fas fa-sync-alt"></i> Update Prices
+                {% endif %}
+            </button>
+            <button type="button" class="btn btn-info" onclick="printMealCost()">
+                {% if session.get('language', 'ar') == 'ar' %}
+                    <i class="fas fa-print"></i> طباعة
+                {% else %}
+                    <i class="fas fa-print"></i> Print
+                {% endif %}
+            </button>
+        </div>
+    </div>
+
+    <!-- Meal Selection Section -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-utensils me-2"></i>
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            اختيار الوجبة
+                        {% else %}
+                            Meal Selection
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}اسم الوجبة{% else %}Meal Name{% endif %}
+                            </label>
+                            <div class="input-group">
+                                <select class="form-select" id="meal-select" onchange="loadMealData()">
+                                    <option value="">
+                                        {% if session.get('language', 'ar') == 'ar' %}اختر الوجبة...{% else %}Select Meal...{% endif %}
+                                    </option>
+                                    {% for meal in meals %}
+                                    <option value="{{ meal.id }}" data-name="{{ meal.name }}" data-servings="{{ meal.servings }}">
+                                        {{ meal.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <button class="btn btn-outline-secondary" type="button" onclick="addNewMeal()">
+                                    <i class="fas fa-plus"></i>
+                                    {% if session.get('language', 'ar') == 'ar' %}جديد{% else %}New{% endif %}
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}عدد الحصص{% else %}Number of Servings{% endif %}
+                            </label>
+                            <input type="number" class="form-control" id="servings-count" value="1" min="1" onchange="calculateMealCost()">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}تكلفة الحصة الواحدة{% else %}Cost per Serving{% endif %}
+                            </label>
+                            <input type="text" class="form-control" id="cost-per-serving" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ingredients Table Section -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            مكونات الوجبة
+                        {% else %}
+                            Meal Ingredients
+                        {% endif %}
+                    </h5>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-light btn-sm" onclick="addIngredient()">
+                            <i class="fas fa-plus"></i>
+                            {% if session.get('language', 'ar') == 'ar' %}إضافة مكون{% else %}Add Ingredient{% endif %}
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="manageIngredients()">
+                            <i class="fas fa-cog"></i>
+                            {% if session.get('language', 'ar') == 'ar' %}إدارة المكونات{% else %}Manage Ingredients{% endif %}
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0" id="ingredients-table">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 25%">
+                                        {% if session.get('language', 'ar') == 'ar' %}اسم المكون{% else %}Ingredient Name{% endif %}
+                                    </th>
+                                    <th style="width: 10%">
+                                        {% if session.get('language', 'ar') == 'ar' %}الوحدة{% else %}Unit{% endif %}
+                                    </th>
+                                    <th style="width: 15%">
+                                        {% if session.get('language', 'ar') == 'ar' %}الكمية المستخدمة{% else %}Quantity Used{% endif %}
+                                    </th>
+                                    <th style="width: 15%">
+                                        {% if session.get('language', 'ar') == 'ar' %}سعر الوحدة{% else %}Unit Price{% endif %}
+                                    </th>
+                                    <th style="width: 10%">
+                                        {% if session.get('language', 'ar') == 'ar' %}النسبة %{% else %}Percentage %{% endif %}
+                                    </th>
+                                    <th style="width: 15%">
+                                        {% if session.get('language', 'ar') == 'ar' %}التكلفة الجزئية{% else %}Partial Cost{% endif %}
+                                    </th>
+                                    <th style="width: 10%">
+                                        {% if session.get('language', 'ar') == 'ar' %}إجراءات{% else %}Actions{% endif %}
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="ingredients-tbody">
+                                <!-- Ingredients rows will be added here dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cost Summary Section -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calculator me-2"></i>
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            ملخص التكاليف
+                        {% else %}
+                            Cost Summary
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center p-3 bg-light rounded">
+                                <h6 class="text-muted mb-1">
+                                    {% if session.get('language', 'ar') == 'ar' %}إجمالي تكلفة المواد{% else %}Total Material Cost{% endif %}
+                                </h6>
+                                <h4 class="text-primary mb-0" id="total-material-cost">0.00 ريال</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center p-3 bg-light rounded">
+                                <h6 class="text-muted mb-1">
+                                    {% if session.get('language', 'ar') == 'ar' %}تكلفة العمالة{% else %}Labor Cost{% endif %}
+                                </h6>
+                                <div class="input-group input-group-sm">
+                                    <input type="number" class="form-control text-center" id="labor-cost" value="0" step="0.01" onchange="calculateMealCost()">
+                                    <span class="input-group-text">ريال</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center p-3 bg-light rounded">
+                                <h6 class="text-muted mb-1">
+                                    {% if session.get('language', 'ar') == 'ar' %}هامش الربح %{% else %}Profit Margin %{% endif %}
+                                </h6>
+                                <div class="input-group input-group-sm">
+                                    <input type="number" class="form-control text-center" id="profit-margin" value="30" min="0" max="100" onchange="calculateMealCost()">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center p-3 bg-success text-white rounded">
+                                <h6 class="mb-1">
+                                    {% if session.get('language', 'ar') == 'ar' %}إجمالي تكلفة الوجبة{% else %}Total Meal Cost{% endif %}
+                                </h6>
+                                <h4 class="mb-0" id="total-meal-cost">0.00 ريال</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Suggested Selling Price Section -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-tag me-2"></i>
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            السعر المقترح للبيع
+                        {% else %}
+                            Suggested Selling Price
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <small class="text-muted">
+                                        {% if session.get('language', 'ar') == 'ar' %}تكلفة الوجبة{% else %}Meal Cost{% endif %}
+                                    </small>
+                                    <div class="h5" id="breakdown-meal-cost">0.00 ريال</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted">
+                                        {% if session.get('language', 'ar') == 'ar' %}هامش الربح{% else %}Profit Margin{% endif %}
+                                    </small>
+                                    <div class="h5" id="breakdown-profit">0.00 ريال</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted">
+                                        {% if session.get('language', 'ar') == 'ar' %}السعر النهائي{% else %}Final Price{% endif %}
+                                    </small>
+                                    <div class="h5 text-success" id="suggested-price">0.00 ريال</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <button type="button" class="btn btn-outline-success btn-lg" onclick="applySuggestedPrice()">
+                                <i class="fas fa-check"></i>
+                                {% if session.get('language', 'ar') == 'ar' %}تطبيق السعر{% else %}Apply Price{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add New Meal Modal -->
+<div class="modal fade" id="newMealModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {% if session.get('language', 'ar') == 'ar' %}إضافة وجبة جديدة{% else %}Add New Meal{% endif %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">
+                        {% if session.get('language', 'ar') == 'ar' %}اسم الوجبة{% else %}Meal Name{% endif %}
+                    </label>
+                    <input type="text" class="form-control" id="new-meal-name">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">
+                        {% if session.get('language', 'ar') == 'ar' %}عدد الحصص الافتراضي{% else %}Default Servings{% endif %}
+                    </label>
+                    <input type="number" class="form-control" id="new-meal-servings" value="1" min="1">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">
+                        {% if session.get('language', 'ar') == 'ar' %}وصف الوجبة{% else %}Meal Description{% endif %}
+                    </label>
+                    <textarea class="form-control" id="new-meal-description" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {% if session.get('language', 'ar') == 'ar' %}إلغاء{% else %}Cancel{% endif %}
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveNewMeal()">
+                    {% if session.get('language', 'ar') == 'ar' %}حفظ{% else %}Save{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Manage Ingredients Modal -->
+<div class="modal fade" id="manageIngredientsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {% if session.get('language', 'ar') == 'ar' %}إدارة المكونات{% else %}Manage Ingredients{% endif %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Add New Ingredient Section -->
+                <div class="card mb-3">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-plus me-2"></i>
+                            {% if session.get('language', 'ar') == 'ar' %}إضافة مكون جديد{% else %}Add New Ingredient{% endif %}
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label class="form-label">
+                                    {% if session.get('language', 'ar') == 'ar' %}اسم المكون{% else %}Ingredient Name{% endif %}
+                                </label>
+                                <input type="text" class="form-control" id="new-ingredient-name" placeholder="{% if session.get('language', 'ar') == 'ar' %}مثال: دقيق أبيض{% else %}Example: White Flour{% endif %}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">
+                                    {% if session.get('language', 'ar') == 'ar' %}وحدة القياس{% else %}Unit of Measure{% endif %}
+                                </label>
+                                <select class="form-select" id="new-ingredient-unit">
+                                    <option value="كيلو">{% if session.get('language', 'ar') == 'ar' %}كيلو{% else %}Kilogram{% endif %}</option>
+                                    <option value="جرام">{% if session.get('language', 'ar') == 'ar' %}جرام{% else %}Gram{% endif %}</option>
+                                    <option value="لتر">{% if session.get('language', 'ar') == 'ar' %}لتر{% else %}Liter{% endif %}</option>
+                                    <option value="مل">{% if session.get('language', 'ar') == 'ar' %}مل{% else %}Milliliter{% endif %}</option>
+                                    <option value="قطعة">{% if session.get('language', 'ar') == 'ar' %}قطعة{% else %}Piece{% endif %}</option>
+                                    <option value="علبة">{% if session.get('language', 'ar') == 'ar' %}علبة{% else %}Can{% endif %}</option>
+                                    <option value="كوب">{% if session.get('language', 'ar') == 'ar' %}كوب{% else %}Cup{% endif %}</option>
+                                    <option value="ملعقة">{% if session.get('language', 'ar') == 'ar' %}ملعقة{% else %}Spoon{% endif %}</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">
+                                    {% if session.get('language', 'ar') == 'ar' %}السعر{% else %}Price{% endif %}
+                                </label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="new-ingredient-price" step="0.01" min="0" placeholder="0.00">
+                                    <span class="input-group-text">ريال</span>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="button" class="btn btn-success w-100" onclick="addNewIngredient()">
+                                    <i class="fas fa-plus"></i>
+                                    {% if session.get('language', 'ar') == 'ar' %}إضافة{% else %}Add{% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Existing Ingredients List -->
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-list me-2"></i>
+                            {% if session.get('language', 'ar') == 'ar' %}المكونات الموجودة{% else %}Existing Ingredients{% endif %}
+                        </h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                            <table class="table table-striped table-hover mb-0" id="ingredients-management-table">
+                                <thead class="table-dark sticky-top">
+                                    <tr>
+                                        <th style="width: 40%">
+                                            {% if session.get('language', 'ar') == 'ar' %}اسم المكون{% else %}Ingredient Name{% endif %}
+                                        </th>
+                                        <th style="width: 20%">
+                                            {% if session.get('language', 'ar') == 'ar' %}الوحدة{% else %}Unit{% endif %}
+                                        </th>
+                                        <th style="width: 25%">
+                                            {% if session.get('language', 'ar') == 'ar' %}السعر{% else %}Price{% endif %}
+                                        </th>
+                                        <th style="width: 15%">
+                                            {% if session.get('language', 'ar') == 'ar' %}إجراءات{% else %}Actions{% endif %}
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ingredients-management-tbody">
+                                    <!-- Ingredients will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {% if session.get('language', 'ar') == 'ar' %}إغلاق{% else %}Close{% endif %}
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveIngredientsChanges()">
+                    {% if session.get('language', 'ar') == 'ar' %}حفظ التغييرات{% else %}Save Changes{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Add Ingredient Modal -->
+<div class="modal fade" id="quickAddIngredientModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {% if session.get('language', 'ar') == 'ar' %}إضافة مكون سريع{% else %}Quick Add Ingredient{% endif %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">
+                        {% if session.get('language', 'ar') == 'ar' %}اسم المكون{% else %}Ingredient Name{% endif %}
+                    </label>
+                    <input type="text" class="form-control" id="quick-ingredient-name" placeholder="{% if session.get('language', 'ar') == 'ar' %}أدخل اسم المكون الجديد{% else %}Enter new ingredient name{% endif %}">
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}وحدة القياس{% else %}Unit{% endif %}
+                        </label>
+                        <select class="form-select" id="quick-ingredient-unit">
+                            <option value="كيلو">{% if session.get('language', 'ar') == 'ar' %}كيلو{% else %}Kilogram{% endif %}</option>
+                            <option value="جرام">{% if session.get('language', 'ar') == 'ar' %}جرام{% else %}Gram{% endif %}</option>
+                            <option value="لتر">{% if session.get('language', 'ar') == 'ar' %}لتر{% else %}Liter{% endif %}</option>
+                            <option value="مل">{% if session.get('language', 'ar') == 'ar' %}مل{% else %}Milliliter{% endif %}</option>
+                            <option value="قطعة">{% if session.get('language', 'ar') == 'ar' %}قطعة{% else %}Piece{% endif %}</option>
+                            <option value="علبة">{% if session.get('language', 'ar') == 'ar' %}علبة{% else %}Can{% endif %}</option>
+                            <option value="كوب">{% if session.get('language', 'ar') == 'ar' %}كوب{% else %}Cup{% endif %}</option>
+                            <option value="ملعقة">{% if session.get('language', 'ar') == 'ar' %}ملعقة{% else %}Spoon{% endif %}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}السعر{% else %}Price{% endif %}
+                        </label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="quick-ingredient-price" step="0.01" min="0" placeholder="0.00">
+                            <span class="input-group-text">ريال</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {% if session.get('language', 'ar') == 'ar' %}إلغاء{% else %}Cancel{% endif %}
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveQuickIngredient()">
+                    {% if session.get('language', 'ar') == 'ar' %}إضافة واستخدام{% else %}Add & Use{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Global variables
+let ingredientsData = {{ raw_materials|tojson }};
+let currentMealId = null;
+let ingredientCounter = 0;
+
+// Initialize page
+$(document).ready(function() {
+    // Add first ingredient row
+    addIngredient();
+    // Load ingredients management table
+    loadIngredientsManagement();
+});
+
+// Add new ingredient row
+function addIngredient() {
+    ingredientCounter++;
+    const tbody = document.getElementById('ingredients-tbody');
+    const row = document.createElement('tr');
+    row.id = `ingredient-row-${ingredientCounter}`;
+
+    row.innerHTML = `
+        <td>
+            <div class="input-group">
+                <select class="form-select ingredient-select" onchange="updateIngredientData(${ingredientCounter})">
+                    <option value="">{% if session.get('language', 'ar') == 'ar' %}اختر المكون...{% else %}Select Ingredient...{% endif %}</option>
+                    ${ingredientsData.map(ing => `<option value="${ing.id}" data-unit="${ing.unit}" data-price="${ing.price}">${ing.name}</option>`).join('')}
+                </select>
+                <button class="btn btn-outline-secondary btn-sm" type="button" onclick="quickAddIngredient(${ingredientCounter})" title="{% if session.get('language', 'ar') == 'ar' %}إضافة مكون جديد{% else %}Add new ingredient{% endif %}">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </td>
+        <td>
+            <input type="text" class="form-control unit-display" readonly>
+        </td>
+        <td>
+            <input type="number" class="form-control quantity-input" step="0.001" min="0" onchange="calculateRowCost(${ingredientCounter})">
+        </td>
+        <td>
+            <input type="number" class="form-control price-input" step="0.01" min="0" onchange="calculateRowCost(${ingredientCounter})">
+        </td>
+        <td>
+            <input type="text" class="form-control percentage-display" readonly>
+        </td>
+        <td>
+            <input type="text" class="form-control cost-display" readonly>
+        </td>
+        <td>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeIngredient(${ingredientCounter})">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
+
+    tbody.appendChild(row);
+}
+
+// Update ingredient data when selected
+function updateIngredientData(rowId) {
+    const row = document.getElementById(`ingredient-row-${rowId}`);
+    const select = row.querySelector('.ingredient-select');
+    const selectedOption = select.options[select.selectedIndex];
+
+    if (selectedOption.value) {
+        const unit = selectedOption.getAttribute('data-unit');
+        const price = selectedOption.getAttribute('data-price');
+
+        row.querySelector('.unit-display').value = unit;
+        row.querySelector('.price-input').value = parseFloat(price).toFixed(2);
+
+        calculateRowCost(rowId);
+    } else {
+        row.querySelector('.unit-display').value = '';
+        row.querySelector('.price-input').value = '';
+        row.querySelector('.quantity-input').value = '';
+        row.querySelector('.percentage-display').value = '';
+        row.querySelector('.cost-display').value = '';
+    }
+}
+
+// Calculate cost for a specific row
+function calculateRowCost(rowId) {
+    const row = document.getElementById(`ingredient-row-${rowId}`);
+    const quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
+    const price = parseFloat(row.querySelector('.price-input').value) || 0;
+
+    const cost = quantity * price;
+    row.querySelector('.cost-display').value = cost.toFixed(3) + ' ريال';
+
+    // Recalculate total meal cost
+    calculateMealCost();
+}
+
+// Calculate total meal cost
+function calculateMealCost() {
+    let totalMaterialCost = 0;
+    const rows = document.querySelectorAll('#ingredients-tbody tr');
+
+    // Calculate total material cost
+    rows.forEach(row => {
+        const costDisplay = row.querySelector('.cost-display');
+        if (costDisplay && costDisplay.value) {
+            const cost = parseFloat(costDisplay.value.replace(' ريال', '')) || 0;
+            totalMaterialCost += cost;
+        }
+    });
+
+    // Update percentages
+    rows.forEach(row => {
+        const costDisplay = row.querySelector('.cost-display');
+        const percentageDisplay = row.querySelector('.percentage-display');
+        if (costDisplay && costDisplay.value && totalMaterialCost > 0) {
+            const cost = parseFloat(costDisplay.value.replace(' ريال', '')) || 0;
+            const percentage = (cost / totalMaterialCost * 100).toFixed(1);
+            percentageDisplay.value = percentage + '%';
+        }
+    });
+
+    // Get labor cost and profit margin
+    const laborCost = parseFloat(document.getElementById('labor-cost').value) || 0;
+    const profitMargin = parseFloat(document.getElementById('profit-margin').value) || 0;
+
+    // Calculate total cost before profit
+    const totalCostBeforeProfit = totalMaterialCost + laborCost;
+
+    // Calculate profit amount
+    const profitAmount = totalCostBeforeProfit * (profitMargin / 100);
+
+    // Calculate final meal cost
+    const totalMealCost = totalCostBeforeProfit + profitAmount;
+
+    // Update displays
+    document.getElementById('total-material-cost').textContent = totalMaterialCost.toFixed(2) + ' ريال';
+    document.getElementById('total-meal-cost').textContent = totalMealCost.toFixed(2) + ' ريال';
+
+    // Update cost breakdown
+    document.getElementById('breakdown-meal-cost').textContent = totalCostBeforeProfit.toFixed(2) + ' ريال';
+    document.getElementById('breakdown-profit').textContent = profitAmount.toFixed(2) + ' ريال';
+    document.getElementById('suggested-price').textContent = totalMealCost.toFixed(2) + ' ريال';
+
+    // Calculate cost per serving
+    const servings = parseInt(document.getElementById('servings-count').value) || 1;
+    const costPerServing = totalMealCost / servings;
+    document.getElementById('cost-per-serving').value = costPerServing.toFixed(2) + ' ريال';
+}
+
+// Remove ingredient row
+function removeIngredient(rowId) {
+    const row = document.getElementById(`ingredient-row-${rowId}`);
+    if (row) {
+        row.remove();
+        calculateMealCost();
+    }
+}
+
+// Load meal data
+function loadMealData() {
+    const select = document.getElementById('meal-select');
+    const selectedOption = select.options[select.selectedIndex];
+
+    if (selectedOption.value) {
+        currentMealId = selectedOption.value;
+        const servings = selectedOption.getAttribute('data-servings');
+        document.getElementById('servings-count').value = servings;
+
+        // Here you would load existing ingredients for this meal
+        // For now, we'll just recalculate
+        calculateMealCost();
+    }
+}
+
+// Add new meal
+function addNewMeal() {
+    const modal = new bootstrap.Modal(document.getElementById('newMealModal'));
+    modal.show();
+}
+
+// Save new meal
+function saveNewMeal() {
+    const name = document.getElementById('new-meal-name').value;
+    const servings = document.getElementById('new-meal-servings').value;
+    const description = document.getElementById('new-meal-description').value;
+
+    if (!name.trim()) {
+        alert('{% if session.get("language", "ar") == "ar" %}يرجى إدخال اسم الوجبة{% else %}Please enter meal name{% endif %}');
+        return;
+    }
+
+    // Here you would save to database
+    // For now, just add to select and close modal
+    const select = document.getElementById('meal-select');
+    const option = document.createElement('option');
+    option.value = 'new_' + Date.now();
+    option.textContent = name;
+    option.setAttribute('data-servings', servings);
+    select.appendChild(option);
+    select.value = option.value;
+
+    // Clear form and close modal
+    document.getElementById('new-meal-name').value = '';
+    document.getElementById('new-meal-servings').value = '1';
+    document.getElementById('new-meal-description').value = '';
+
+    const modal = bootstrap.Modal.getInstance(document.getElementById('newMealModal'));
+    modal.hide();
+
+    loadMealData();
+}
+
+// Save meal cost
+function saveMealCost() {
+    if (!currentMealId && !document.getElementById('meal-select').value) {
+        alert('{% if session.get("language", "ar") == "ar" %}يرجى اختيار الوجبة أولاً{% else %}Please select a meal first{% endif %}');
+        return;
+    }
+
+    // Collect ingredients data
+    const ingredients = [];
+    const rows = document.querySelectorAll('#ingredients-tbody tr');
+
+    rows.forEach(row => {
+        const select = row.querySelector('.ingredient-select');
+        const quantity = row.querySelector('.quantity-input').value;
+        const price = row.querySelector('.price-input').value;
+
+        if (select.value && quantity && price) {
+            ingredients.push({
+                ingredient_id: select.value,
+                quantity: parseFloat(quantity),
+                price: parseFloat(price)
+            });
+        }
+    });
+
+    if (ingredients.length === 0) {
+        alert('{% if session.get("language", "ar") == "ar" %}يرجى إضافة مكونات للوجبة{% else %}Please add ingredients to the meal{% endif %}');
+        return;
+    }
+
+    // Here you would save to database
+    alert('{% if session.get("language", "ar") == "ar" %}تم حفظ تكاليف الوجبة بنجاح{% else %}Meal costs saved successfully{% endif %}');
+}
+
+// Update prices from database
+function updatePrices() {
+    // Here you would fetch latest prices from database
+    alert('{% if session.get("language", "ar") == "ar" %}تم تحديث الأسعار{% else %}Prices updated{% endif %}');
+    calculateMealCost();
+}
+
+// Print meal cost
+function printMealCost() {
+    window.print();
+}
+
+// Apply suggested price
+function applySuggestedPrice() {
+    const price = document.getElementById('suggested-price').textContent;
+    alert('{% if session.get("language", "ar") == "ar" %}السعر المقترح: {% else %}Suggested price: {% endif %}' + price);
+}
+
+// Manage ingredients
+function manageIngredients() {
+    loadIngredientsManagement();
+    const modal = new bootstrap.Modal(document.getElementById('manageIngredientsModal'));
+    modal.show();
+}
+
+// Load ingredients management table
+function loadIngredientsManagement() {
+    const tbody = document.getElementById('ingredients-management-tbody');
+    tbody.innerHTML = '';
+
+    ingredientsData.forEach((ingredient, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>
+                <input type="text" class="form-control form-control-sm" value="${ingredient.name}"
+                       onchange="updateIngredientName(${ingredient.id}, this.value)">
+            </td>
+            <td>
+                <select class="form-select form-select-sm" onchange="updateIngredientUnit(${ingredient.id}, this.value)">
+                    <option value="كيلو" ${ingredient.unit === 'كيلو' ? 'selected' : ''}>{% if session.get('language', 'ar') == 'ar' %}كيلو{% else %}Kilogram{% endif %}</option>
+                    <option value="جرام" ${ingredient.unit === 'جرام' ? 'selected' : ''}>{% if session.get('language', 'ar') == 'ar' %}جرام{% else %}Gram{% endif %}</option>
+                    <option value="لتر" ${ingredient.unit === 'لتر' ? 'selected' : ''}>{% if session.get('language', 'ar') == 'ar' %}لتر{% else %}Liter{% endif %}</option>
+                    <option value="مل" ${ingredient.unit === 'مل' ? 'selected' : ''}>{% if session.get('language', 'ar') == 'ar' %}مل{% else %}Milliliter{% endif %}</option>
+                    <option value="قطعة" ${ingredient.unit === 'قطعة' ? 'selected' : ''}>{% if session.get('language', 'ar') == 'ar' %}قطعة{% else %}Piece{% endif %}</option>
+                    <option value="علبة" ${ingredient.unit === 'علبة' ? 'selected' : ''}>{% if session.get('language', 'ar') == 'ar' %}علبة{% else %}Can{% endif %}</option>
+                    <option value="كوب" ${ingredient.unit === 'كوب' ? 'selected' : ''}>{% if session.get('language', 'ar') == 'ar' %}كوب{% else %}Cup{% endif %}</option>
+                    <option value="ملعقة" ${ingredient.unit === 'ملعقة' ? 'selected' : ''}>{% if session.get('language', 'ar') == 'ar' %}ملعقة{% else %}Spoon{% endif %}</option>
+                </select>
+            </td>
+            <td>
+                <div class="input-group input-group-sm">
+                    <input type="number" class="form-control" value="${ingredient.price}" step="0.01" min="0"
+                           onchange="updateIngredientPrice(${ingredient.id}, this.value)">
+                    <span class="input-group-text">ريال</span>
+                </div>
+            </td>
+            <td>
+                <button type="button" class="btn btn-danger btn-sm" onclick="deleteIngredient(${ingredient.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// Update ingredient name
+function updateIngredientName(id, newName) {
+    const ingredient = ingredientsData.find(ing => ing.id === id);
+    if (ingredient) {
+        ingredient.name = newName;
+        refreshIngredientSelects();
+    }
+}
+
+// Update ingredient unit
+function updateIngredientUnit(id, newUnit) {
+    const ingredient = ingredientsData.find(ing => ing.id === id);
+    if (ingredient) {
+        ingredient.unit = newUnit;
+        refreshIngredientSelects();
+    }
+}
+
+// Update ingredient price
+function updateIngredientPrice(id, newPrice) {
+    const ingredient = ingredientsData.find(ing => ing.id === id);
+    if (ingredient) {
+        ingredient.price = parseFloat(newPrice) || 0;
+        refreshIngredientSelects();
+        calculateMealCost(); // Recalculate if ingredient is being used
+    }
+}
+
+// Delete ingredient
+function deleteIngredient(id) {
+    if (confirm('{% if session.get("language", "ar") == "ar" %}هل أنت متأكد من حذف هذا المكون؟{% else %}Are you sure you want to delete this ingredient?{% endif %}')) {
+        ingredientsData = ingredientsData.filter(ing => ing.id !== id);
+        loadIngredientsManagement();
+        refreshIngredientSelects();
+    }
+}
+
+// Add new ingredient
+function addNewIngredient() {
+    const name = document.getElementById('new-ingredient-name').value.trim();
+    const unit = document.getElementById('new-ingredient-unit').value;
+    const price = parseFloat(document.getElementById('new-ingredient-price').value) || 0;
+
+    if (!name) {
+        alert('{% if session.get("language", "ar") == "ar" %}يرجى إدخال اسم المكون{% else %}Please enter ingredient name{% endif %}');
+        return;
+    }
+
+    // Check if ingredient already exists
+    if (ingredientsData.some(ing => ing.name.toLowerCase() === name.toLowerCase())) {
+        alert('{% if session.get("language", "ar") == "ar" %}هذا المكون موجود بالفعل{% else %}This ingredient already exists{% endif %}');
+        return;
+    }
+
+    // Generate new ID
+    const newId = Math.max(...ingredientsData.map(ing => ing.id)) + 1;
+
+    // Add new ingredient
+    ingredientsData.push({
+        id: newId,
+        name: name,
+        unit: unit,
+        price: price
+    });
+
+    // Clear form
+    document.getElementById('new-ingredient-name').value = '';
+    document.getElementById('new-ingredient-unit').value = 'كيلو';
+    document.getElementById('new-ingredient-price').value = '';
+
+    // Refresh displays
+    loadIngredientsManagement();
+    refreshIngredientSelects();
+
+    alert('{% if session.get("language", "ar") == "ar" %}تم إضافة المكون بنجاح{% else %}Ingredient added successfully{% endif %}');
+}
+
+// Quick add ingredient
+function quickAddIngredient(rowId) {
+    currentRowForQuickAdd = rowId;
+    const modal = new bootstrap.Modal(document.getElementById('quickAddIngredientModal'));
+    modal.show();
+}
+
+// Save quick ingredient
+function saveQuickIngredient() {
+    const name = document.getElementById('quick-ingredient-name').value.trim();
+    const unit = document.getElementById('quick-ingredient-unit').value;
+    const price = parseFloat(document.getElementById('quick-ingredient-price').value) || 0;
+
+    if (!name) {
+        alert('{% if session.get("language", "ar") == "ar" %}يرجى إدخال اسم المكون{% else %}Please enter ingredient name{% endif %}');
+        return;
+    }
+
+    // Check if ingredient already exists
+    if (ingredientsData.some(ing => ing.name.toLowerCase() === name.toLowerCase())) {
+        alert('{% if session.get("language", "ar") == "ar" %}هذا المكون موجود بالفعل{% else %}This ingredient already exists{% endif %}');
+        return;
+    }
+
+    // Generate new ID
+    const newId = Math.max(...ingredientsData.map(ing => ing.id)) + 1;
+
+    // Add new ingredient
+    const newIngredient = {
+        id: newId,
+        name: name,
+        unit: unit,
+        price: price
+    };
+
+    ingredientsData.push(newIngredient);
+
+    // Refresh ingredient selects
+    refreshIngredientSelects();
+
+    // Auto-select the new ingredient in the current row
+    if (currentRowForQuickAdd) {
+        const row = document.getElementById(`ingredient-row-${currentRowForQuickAdd}`);
+        if (row) {
+            const select = row.querySelector('.ingredient-select');
+            select.value = newId;
+            updateIngredientData(currentRowForQuickAdd);
+        }
+    }
+
+    // Clear form and close modal
+    document.getElementById('quick-ingredient-name').value = '';
+    document.getElementById('quick-ingredient-unit').value = 'كيلو';
+    document.getElementById('quick-ingredient-price').value = '';
+
+    const modal = bootstrap.Modal.getInstance(document.getElementById('quickAddIngredientModal'));
+    modal.hide();
+
+    alert('{% if session.get("language", "ar") == "ar" %}تم إضافة المكون واختياره{% else %}Ingredient added and selected{% endif %}');
+}
+
+// Refresh ingredient selects
+function refreshIngredientSelects() {
+    const selects = document.querySelectorAll('.ingredient-select');
+    selects.forEach(select => {
+        const currentValue = select.value;
+        select.innerHTML = `
+            <option value="">{% if session.get('language', 'ar') == 'ar' %}اختر المكون...{% else %}Select Ingredient...{% endif %}</option>
+            ${ingredientsData.map(ing => `<option value="${ing.id}" data-unit="${ing.unit}" data-price="${ing.price}">${ing.name}</option>`).join('')}
+        `;
+        select.value = currentValue;
+    });
+}
+
+// Save ingredients changes
+function saveIngredientsChanges() {
+    // Here you would save to database
+    alert('{% if session.get("language", "ar") == "ar" %}تم حفظ التغييرات بنجاح{% else %}Changes saved successfully{% endif %}');
+
+    const modal = bootstrap.Modal.getInstance(document.getElementById('manageIngredientsModal'));
+    modal.hide();
+}
+
+// Global variable for quick add
+let currentRowForQuickAdd = null;
+</script>
+{% endblock %}

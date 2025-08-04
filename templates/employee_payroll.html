@@ -1,0 +1,1246 @@
+{% extends "base_simple.html" %}
+
+{% block title %}
+    {% if session.get('language', 'ar') == 'ar' %}
+        إدارة الموظفين والرواتب
+    {% else %}
+        Employee & Payroll Management
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            {% if session.get('language', 'ar') == 'ar' %}
+                <i class="fas fa-users"></i> إدارة الموظفين والرواتب
+            {% else %}
+                <i class="fas fa-users"></i> Employee & Payroll Management
+            {% endif %}
+        </h1>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-primary" onclick="showAddEmployeeModal()">
+                {% if session.get('language', 'ar') == 'ar' %}
+                    <i class="fas fa-user-plus"></i> إضافة موظف
+                {% else %}
+                    <i class="fas fa-user-plus"></i> Add Employee
+                {% endif %}
+            </button>
+            <button type="button" class="btn btn-success" onclick="processPayroll()">
+                {% if session.get('language', 'ar') == 'ar' %}
+                    <i class="fas fa-money-bill-wave"></i> معالجة الرواتب
+                {% else %}
+                    <i class="fas fa-money-bill-wave"></i> Process Payroll
+                {% endif %}
+            </button>
+            <button type="button" class="btn btn-info" onclick="generatePayrollReport()">
+                {% if session.get('language', 'ar') == 'ar' %}
+                    <i class="fas fa-file-alt"></i> تقرير الرواتب
+                {% else %}
+                    <i class="fas fa-file-alt"></i> Payroll Report
+                {% endif %}
+            </button>
+            <button type="button" class="btn btn-warning" onclick="showOverdueAlerts()">
+                {% if session.get('language', 'ar') == 'ar' %}
+                    <i class="fas fa-exclamation-triangle"></i> التنبيهات
+                {% else %}
+                    <i class="fas fa-exclamation-triangle"></i> Alerts
+                {% endif %}
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-4 border-primary h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-primary mb-1">
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                إجمالي الموظفين
+                            {% else %}
+                                Total Employees
+                            {% endif %}
+                        </h6>
+                        <h3 class="mb-0" id="total-employees">0</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-users fa-2x opacity-75 text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-4 border-success h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-success mb-1">
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                الرواتب المدفوعة
+                            {% else %}
+                                Paid Salaries
+                            {% endif %}
+                        </h6>
+                        <h3 class="mb-0" id="paid-salaries">0.00 ريال</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x opacity-75 text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-4 border-danger h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-danger mb-1">
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                الرواتب المستحقة
+                            {% else %}
+                                Outstanding Salaries
+                            {% endif %}
+                        </h6>
+                        <h3 class="mb-0" id="outstanding-salaries">0.00 ريال</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-exclamation-triangle fa-2x opacity-75 text-danger"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-4 border-warning h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-warning mb-1">
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                الرواتب المتأخرة
+                            {% else %}
+                                Overdue Salaries
+                            {% endif %}
+                        </h6>
+                        <h3 class="mb-0" id="overdue-count">0</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-clock fa-2x opacity-75 text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" id="payrollTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="employees-tab" data-bs-toggle="tab" data-bs-target="#employees" type="button" role="tab">
+                                <i class="fas fa-users me-2"></i>
+                                {% if session.get('language', 'ar') == 'ar' %}الموظفين{% else %}Employees{% endif %}
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="payroll-tab" data-bs-toggle="tab" data-bs-target="#payroll" type="button" role="tab">
+                                <i class="fas fa-money-bill-wave me-2"></i>
+                                {% if session.get('language', 'ar') == 'ar' %}الرواتب{% else %}Payroll{% endif %}
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="salary-statement-tab" data-bs-toggle="tab" data-bs-target="#salary-statement" type="button" role="tab">
+                                <i class="fas fa-file-invoice me-2"></i>
+                                {% if session.get('language', 'ar') == 'ar' %}كشف الراتب{% else %}Salary Statement{% endif %}
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="reports-tab" data-bs-toggle="tab" data-bs-target="#reports" type="button" role="tab">
+                                <i class="fas fa-chart-bar me-2"></i>
+                                {% if session.get('language', 'ar') == 'ar' %}التقارير{% else %}Reports{% endif %}
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="payrollTabsContent">
+                        <!-- Employees Tab -->
+                        <div class="tab-pane fade show active" id="employees" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover" id="employees-table">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>
+                                                {% if session.get('language', 'ar') == 'ar' %}الرقم الوظيفي{% else %}Employee ID{% endif %}
+                                            </th>
+                                            <th>
+                                                {% if session.get('language', 'ar') == 'ar' %}الاسم{% else %}Name{% endif %}
+                                            </th>
+                                            <th>
+                                                {% if session.get('language', 'ar') == 'ar' %}المسمى الوظيفي{% else %}Job Title{% endif %}
+                                            </th>
+                                            <th>
+                                                {% if session.get('language', 'ar') == 'ar' %}القسم{% else %}Department{% endif %}
+                                            </th>
+                                            <th>
+                                                {% if session.get('language', 'ar') == 'ar' %}الراتب الأساسي{% else %}Basic Salary{% endif %}
+                                            </th>
+                                            <th>
+                                                {% if session.get('language', 'ar') == 'ar' %}تاريخ التعيين{% else %}Hire Date{% endif %}
+                                            </th>
+                                            <th>
+                                                {% if session.get('language', 'ar') == 'ar' %}الحالة{% else %}Status{% endif %}
+                                            </th>
+                                            <th>
+                                                {% if session.get('language', 'ar') == 'ar' %}إجراءات{% else %}Actions{% endif %}
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="employees-tbody">
+                                        <!-- Employees will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Payroll Tab -->
+                        <div class="tab-pane fade" id="payroll" role="tabpanel">
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">
+                                        {% if session.get('language', 'ar') == 'ar' %}الشهر{% else %}Month{% endif %}
+                                    </label>
+                                    <select class="form-select" id="payroll-month">
+                                        <option value="2025-08">
+                                            {% if session.get('language', 'ar') == 'ar' %}أغسطس 2025{% else %}August 2025{% endif %}
+                                        </option>
+                                        <option value="2025-07">
+                                            {% if session.get('language', 'ar') == 'ar' %}يوليو 2025{% else %}July 2025{% endif %}
+                                        </option>
+                                        <option value="2025-06">
+                                            {% if session.get('language', 'ar') == 'ar' %}يونيو 2025{% else %}June 2025{% endif %}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">
+                                        {% if session.get('language', 'ar') == 'ar' %}القسم{% else %}Department{% endif %}
+                                    </label>
+                                    <select class="form-select" id="payroll-department">
+                                        <option value="all">
+                                            {% if session.get('language', 'ar') == 'ar' %}جميع الأقسام{% else %}All Departments{% endif %}
+                                        </option>
+                                        <option value="kitchen">
+                                            {% if session.get('language', 'ar') == 'ar' %}المطبخ{% else %}Kitchen{% endif %}
+                                        </option>
+                                        <option value="service">
+                                            {% if session.get('language', 'ar') == 'ar' %}الخدمة{% else %}Service{% endif %}
+                                        </option>
+                                        <option value="management">
+                                            {% if session.get('language', 'ar') == 'ar' %}الإدارة{% else %}Management{% endif %}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">&nbsp;</label>
+                                    <button type="button" class="btn btn-primary w-100" onclick="loadPayrollData()">
+                                        <i class="fas fa-search"></i>
+                                        {% if session.get('language', 'ar') == 'ar' %}عرض الرواتب{% else %}Load Payroll{% endif %}
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover" id="payroll-table">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>
+                                                {% if session.get('language', 'ar') == 'ar' %}الموظف{% else %}Employee{% endif %}
+                                            </th>
+                                            <th>
+                                                {% if session.get('language', 'ar') == 'ar' %}الراتب الأساسي{% else %}Basic Salary{% endif %}
+                                            </th>
+                                            <th>
+                                                {% if session.get('language', 'ar') == 'ar' %}البدلات{% else %}Allowances{% endif %}
+                                            </th>
+                                            <th>
+                                                {% if session.get('language', 'ar') == 'ar' %}الاستقطاعات{% else %}Deductions{% endif %}
+                                            </th>
+                                            <th>
+                                                {% if session.get('language', 'ar') == 'ar' %}السلف{% else %}Advances{% endif %}
+                                            </th>
+                                            <th>
+                                                {% if session.get('language', 'ar') == 'ar' %}الإجمالي{% else %}Total{% endif %}
+                                            </th>
+                                            <th>
+                                                {% if session.get('language', 'ar') == 'ar' %}المدفوع{% else %}Paid{% endif %}
+                                            </th>
+                                            <th>
+                                                {% if session.get('language', 'ar') == 'ar' %}المتبقي{% else %}Balance{% endif %}
+                                            </th>
+                                            <th>
+                                                {% if session.get('language', 'ar') == 'ar' %}إجراءات{% else %}Actions{% endif %}
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="payroll-tbody">
+                                        <!-- Payroll data will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Salary Statement Tab -->
+                        <div class="tab-pane fade" id="salary-statement" role="tabpanel">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">
+                                        {% if session.get('language', 'ar') == 'ar' %}اختر الموظف{% else %}Select Employee{% endif %}
+                                    </label>
+                                    <select class="form-select" id="statement-employee">
+                                        <option value="">
+                                            {% if session.get('language', 'ar') == 'ar' %}اختر الموظف{% else %}Select Employee{% endif %}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">
+                                        {% if session.get('language', 'ar') == 'ar' %}الشهر{% else %}Month{% endif %}
+                                    </label>
+                                    <select class="form-select" id="statement-month">
+                                        <option value="2025-08">
+                                            {% if session.get('language', 'ar') == 'ar' %}أغسطس 2025{% else %}August 2025{% endif %}
+                                        </option>
+                                        <option value="2025-07">
+                                            {% if session.get('language', 'ar') == 'ar' %}يوليو 2025{% else %}July 2025{% endif %}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">&nbsp;</label>
+                                    <button type="button" class="btn btn-primary w-100" onclick="generateSalaryStatement()">
+                                        <i class="fas fa-file-invoice"></i>
+                                        {% if session.get('language', 'ar') == 'ar' %}عرض{% else %}View{% endif %}
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div id="salary-statement-content" style="display: none;">
+                                <!-- Salary statement will be generated here -->
+                            </div>
+                        </div>
+
+                        <!-- Reports Tab -->
+                        <div class="tab-pane fade" id="reports" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-header bg-info text-white">
+                                            <h6 class="mb-0">
+                                                {% if session.get('language', 'ar') == 'ar' %}تقارير الرواتب{% else %}Payroll Reports{% endif %}
+                                            </h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="d-grid gap-2">
+                                                <button type="button" class="btn btn-outline-primary" onclick="generateMonthlyReport()">
+                                                    {% if session.get('language', 'ar') == 'ar' %}تقرير شهري{% else %}Monthly Report{% endif %}
+                                                </button>
+                                                <button type="button" class="btn btn-outline-success" onclick="generateDepartmentReport()">
+                                                    {% if session.get('language', 'ar') == 'ar' %}تقرير حسب القسم{% else %}Department Report{% endif %}
+                                                </button>
+                                                <button type="button" class="btn btn-outline-warning" onclick="generateOverdueReport()">
+                                                    {% if session.get('language', 'ar') == 'ar' %}تقرير المتأخرات{% else %}Overdue Report{% endif %}
+                                                </button>
+                                                <button type="button" class="btn btn-outline-info" onclick="generateAnnualReport()">
+                                                    {% if session.get('language', 'ar') == 'ar' %}تقرير سنوي{% else %}Annual Report{% endif %}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-header bg-secondary text-white">
+                                            <h6 class="mb-0">
+                                                {% if session.get('language', 'ar') == 'ar' %}إحصائيات سريعة{% else %}Quick Statistics{% endif %}
+                                            </h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <canvas id="payrollChart" width="400" height="200"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Add Employee Modal -->
+<div class="modal fade" id="addEmployeeModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {% if session.get('language', 'ar') == 'ar' %}إضافة موظف جديد{% else %}Add New Employee{% endif %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="employee-form">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}الرقم الوظيفي{% else %}Employee ID{% endif %}
+                            </label>
+                            <input type="text" class="form-control" id="employee-id" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}الاسم الكامل{% else %}Full Name{% endif %}
+                            </label>
+                            <input type="text" class="form-control" id="employee-name" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}رقم الهوية/الإقامة{% else %}ID/Iqama Number{% endif %}
+                            </label>
+                            <input type="text" class="form-control" id="employee-national-id" required>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}الجنسية{% else %}Nationality{% endif %}
+                            </label>
+                            <select class="form-select" id="employee-nationality" required>
+                                <option value="saudi">
+                                    {% if session.get('language', 'ar') == 'ar' %}سعودي{% else %}Saudi{% endif %}
+                                </option>
+                                <option value="egyptian">
+                                    {% if session.get('language', 'ar') == 'ar' %}مصري{% else %}Egyptian{% endif %}
+                                </option>
+                                <option value="indian">
+                                    {% if session.get('language', 'ar') == 'ar' %}هندي{% else %}Indian{% endif %}
+                                </option>
+                                <option value="pakistani">
+                                    {% if session.get('language', 'ar') == 'ar' %}باكستاني{% else %}Pakistani{% endif %}
+                                </option>
+                                <option value="other">
+                                    {% if session.get('language', 'ar') == 'ar' %}أخرى{% else %}Other{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}المسمى الوظيفي{% else %}Job Title{% endif %}
+                            </label>
+                            <input type="text" class="form-control" id="employee-job-title" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}القسم{% else %}Department{% endif %}
+                            </label>
+                            <select class="form-select" id="employee-department" required>
+                                <option value="kitchen">
+                                    {% if session.get('language', 'ar') == 'ar' %}المطبخ{% else %}Kitchen{% endif %}
+                                </option>
+                                <option value="service">
+                                    {% if session.get('language', 'ar') == 'ar' %}الخدمة{% else %}Service{% endif %}
+                                </option>
+                                <option value="management">
+                                    {% if session.get('language', 'ar') == 'ar' %}الإدارة{% else %}Management{% endif %}
+                                </option>
+                                <option value="cleaning">
+                                    {% if session.get('language', 'ar') == 'ar' %}النظافة{% else %}Cleaning{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}تاريخ التعيين{% else %}Hire Date{% endif %}
+                            </label>
+                            <input type="date" class="form-control" id="employee-hire-date" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}الراتب الأساسي{% else %}Basic Salary{% endif %}
+                            </label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="employee-basic-salary" step="0.01" min="0" required>
+                                <span class="input-group-text">ريال</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}طريقة الدفع{% else %}Payment Method{% endif %}
+                            </label>
+                            <select class="form-select" id="employee-payment-method" required>
+                                <option value="BANK">
+                                    {% if session.get('language', 'ar') == 'ar' %}تحويل بنكي{% else %}Bank Transfer{% endif %}
+                                </option>
+                                <option value="CASH">
+                                    {% if session.get('language', 'ar') == 'ar' %}نقدي{% else %}Cash{% endif %}
+                                </option>
+                                <option value="MADA">مدى - MADA</option>
+                                <option value="VISA">فيزا - VISA</option>
+                                <option value="MASTERCARD">ماستركارد - MASTERCARD</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}رقم الحساب البنكي{% else %}Bank Account Number{% endif %}
+                            </label>
+                            <input type="text" class="form-control" id="employee-bank-account">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}اسم البنك{% else %}Bank Name{% endif %}
+                            </label>
+                            <input type="text" class="form-control" id="employee-bank-name">
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}بدل السكن{% else %}Housing Allowance{% endif %}
+                            </label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="employee-housing-allowance" step="0.01" min="0" value="0">
+                                <span class="input-group-text">ريال</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}بدل النقل{% else %}Transportation Allowance{% endif %}
+                            </label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="employee-transport-allowance" step="0.01" min="0" value="0">
+                                <span class="input-group-text">ريال</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}بدلات أخرى{% else %}Other Allowances{% endif %}
+                            </label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="employee-other-allowances" step="0.01" min="0" value="0">
+                                <span class="input-group-text">ريال</span>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {% if session.get('language', 'ar') == 'ar' %}إلغاء{% else %}Cancel{% endif %}
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveEmployee()">
+                    {% if session.get('language', 'ar') == 'ar' %}حفظ الموظف{% else %}Save Employee{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Process Payment Modal -->
+<div class="modal fade" id="processPaymentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {% if session.get('language', 'ar') == 'ar' %}تسجيل دفع راتب{% else %}Process Salary Payment{% endif %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <div class="alert alert-info">
+                            <h6 class="mb-2">
+                                {% if session.get('language', 'ar') == 'ar' %}تفاصيل الموظف:{% else %}Employee Details:{% endif %}
+                            </h6>
+                            <div id="payment-employee-details"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}المبلغ المدفوع{% else %}Payment Amount{% endif %}
+                        </label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="payment-amount" step="0.01" min="0">
+                            <span class="input-group-text">ريال</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}تاريخ الدفع{% else %}Payment Date{% endif %}
+                        </label>
+                        <input type="date" class="form-control" id="payment-date">
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}طريقة الدفع{% else %}Payment Method{% endif %}
+                        </label>
+                        <select class="form-select" id="payment-method">
+                            <option value="BANK">
+                                {% if session.get('language', 'ar') == 'ar' %}تحويل بنكي{% else %}Bank Transfer{% endif %}
+                            </option>
+                            <option value="CASH">
+                                {% if session.get('language', 'ar') == 'ar' %}نقدي{% else %}Cash{% endif %}
+                            </option>
+                            <option value="MADA">مدى - MADA</option>
+                            <option value="VISA">فيزا - VISA</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}رقم المرجع{% else %}Reference Number{% endif %}
+                        </label>
+                        <input type="text" class="form-control" id="payment-reference">
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}ملاحظات{% else %}Notes{% endif %}
+                        </label>
+                        <textarea class="form-control" id="payment-notes" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {% if session.get('language', 'ar') == 'ar' %}إلغاء{% else %}Cancel{% endif %}
+                </button>
+                <button type="button" class="btn btn-success" onclick="savePayment()">
+                    {% if session.get('language', 'ar') == 'ar' %}تسجيل الدفع{% else %}Process Payment{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Global variables
+let employeesData = [];
+let payrollData = [];
+let currentLanguage = '{{ session.get("language", "ar") }}';
+let payrollChart = null;
+
+// Initialize page
+$(document).ready(function() {
+    loadEmployeesData();
+    loadPayrollSummary();
+    initializeChart();
+    setCurrentDate();
+});
+
+// Set current date
+function setCurrentDate() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('payment-date').value = today;
+}
+
+// Load employees data
+function loadEmployeesData() {
+    // Sample employees data
+    employeesData = [
+        {
+            id: 1,
+            employee_id: 'EMP001',
+            name: 'أحمد محمد علي',
+            name_en: 'Ahmed Mohammed Ali',
+            national_id: '1234567890',
+            nationality: 'saudi',
+            job_title: 'رئيس طباخين',
+            job_title_en: 'Head Chef',
+            department: 'kitchen',
+            hire_date: '2023-01-15',
+            basic_salary: 8000.00,
+            housing_allowance: 1500.00,
+            transport_allowance: 500.00,
+            other_allowances: 200.00,
+            payment_method: 'BANK',
+            bank_account: '1234567890123456',
+            bank_name: 'البنك الأهلي السعودي',
+            status: 'active'
+        },
+        {
+            id: 2,
+            employee_id: 'EMP002',
+            name: 'محمد أحمد السعيد',
+            name_en: 'Mohammed Ahmed Al-Saeed',
+            national_id: '2345678901',
+            nationality: 'egyptian',
+            job_title: 'نادل أول',
+            job_title_en: 'Senior Waiter',
+            department: 'service',
+            hire_date: '2023-03-20',
+            basic_salary: 4500.00,
+            housing_allowance: 1000.00,
+            transport_allowance: 300.00,
+            other_allowances: 100.00,
+            payment_method: 'CASH',
+            bank_account: '',
+            bank_name: '',
+            status: 'active'
+        },
+        {
+            id: 3,
+            employee_id: 'EMP003',
+            name: 'فاطمة عبدالله',
+            name_en: 'Fatima Abdullah',
+            national_id: '3456789012',
+            nationality: 'saudi',
+            job_title: 'محاسبة',
+            job_title_en: 'Accountant',
+            department: 'management',
+            hire_date: '2022-11-10',
+            basic_salary: 7000.00,
+            housing_allowance: 1200.00,
+            transport_allowance: 400.00,
+            other_allowances: 300.00,
+            payment_method: 'BANK',
+            bank_account: '9876543210987654',
+            bank_name: 'بنك الرياض',
+            status: 'active'
+        },
+        {
+            id: 4,
+            employee_id: 'EMP004',
+            name: 'راج كومار',
+            name_en: 'Raj Kumar',
+            national_id: '4567890123',
+            nationality: 'indian',
+            job_title: 'طباخ مساعد',
+            job_title_en: 'Assistant Cook',
+            department: 'kitchen',
+            hire_date: '2023-05-01',
+            basic_salary: 3500.00,
+            housing_allowance: 800.00,
+            transport_allowance: 200.00,
+            other_allowances: 50.00,
+            payment_method: 'MADA',
+            bank_account: '',
+            bank_name: '',
+            status: 'active'
+        },
+        {
+            id: 5,
+            employee_id: 'EMP005',
+            name: 'علي حسن محمد',
+            name_en: 'Ali Hassan Mohammed',
+            national_id: '5678901234',
+            nationality: 'pakistani',
+            job_title: 'عامل نظافة',
+            job_title_en: 'Cleaner',
+            department: 'cleaning',
+            hire_date: '2023-02-15',
+            basic_salary: 2800.00,
+            housing_allowance: 600.00,
+            transport_allowance: 150.00,
+            other_allowances: 0.00,
+            payment_method: 'CASH',
+            bank_account: '',
+            bank_name: '',
+            status: 'active'
+        }
+    ];
+
+    updateEmployeesTable();
+    updateEmployeeSelects();
+}
+
+// Update employees table
+function updateEmployeesTable() {
+    const tbody = document.getElementById('employees-tbody');
+    tbody.innerHTML = '';
+
+    employeesData.forEach(employee => {
+        const row = document.createElement('tr');
+
+        const name = currentLanguage === 'ar' ? employee.name : employee.name_en;
+        const jobTitle = currentLanguage === 'ar' ? employee.job_title : employee.job_title_en;
+        const departmentName = getDepartmentName(employee.department);
+        const statusText = getStatusText(employee.status);
+        const statusClass = getStatusClass(employee.status);
+
+        row.innerHTML = `
+            <td><strong>${employee.employee_id}</strong></td>
+            <td>${name}</td>
+            <td>${jobTitle}</td>
+            <td><span class="badge bg-info">${departmentName}</span></td>
+            <td class="text-end">${formatCurrency(employee.basic_salary)}</td>
+            <td>${formatDate(employee.hire_date)}</td>
+            <td><span class="badge bg-${statusClass}">${statusText}</span></td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-primary" onclick="editEmployee(${employee.id})" title="تعديل">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-success" onclick="viewSalaryDetails(${employee.id})" title="تفاصيل الراتب">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-info" onclick="generatePayslip(${employee.id})" title="كشف راتب">
+                        <i class="fas fa-file-invoice"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+
+        tbody.appendChild(row);
+    });
+}
+
+// Update employee selects
+function updateEmployeeSelects() {
+    const statementSelect = document.getElementById('statement-employee');
+    statementSelect.innerHTML = '<option value="">اختر الموظف</option>';
+
+    employeesData.forEach(employee => {
+        const option = document.createElement('option');
+        option.value = employee.id;
+        option.textContent = currentLanguage === 'ar' ? employee.name : employee.name_en;
+        statementSelect.appendChild(option);
+    });
+}
+
+// Load payroll summary
+function loadPayrollSummary() {
+    // Sample summary data
+    const summary = {
+        totalEmployees: employeesData.length,
+        paidSalaries: 45000.00,
+        outstandingSalaries: 15000.00,
+        overdueCount: 2
+    };
+
+    document.getElementById('total-employees').textContent = summary.totalEmployees;
+    document.getElementById('paid-salaries').textContent = formatCurrency(summary.paidSalaries);
+    document.getElementById('outstanding-salaries').textContent = formatCurrency(summary.outstandingSalaries);
+    document.getElementById('overdue-count').textContent = summary.overdueCount;
+}
+
+// Show add employee modal
+function showAddEmployeeModal() {
+    // Generate new employee ID
+    const newId = 'EMP' + String(employeesData.length + 1).padStart(3, '0');
+    document.getElementById('employee-id').value = newId;
+
+    const modal = new bootstrap.Modal(document.getElementById('addEmployeeModal'));
+    modal.show();
+}
+
+// Save employee
+function saveEmployee() {
+    const form = document.getElementById('employee-form');
+
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    const newEmployee = {
+        id: employeesData.length + 1,
+        employee_id: document.getElementById('employee-id').value,
+        name: document.getElementById('employee-name').value,
+        name_en: document.getElementById('employee-name').value,
+        national_id: document.getElementById('employee-national-id').value,
+        nationality: document.getElementById('employee-nationality').value,
+        job_title: document.getElementById('employee-job-title').value,
+        job_title_en: document.getElementById('employee-job-title').value,
+        department: document.getElementById('employee-department').value,
+        hire_date: document.getElementById('employee-hire-date').value,
+        basic_salary: parseFloat(document.getElementById('employee-basic-salary').value),
+        housing_allowance: parseFloat(document.getElementById('employee-housing-allowance').value),
+        transport_allowance: parseFloat(document.getElementById('employee-transport-allowance').value),
+        other_allowances: parseFloat(document.getElementById('employee-other-allowances').value),
+        payment_method: document.getElementById('employee-payment-method').value,
+        bank_account: document.getElementById('employee-bank-account').value,
+        bank_name: document.getElementById('employee-bank-name').value,
+        status: 'active'
+    };
+
+    employeesData.push(newEmployee);
+
+    // Clear form
+    form.reset();
+
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('addEmployeeModal'));
+    modal.hide();
+
+    // Refresh display
+    updateEmployeesTable();
+    updateEmployeeSelects();
+    loadPayrollSummary();
+
+    alert(currentLanguage === 'ar' ? 'تم حفظ الموظف بنجاح' : 'Employee saved successfully');
+}
+
+// Load payroll data
+function loadPayrollData() {
+    const month = document.getElementById('payroll-month').value;
+    const department = document.getElementById('payroll-department').value;
+
+    // Generate payroll data based on employees
+    payrollData = employeesData
+        .filter(emp => department === 'all' || emp.department === department)
+        .map(emp => {
+            const basicSalary = emp.basic_salary;
+            const allowances = emp.housing_allowance + emp.transport_allowance + emp.other_allowances;
+            const deductions = Math.random() * 500; // Random deductions
+            const advances = Math.random() * 1000; // Random advances
+            const totalSalary = basicSalary + allowances - deductions - advances;
+            const paidAmount = Math.random() > 0.3 ? totalSalary : totalSalary * 0.7; // 70% chance of full payment
+            const balance = totalSalary - paidAmount;
+
+            return {
+                employee_id: emp.id,
+                employee_name: currentLanguage === 'ar' ? emp.name : emp.name_en,
+                basic_salary: basicSalary,
+                allowances: allowances,
+                deductions: deductions,
+                advances: advances,
+                total_salary: totalSalary,
+                paid_amount: paidAmount,
+                balance: balance,
+                month: month
+            };
+        });
+
+    updatePayrollTable();
+}
+
+// Update payroll table
+function updatePayrollTable() {
+    const tbody = document.getElementById('payroll-tbody');
+    tbody.innerHTML = '';
+
+    payrollData.forEach(payroll => {
+        const row = document.createElement('tr');
+
+        const balanceClass = payroll.balance > 0 ? 'text-danger' : 'text-success';
+
+        row.innerHTML = `
+            <td><strong>${payroll.employee_name}</strong></td>
+            <td class="text-end">${formatCurrency(payroll.basic_salary)}</td>
+            <td class="text-end text-success">${formatCurrency(payroll.allowances)}</td>
+            <td class="text-end text-warning">${formatCurrency(payroll.deductions)}</td>
+            <td class="text-end text-info">${formatCurrency(payroll.advances)}</td>
+            <td class="text-end"><strong>${formatCurrency(payroll.total_salary)}</strong></td>
+            <td class="text-end text-success">${formatCurrency(payroll.paid_amount)}</td>
+            <td class="text-end ${balanceClass}"><strong>${formatCurrency(payroll.balance)}</strong></td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-success" onclick="processPayment(${payroll.employee_id})" title="دفع راتب">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-info" onclick="generatePayslip(${payroll.employee_id})" title="كشف راتب">
+                        <i class="fas fa-file-invoice"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+
+        tbody.appendChild(row);
+    });
+}
+
+// Process payment
+function processPayment(employeeId) {
+    const employee = employeesData.find(emp => emp.id === employeeId);
+    const payroll = payrollData.find(p => p.employee_id === employeeId);
+
+    if (!employee || !payroll) return;
+
+    // Fill employee details
+    const employeeName = currentLanguage === 'ar' ? employee.name : employee.name_en;
+    const jobTitle = currentLanguage === 'ar' ? employee.job_title : employee.job_title_en;
+
+    document.getElementById('payment-employee-details').innerHTML = `
+        <strong>${employeeName}</strong> - ${jobTitle}<br>
+        <small>الراتب الإجمالي: ${formatCurrency(payroll.total_salary)} | المتبقي: ${formatCurrency(payroll.balance)}</small>
+    `;
+
+    // Set payment amount to balance
+    document.getElementById('payment-amount').value = payroll.balance.toFixed(2);
+
+    // Store current employee for payment
+    window.currentPaymentEmployee = employeeId;
+
+    const modal = new bootstrap.Modal(document.getElementById('processPaymentModal'));
+    modal.show();
+}
+
+// Save payment
+function savePayment() {
+    const employeeId = window.currentPaymentEmployee;
+    const amount = parseFloat(document.getElementById('payment-amount').value);
+    const date = document.getElementById('payment-date').value;
+    const method = document.getElementById('payment-method').value;
+    const reference = document.getElementById('payment-reference').value;
+    const notes = document.getElementById('payment-notes').value;
+
+    if (!amount || amount <= 0) {
+        alert(currentLanguage === 'ar' ? 'يرجى إدخال مبلغ صحيح' : 'Please enter a valid amount');
+        return;
+    }
+
+    // Update payroll data
+    const payrollIndex = payrollData.findIndex(p => p.employee_id === employeeId);
+    if (payrollIndex !== -1) {
+        payrollData[payrollIndex].paid_amount += amount;
+        payrollData[payrollIndex].balance -= amount;
+    }
+
+    // Clear form
+    document.getElementById('payment-amount').value = '';
+    document.getElementById('payment-reference').value = '';
+    document.getElementById('payment-notes').value = '';
+
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('processPaymentModal'));
+    modal.hide();
+
+    // Refresh display
+    updatePayrollTable();
+    loadPayrollSummary();
+
+    alert(currentLanguage === 'ar' ? 'تم تسجيل الدفع بنجاح' : 'Payment processed successfully');
+}
+
+// Generate salary statement
+function generateSalaryStatement() {
+    const employeeId = parseInt(document.getElementById('statement-employee').value);
+    const month = document.getElementById('statement-month').value;
+
+    if (!employeeId) {
+        alert(currentLanguage === 'ar' ? 'يرجى اختيار الموظف' : 'Please select an employee');
+        return;
+    }
+
+    const employee = employeesData.find(emp => emp.id === employeeId);
+    if (!employee) return;
+
+    // Generate statement content
+    const statementContent = generateStatementHTML(employee, month);
+    document.getElementById('salary-statement-content').innerHTML = statementContent;
+    document.getElementById('salary-statement-content').style.display = 'block';
+}
+
+// Generate statement HTML
+function generateStatementHTML(employee, month) {
+    const employeeName = currentLanguage === 'ar' ? employee.name : employee.name_en;
+    const jobTitle = currentLanguage === 'ar' ? employee.job_title : employee.job_title_en;
+    const departmentName = getDepartmentName(employee.department);
+
+    const basicSalary = employee.basic_salary;
+    const allowances = employee.housing_allowance + employee.transport_allowance + employee.other_allowances;
+    const deductions = 250.00; // Sample deduction
+    const advances = 500.00; // Sample advance
+    const totalSalary = basicSalary + allowances - deductions - advances;
+    const paidAmount = totalSalary * 0.8; // 80% paid
+    const balance = totalSalary - paidAmount;
+
+    return `
+        <div class="card">
+            <div class="card-header bg-primary text-white text-center">
+                <h5 class="mb-0">
+                    {% if session.get('language', 'ar') == 'ar' %}كشف راتب{% else %}Salary Statement{% endif %}
+                </h5>
+                <small>${new Date(month).toLocaleDateString('ar-SA', { year: 'numeric', month: 'long' })}</small>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6>{% if session.get('language', 'ar') == 'ar' %}بيانات الموظف{% else %}Employee Information{% endif %}</h6>
+                        <table class="table table-sm">
+                            <tr><td><strong>الاسم:</strong></td><td>${employeeName}</td></tr>
+                            <tr><td><strong>الرقم الوظيفي:</strong></td><td>${employee.employee_id}</td></tr>
+                            <tr><td><strong>المسمى:</strong></td><td>${jobTitle}</td></tr>
+                            <tr><td><strong>القسم:</strong></td><td>${departmentName}</td></tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>{% if session.get('language', 'ar') == 'ar' %}تفاصيل الراتب{% else %}Salary Details{% endif %}</h6>
+                        <table class="table table-sm">
+                            <tr><td>الراتب الأساسي:</td><td class="text-end">${formatCurrency(basicSalary)}</td></tr>
+                            <tr><td>البدلات:</td><td class="text-end text-success">${formatCurrency(allowances)}</td></tr>
+                            <tr><td>الاستقطاعات:</td><td class="text-end text-warning">${formatCurrency(deductions)}</td></tr>
+                            <tr><td>السلف:</td><td class="text-end text-info">${formatCurrency(advances)}</td></tr>
+                            <tr class="table-primary"><td><strong>الإجمالي:</strong></td><td class="text-end"><strong>${formatCurrency(totalSalary)}</strong></td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <h6>{% if session.get('language', 'ar') == 'ar' %}حالة الدفع{% else %}Payment Status{% endif %}</h6>
+                        <table class="table table-bordered">
+                            <tr><td>المبلغ المدفوع:</td><td class="text-end text-success"><strong>${formatCurrency(paidAmount)}</strong></td></tr>
+                            <tr><td>المتبقي:</td><td class="text-end text-danger"><strong>${formatCurrency(balance)}</strong></td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-12 text-center">
+                        <button type="button" class="btn btn-primary" onclick="printStatement()">
+                            <i class="fas fa-print"></i> طباعة
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="exportStatementPDF()">
+                            <i class="fas fa-file-pdf"></i> تصدير PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Helper functions
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('ar-SA', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(amount) + ' ريال';
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ar-SA');
+}
+
+function getDepartmentName(department) {
+    const departments = {
+        'kitchen': currentLanguage === 'ar' ? 'المطبخ' : 'Kitchen',
+        'service': currentLanguage === 'ar' ? 'الخدمة' : 'Service',
+        'management': currentLanguage === 'ar' ? 'الإدارة' : 'Management',
+        'cleaning': currentLanguage === 'ar' ? 'النظافة' : 'Cleaning'
+    };
+    return departments[department] || department;
+}
+
+function getStatusText(status) {
+    const statuses = {
+        'active': currentLanguage === 'ar' ? 'نشط' : 'Active',
+        'inactive': currentLanguage === 'ar' ? 'غير نشط' : 'Inactive',
+        'terminated': currentLanguage === 'ar' ? 'منتهي الخدمة' : 'Terminated'
+    };
+    return statuses[status] || status;
+}
+
+function getStatusClass(status) {
+    const classes = {
+        'active': 'success',
+        'inactive': 'warning',
+        'terminated': 'danger'
+    };
+    return classes[status] || 'secondary';
+}
+
+// Initialize chart
+function initializeChart() {
+    const ctx = document.getElementById('payrollChart').getContext('2d');
+
+    payrollChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['المطبخ', 'الخدمة', 'الإدارة', 'النظافة'],
+            datasets: [{
+                data: [35000, 18000, 15000, 8000],
+                backgroundColor: [
+                    '#FF6384',
+                    '#36A2EB',
+                    '#FFCE56',
+                    '#4BC0C0'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+}
+
+// Report functions
+function generateMonthlyReport() {
+    alert(currentLanguage === 'ar' ? 'سيتم إنشاء التقرير الشهري' : 'Monthly report will be generated');
+}
+
+function generateDepartmentReport() {
+    alert(currentLanguage === 'ar' ? 'سيتم إنشاء تقرير الأقسام' : 'Department report will be generated');
+}
+
+function generateOverdueReport() {
+    alert(currentLanguage === 'ar' ? 'سيتم إنشاء تقرير المتأخرات' : 'Overdue report will be generated');
+}
+
+function generateAnnualReport() {
+    alert(currentLanguage === 'ar' ? 'سيتم إنشاء التقرير السنوي' : 'Annual report will be generated');
+}
+
+// Other functions
+function editEmployee(id) {
+    alert(currentLanguage === 'ar' ? 'تعديل الموظف رقم: ' + id : 'Edit employee ID: ' + id);
+}
+
+function viewSalaryDetails(id) {
+    alert(currentLanguage === 'ar' ? 'عرض تفاصيل راتب الموظف رقم: ' + id : 'View salary details for employee ID: ' + id);
+}
+
+function generatePayslip(id) {
+    alert(currentLanguage === 'ar' ? 'إنشاء كشف راتب للموظف رقم: ' + id : 'Generate payslip for employee ID: ' + id);
+}
+
+function processPayroll() {
+    alert(currentLanguage === 'ar' ? 'سيتم معالجة جميع الرواتب' : 'All payroll will be processed');
+}
+
+function generatePayrollReport() {
+    alert(currentLanguage === 'ar' ? 'سيتم إنشاء تقرير الرواتب' : 'Payroll report will be generated');
+}
+
+function showOverdueAlerts() {
+    alert(currentLanguage === 'ar' ? 'عرض تنبيهات الرواتب المتأخرة' : 'Show overdue salary alerts');
+}
+
+function printStatement() {
+    window.print();
+}
+
+function exportStatementPDF() {
+    alert(currentLanguage === 'ar' ? 'سيتم تصدير كشف الراتب إلى PDF' : 'Statement will be exported to PDF');
+}
+</script>
+{% endblock %}

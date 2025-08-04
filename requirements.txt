@@ -1,0 +1,55 @@
+# متطلبات تطبيق المحاسبة الويب - Web Accounting System Requirements
+
+# إطار العمل الويب - Web Framework
+Flask>=2.3.0
+Flask-SQLAlchemy>=3.0.0
+Flask-Login>=0.6.0
+Flask-WTF>=1.1.0
+WTForms>=3.0.0
+Flask-Migrate>=4.0.0
+Flask-CORS>=4.0.0
+
+# قاعدة البيانات - Database
+psycopg2-binary>=2.9.0
+SQLAlchemy>=2.0.0
+
+# الأمان - Security
+Werkzeug>=2.3.0
+bcrypt>=4.0.0
+PyJWT>=2.8.0
+
+# معالجة الصور - Image Processing
+Pillow>=9.0.0
+
+# إنتاج ملفات PDF - PDF Generation
+reportlab>=3.6.0
+weasyprint>=59.0
+
+# الرسومات البيانية - Charts and Graphs
+matplotlib>=3.5.0
+plotly>=5.15.0
+
+# معالجة البيانات - Data Processing
+pandas>=1.4.0
+
+# ملفات Excel - Excel Files
+openpyxl>=3.0.0
+
+# الباركود - Barcode Generation
+python-barcode>=0.13.0
+
+# رموز QR - QR Code Generation
+qrcode>=7.3.0
+
+# دعم النصوص العربية - Arabic Text Support
+arabic-reshaper>=2.1.0
+python-bidi>=0.4.0
+
+# أدوات إضافية - Additional Tools
+requests>=2.28.0
+python-dateutil>=2.8.0
+gunicorn>=21.0.0
+python-dotenv>=1.0.0
+
+# تطوير - Development
+Flask-DebugToolbar>=0.13.0

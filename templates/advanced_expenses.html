@@ -1,0 +1,1043 @@
+{% extends "base_simple.html" %}
+
+{% block title %}
+    {% if session.get('language', 'ar') == 'ar' %}
+        المصروفات المتقدمة
+    {% else %}
+        Advanced Expenses
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            {% if session.get('language', 'ar') == 'ar' %}
+                <i class="fas fa-receipt"></i> المصروفات المتقدمة
+            {% else %}
+                <i class="fas fa-receipt"></i> Advanced Expenses
+            {% endif %}
+        </h1>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-primary" onclick="showAddExpenseModal()">
+                {% if session.get('language', 'ar') == 'ar' %}
+                    <i class="fas fa-plus"></i> إضافة مصروف
+                {% else %}
+                    <i class="fas fa-plus"></i> Add Expense
+                {% endif %}
+            </button>
+            <button type="button" class="btn btn-success" onclick="exportExpenses()">
+                {% if session.get('language', 'ar') == 'ar' %}
+                    <i class="fas fa-file-excel"></i> تصدير Excel
+                {% else %}
+                    <i class="fas fa-file-excel"></i> Export Excel
+                {% endif %}
+            </button>
+            <button type="button" class="btn btn-info" onclick="generateReport()">
+                {% if session.get('language', 'ar') == 'ar' %}
+                    <i class="fas fa-file-pdf"></i> تقرير PDF
+                {% else %}
+                    <i class="fas fa-file-pdf"></i> PDF Report
+                {% endif %}
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="printExpenses()">
+                {% if session.get('language', 'ar') == 'ar' %}
+                    <i class="fas fa-print"></i> طباعة
+                {% else %}
+                    <i class="fas fa-print"></i> Print
+                {% endif %}
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-4 border-primary h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-primary mb-1">
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                إجمالي المصروفات
+                            {% else %}
+                                Total Expenses
+                            {% endif %}
+                        </h6>
+                        <h3 class="mb-0" id="total-expenses">0.00 ريال</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-calculator fa-2x opacity-75 text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-4 border-success h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-success mb-1">
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                المصروفات المدفوعة
+                            {% else %}
+                                Paid Expenses
+                            {% endif %}
+                        </h6>
+                        <h3 class="mb-0" id="paid-expenses">0.00 ريال</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-check-circle fa-2x opacity-75 text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-4 border-danger h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-danger mb-1">
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                المصروفات المستحقة
+                            {% else %}
+                                Pending Expenses
+                            {% endif %}
+                        </h6>
+                        <h3 class="mb-0" id="pending-expenses">0.00 ريال</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-clock fa-2x opacity-75 text-danger"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-4 border-warning h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-warning mb-1">
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                عدد المصروفات
+                            {% else %}
+                                Expenses Count
+                            {% endif %}
+                        </h6>
+                        <h3 class="mb-0" id="expenses-count">0</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-list fa-2x opacity-75 text-warning"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Analytics Row -->
+    <div class="row mb-4">
+        <!-- Filters Section -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-filter me-2"></i>
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            فلاتر البحث
+                        {% else %}
+                            Search Filters
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}من تاريخ{% else %}From Date{% endif %}
+                            </label>
+                            <input type="date" class="form-control" id="from-date" value="2025-08-01" onchange="filterExpenses()">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}إلى تاريخ{% else %}To Date{% endif %}
+                            </label>
+                            <input type="date" class="form-control" id="to-date" value="2025-08-31" onchange="filterExpenses()">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}نوع المصروف{% else %}Expense Type{% endif %}
+                            </label>
+                            <select class="form-select" id="expense-type" onchange="filterExpenses()">
+                                <option value="all">
+                                    {% if session.get('language', 'ar') == 'ar' %}جميع الأنواع{% else %}All Types{% endif %}
+                                </option>
+                                <option value="salaries">
+                                    {% if session.get('language', 'ar') == 'ar' %}رواتب{% else %}Salaries{% endif %}
+                                </option>
+                                <option value="rent">
+                                    {% if session.get('language', 'ar') == 'ar' %}إيجار{% else %}Rent{% endif %}
+                                </option>
+                                <option value="utilities">
+                                    {% if session.get('language', 'ar') == 'ar' %}خدمات{% else %}Utilities{% endif %}
+                                </option>
+                                <option value="maintenance">
+                                    {% if session.get('language', 'ar') == 'ar' %}صيانة{% else %}Maintenance{% endif %}
+                                </option>
+                                <option value="marketing">
+                                    {% if session.get('language', 'ar') == 'ar' %}تسويق{% else %}Marketing{% endif %}
+                                </option>
+                                <option value="supplies">
+                                    {% if session.get('language', 'ar') == 'ar' %}مستلزمات{% else %}Supplies{% endif %}
+                                </option>
+                                <option value="other">
+                                    {% if session.get('language', 'ar') == 'ar' %}أخرى{% else %}Other{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}حالة الدفع{% else %}Payment Status{% endif %}
+                            </label>
+                            <select class="form-select" id="payment-status" onchange="filterExpenses()">
+                                <option value="all">
+                                    {% if session.get('language', 'ar') == 'ar' %}جميع الحالات{% else %}All Status{% endif %}
+                                </option>
+                                <option value="paid">
+                                    {% if session.get('language', 'ar') == 'ar' %}مدفوع{% else %}Paid{% endif %}
+                                </option>
+                                <option value="unpaid">
+                                    {% if session.get('language', 'ar') == 'ar' %}غير مدفوع{% else %}Unpaid{% endif %}
+                                </option>
+                                <option value="partial">
+                                    {% if session.get('language', 'ar') == 'ar' %}مدفوع جزئياً{% else %}Partially Paid{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}طريقة الدفع{% else %}Payment Method{% endif %}
+                            </label>
+                            <select class="form-select" id="payment-method" onchange="filterExpenses()">
+                                <option value="all">
+                                    {% if session.get('language', 'ar') == 'ar' %}جميع الطرق{% else %}All Methods{% endif %}
+                                </option>
+                                <option value="CASH">
+                                    {% if session.get('language', 'ar') == 'ar' %}نقدي{% else %}Cash{% endif %}
+                                </option>
+                                <option value="MADA">مدى - MADA</option>
+                                <option value="VISA">فيزا - VISA</option>
+                                <option value="MASTERCARD">ماستركارد - MASTERCARD</option>
+                                <option value="BANK">
+                                    {% if session.get('language', 'ar') == 'ar' %}تحويل بنكي{% else %}Bank Transfer{% endif %}
+                                </option>
+                                <option value="CHECK">
+                                    {% if session.get('language', 'ar') == 'ar' %}شيك{% else %}Check{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}البحث بالوصف{% else %}Search Description{% endif %}
+                            </label>
+                            <input type="text" class="form-control" id="search-description" placeholder="{% if session.get('language', 'ar') == 'ar' %}ابحث في وصف المصروف{% else %}Search in expense description{% endif %}" onkeyup="filterExpenses()">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}الجهة المستفيدة{% else %}Vendor{% endif %}
+                            </label>
+                            <input type="text" class="form-control" id="search-vendor" placeholder="{% if session.get('language', 'ar') == 'ar' %}ابحث بالجهة المستفيدة{% else %}Search by vendor{% endif %}" onkeyup="filterExpenses()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Analytics -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            تحليل سريع
+                        {% else %}
+                            Quick Analytics
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="expensesPieChart" width="300" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expenses Table -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-table me-2"></i>
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            جدول المصروفات
+                        {% else %}
+                            Expenses Table
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0" id="expenses-table">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th style="width: 10%">
+                                        {% if session.get('language', 'ar') == 'ar' %}رقم العملية{% else %}Operation No.{% endif %}
+                                    </th>
+                                    <th style="width: 12%">
+                                        {% if session.get('language', 'ar') == 'ar' %}التاريخ{% else %}Date{% endif %}
+                                    </th>
+                                    <th style="width: 15%">
+                                        {% if session.get('language', 'ar') == 'ar' %}نوع المصروف{% else %}Expense Type{% endif %}
+                                    </th>
+                                    <th style="width: 20%">
+                                        {% if session.get('language', 'ar') == 'ar' %}الوصف{% else %}Description{% endif %}
+                                    </th>
+                                    <th style="width: 12%">
+                                        {% if session.get('language', 'ar') == 'ar' %}المبلغ{% else %}Amount{% endif %}
+                                    </th>
+                                    <th style="width: 12%">
+                                        {% if session.get('language', 'ar') == 'ar' %}الجهة المستفيدة{% else %}Vendor{% endif %}
+                                    </th>
+                                    <th style="width: 10%">
+                                        {% if session.get('language', 'ar') == 'ar' %}طريقة الدفع{% else %}Payment Method{% endif %}
+                                    </th>
+                                    <th style="width: 9%">
+                                        {% if session.get('language', 'ar') == 'ar' %}حالة الدفع{% else %}Status{% endif %}
+                                    </th>
+                                    <th style="width: 10%">
+                                        {% if session.get('language', 'ar') == 'ar' %}إجراءات{% else %}Actions{% endif %}
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="expenses-tbody">
+                                <!-- Expenses will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Add Expense Modal -->
+<div class="modal fade" id="addExpenseModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {% if session.get('language', 'ar') == 'ar' %}إضافة مصروف جديد{% else %}Add New Expense{% endif %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="expense-form">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}رقم العملية{% else %}Operation Number{% endif %}
+                            </label>
+                            <input type="text" class="form-control" id="operation-number" readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}التاريخ{% else %}Date{% endif %}
+                            </label>
+                            <input type="date" class="form-control" id="expense-date" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}العملة{% else %}Currency{% endif %}
+                            </label>
+                            <select class="form-select" id="currency">
+                                <option value="SAR" selected>ريال سعودي - SAR</option>
+                                <option value="USD">دولار أمريكي - USD</option>
+                                <option value="EUR">يورو - EUR</option>
+                                <option value="GBP">جنيه إسترليني - GBP</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}التصنيف الرئيسي{% else %}Main Category{% endif %}
+                            </label>
+                            <select class="form-select" id="main-category" onchange="updateSubCategories()" required>
+                                <option value="">
+                                    {% if session.get('language', 'ar') == 'ar' %}اختر التصنيف الرئيسي{% else %}Select Main Category{% endif %}
+                                </option>
+                                <option value="operational">
+                                    {% if session.get('language', 'ar') == 'ar' %}تشغيلي{% else %}Operational{% endif %}
+                                </option>
+                                <option value="administrative">
+                                    {% if session.get('language', 'ar') == 'ar' %}إداري{% else %}Administrative{% endif %}
+                                </option>
+                                <option value="investment">
+                                    {% if session.get('language', 'ar') == 'ar' %}استثماري{% else %}Investment{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}نوع المصروف{% else %}Expense Type{% endif %}
+                            </label>
+                            <select class="form-select" id="expense-type-modal" required>
+                                <option value="">
+                                    {% if session.get('language', 'ar') == 'ar' %}اختر نوع المصروف{% else %}Select Expense Type{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}وصف المصروف{% else %}Expense Description{% endif %}
+                            </label>
+                            <textarea class="form-control" id="expense-description" rows="3" placeholder="{% if session.get('language', 'ar') == 'ar' %}أدخل وصف تفصيلي للمصروف{% else %}Enter detailed description of the expense{% endif %}" required></textarea>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}المبلغ{% else %}Amount{% endif %}
+                            </label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="expense-amount" step="0.01" min="0" required>
+                                <span class="input-group-text" id="currency-symbol">ريال</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}الجهة المستفيدة{% else %}Vendor/Beneficiary{% endif %}
+                            </label>
+                            <input type="text" class="form-control" id="vendor-name" placeholder="{% if session.get('language', 'ar') == 'ar' %}اسم الجهة المستفيدة{% else %}Vendor name{% endif %}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}طريقة الدفع{% else %}Payment Method{% endif %}
+                            </label>
+                            <select class="form-select" id="payment-method-modal" required>
+                                <option value="CASH">
+                                    {% if session.get('language', 'ar') == 'ar' %}نقدي{% else %}Cash{% endif %}
+                                </option>
+                                <option value="MADA">مدى - MADA</option>
+                                <option value="VISA">فيزا - VISA</option>
+                                <option value="MASTERCARD">ماستركارد - MASTERCARD</option>
+                                <option value="BANK">
+                                    {% if session.get('language', 'ar') == 'ar' %}تحويل بنكي{% else %}Bank Transfer{% endif %}
+                                </option>
+                                <option value="CHECK">
+                                    {% if session.get('language', 'ar') == 'ar' %}شيك{% else %}Check{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}حالة الدفع{% else %}Payment Status{% endif %}
+                            </label>
+                            <select class="form-select" id="payment-status-modal" required>
+                                <option value="paid">
+                                    {% if session.get('language', 'ar') == 'ar' %}مدفوع{% else %}Paid{% endif %}
+                                </option>
+                                <option value="unpaid">
+                                    {% if session.get('language', 'ar') == 'ar' %}غير مدفوع{% else %}Unpaid{% endif %}
+                                </option>
+                                <option value="partial">
+                                    {% if session.get('language', 'ar') == 'ar' %}مدفوع جزئياً{% else %}Partially Paid{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}رقم المرجع{% else %}Reference Number{% endif %}
+                            </label>
+                            <input type="text" class="form-control" id="reference-number" placeholder="{% if session.get('language', 'ar') == 'ar' %}رقم الفاتورة أو المرجع{% else %}Invoice or reference number{% endif %}">
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}المرفقات{% else %}Attachments{% endif %}
+                            </label>
+                            <input type="file" class="form-control" id="expense-attachments" multiple accept="image/*,.pdf,.doc,.docx">
+                            <small class="text-muted">
+                                {% if session.get('language', 'ar') == 'ar' %}
+                                    يمكنك رفع صور الفواتير أو الإيصالات (PNG, JPG, PDF, DOC)
+                                {% else %}
+                                    You can upload invoice images or receipts (PNG, JPG, PDF, DOC)
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}ملاحظات إضافية{% else %}Additional Notes{% endif %}
+                            </label>
+                            <textarea class="form-control" id="expense-notes" rows="2" placeholder="{% if session.get('language', 'ar') == 'ar' %}ملاحظات إضافية (اختياري){% else %}Additional notes (optional){% endif %}"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {% if session.get('language', 'ar') == 'ar' %}إلغاء{% else %}Cancel{% endif %}
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveExpense()">
+                    {% if session.get('language', 'ar') == 'ar' %}حفظ المصروف{% else %}Save Expense{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Global variables
+let expensesData = [];
+let currentLanguage = '{{ session.get("language", "ar") }}';
+let expenseChart = null;
+
+// Expense categories by main category
+const expenseCategories = {
+    operational: {
+        ar: ['رواتب', 'خدمات', 'صيانة', 'مستلزمات', 'وقود', 'نظافة'],
+        en: ['salaries', 'utilities', 'maintenance', 'supplies', 'fuel', 'cleaning']
+    },
+    administrative: {
+        ar: ['إيجار', 'تأمين', 'قانونية', 'محاسبة', 'اتصالات', 'مكتبية'],
+        en: ['rent', 'insurance', 'legal', 'accounting', 'communications', 'office']
+    },
+    investment: {
+        ar: ['معدات', 'تطوير', 'تدريب', 'تسويق', 'بحث وتطوير', 'تكنولوجيا'],
+        en: ['equipment', 'development', 'training', 'marketing', 'research', 'technology']
+    }
+};
+
+// Initialize page
+$(document).ready(function() {
+    // Set today's date as default
+    document.getElementById('expense-date').value = new Date().toISOString().split('T')[0];
+
+    // Generate operation number
+    generateOperationNumber();
+
+    // Load sample data
+    loadSampleExpenses();
+
+    // Filter and display data
+    filterExpenses();
+
+    // Initialize chart
+    initializeChart();
+});
+
+// Generate operation number
+function generateOperationNumber() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+
+    const operationNumber = `EXP-${year}${month}${day}-${random}`;
+    document.getElementById('operation-number').value = operationNumber;
+}
+
+// Load sample expenses data
+function loadSampleExpenses() {
+    expensesData = [
+        {
+            id: 1,
+            operation_number: 'EXP-20250801-001',
+            date: '2025-08-01',
+            main_category: 'operational',
+            type: 'salaries',
+            type_ar: 'رواتب',
+            type_en: 'Salaries',
+            description: 'راتب شهر يوليو للموظفين',
+            description_en: 'July salary for employees',
+            amount: 15000.00,
+            currency: 'SAR',
+            vendor: 'قسم الموارد البشرية',
+            vendor_en: 'HR Department',
+            payment_method: 'BANK',
+            payment_status: 'paid',
+            reference_number: 'PAY-001',
+            notes: 'تم الدفع في الموعد المحدد',
+            attachments: ['salary_receipt.pdf']
+        },
+        {
+            id: 2,
+            operation_number: 'EXP-20250802-002',
+            date: '2025-08-02',
+            main_category: 'administrative',
+            type: 'rent',
+            type_ar: 'إيجار',
+            type_en: 'Rent',
+            description: 'إيجار المطعم لشهر أغسطس',
+            description_en: 'Restaurant rent for August',
+            amount: 8000.00,
+            currency: 'SAR',
+            vendor: 'شركة العقارات المتحدة',
+            vendor_en: 'United Real Estate',
+            payment_method: 'CHECK',
+            payment_status: 'paid',
+            reference_number: 'CHK-001',
+            notes: 'تم الدفع بشيك',
+            attachments: ['rent_receipt.jpg']
+        },
+        {
+            id: 3,
+            operation_number: 'EXP-20250803-003',
+            date: '2025-08-03',
+            main_category: 'operational',
+            type: 'utilities',
+            type_ar: 'خدمات',
+            type_en: 'Utilities',
+            description: 'فاتورة الكهرباء والماء',
+            description_en: 'Electricity and water bill',
+            amount: 2500.00,
+            currency: 'SAR',
+            vendor: 'شركة الكهرباء السعودية',
+            vendor_en: 'Saudi Electricity Company',
+            payment_method: 'MADA',
+            payment_status: 'unpaid',
+            reference_number: 'ELEC-001',
+            notes: 'في انتظار الدفع',
+            attachments: []
+        },
+        {
+            id: 4,
+            operation_number: 'EXP-20250804-004',
+            date: '2025-08-04',
+            main_category: 'operational',
+            type: 'maintenance',
+            type_ar: 'صيانة',
+            type_en: 'Maintenance',
+            description: 'صيانة أجهزة التكييف',
+            description_en: 'Air conditioning maintenance',
+            amount: 1200.00,
+            currency: 'SAR',
+            vendor: 'شركة التكييف المتخصصة',
+            vendor_en: 'AC Specialists Company',
+            payment_method: 'CASH',
+            payment_status: 'partial',
+            reference_number: 'MAINT-001',
+            notes: 'تم دفع 50% من المبلغ',
+            attachments: ['maintenance_invoice.pdf']
+        },
+        {
+            id: 5,
+            operation_number: 'EXP-20250805-005',
+            date: '2025-08-05',
+            main_category: 'investment',
+            type: 'marketing',
+            type_ar: 'تسويق',
+            type_en: 'Marketing',
+            description: 'حملة إعلانية على وسائل التواصل',
+            description_en: 'Social media advertising campaign',
+            amount: 3000.00,
+            currency: 'SAR',
+            vendor: 'وكالة التسويق الرقمي',
+            vendor_en: 'Digital Marketing Agency',
+            payment_method: 'VISA',
+            payment_status: 'paid',
+            reference_number: 'MKT-001',
+            notes: 'حملة لمدة شهر',
+            attachments: ['marketing_contract.pdf']
+        },
+        {
+            id: 6,
+            operation_number: 'EXP-20250806-006',
+            date: '2025-08-06',
+            main_category: 'operational',
+            type: 'supplies',
+            type_ar: 'مستلزمات',
+            type_en: 'Supplies',
+            description: 'مستلزمات تنظيف ومواد استهلاكية',
+            description_en: 'Cleaning supplies and consumables',
+            amount: 800.00,
+            currency: 'SAR',
+            vendor: 'متجر المستلزمات',
+            vendor_en: 'Supplies Store',
+            payment_method: 'CASH',
+            payment_status: 'paid',
+            reference_number: 'SUP-001',
+            notes: 'مشتريات شهرية',
+            attachments: []
+        }
+    ];
+}
+
+// Update sub categories based on main category
+function updateSubCategories() {
+    const mainCategory = document.getElementById('main-category').value;
+    const subCategorySelect = document.getElementById('expense-type-modal');
+
+    subCategorySelect.innerHTML = '<option value="">اختر نوع المصروف</option>';
+
+    if (mainCategory && expenseCategories[mainCategory]) {
+        const categories = currentLanguage === 'ar' ?
+            expenseCategories[mainCategory].ar :
+            expenseCategories[mainCategory].en;
+
+        categories.forEach((category, index) => {
+            const option = document.createElement('option');
+            option.value = expenseCategories[mainCategory].en[index];
+            option.textContent = category;
+            subCategorySelect.appendChild(option);
+        });
+    }
+}
+
+// Show add expense modal
+function showAddExpenseModal() {
+    generateOperationNumber();
+    const modal = new bootstrap.Modal(document.getElementById('addExpenseModal'));
+    modal.show();
+}
+
+// Save expense
+function saveExpense() {
+    const form = document.getElementById('expense-form');
+
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    const newExpense = {
+        id: expensesData.length + 1,
+        operation_number: document.getElementById('operation-number').value,
+        date: document.getElementById('expense-date').value,
+        main_category: document.getElementById('main-category').value,
+        type: document.getElementById('expense-type-modal').value,
+        type_ar: document.getElementById('expense-type-modal').selectedOptions[0].text,
+        type_en: document.getElementById('expense-type-modal').value,
+        description: document.getElementById('expense-description').value,
+        description_en: document.getElementById('expense-description').value,
+        amount: parseFloat(document.getElementById('expense-amount').value),
+        currency: document.getElementById('currency').value,
+        vendor: document.getElementById('vendor-name').value,
+        vendor_en: document.getElementById('vendor-name').value,
+        payment_method: document.getElementById('payment-method-modal').value,
+        payment_status: document.getElementById('payment-status-modal').value,
+        reference_number: document.getElementById('reference-number').value,
+        notes: document.getElementById('expense-notes').value,
+        attachments: []
+    };
+
+    expensesData.push(newExpense);
+
+    // Clear form
+    form.reset();
+    generateOperationNumber();
+
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('addExpenseModal'));
+    modal.hide();
+
+    // Refresh display
+    filterExpenses();
+
+    alert(currentLanguage === 'ar' ? 'تم حفظ المصروف بنجاح' : 'Expense saved successfully');
+}
+
+// Filter expenses
+function filterExpenses() {
+    const fromDate = document.getElementById('from-date').value;
+    const toDate = document.getElementById('to-date').value;
+    const expenseType = document.getElementById('expense-type').value;
+    const paymentStatus = document.getElementById('payment-status').value;
+    const paymentMethod = document.getElementById('payment-method').value;
+    const searchDescription = document.getElementById('search-description').value.toLowerCase();
+    const searchVendor = document.getElementById('search-vendor').value.toLowerCase();
+
+    let filteredData = expensesData.filter(expense => {
+        // Date filter
+        const expenseDate = new Date(expense.date);
+        const from = new Date(fromDate);
+        const to = new Date(toDate);
+        if (expenseDate < from || expenseDate > to) {
+            return false;
+        }
+
+        // Type filter
+        if (expenseType !== 'all' && expense.type !== expenseType) {
+            return false;
+        }
+
+        // Payment status filter
+        if (paymentStatus !== 'all' && expense.payment_status !== paymentStatus) {
+            return false;
+        }
+
+        // Payment method filter
+        if (paymentMethod !== 'all' && expense.payment_method !== paymentMethod) {
+            return false;
+        }
+
+        // Description search
+        if (searchDescription && !expense.description.toLowerCase().includes(searchDescription) &&
+            !expense.description_en.toLowerCase().includes(searchDescription)) {
+            return false;
+        }
+
+        // Vendor search
+        if (searchVendor && !expense.vendor.toLowerCase().includes(searchVendor) &&
+            !expense.vendor_en.toLowerCase().includes(searchVendor)) {
+            return false;
+        }
+
+        return true;
+    });
+
+    updateExpensesTable(filteredData);
+    updateSummaryCards(filteredData);
+    updateChart(filteredData);
+}
+
+// Update expenses table
+function updateExpensesTable(data) {
+    const tbody = document.getElementById('expenses-tbody');
+    tbody.innerHTML = '';
+
+    data.forEach(expense => {
+        const row = document.createElement('tr');
+
+        const typeName = currentLanguage === 'ar' ? expense.type_ar : expense.type_en;
+        const description = currentLanguage === 'ar' ? expense.description : expense.description_en;
+        const vendorName = currentLanguage === 'ar' ? expense.vendor : expense.vendor_en;
+        const statusText = getStatusText(expense.payment_status);
+        const statusClass = getStatusClass(expense.payment_status);
+        const paymentMethodText = getPaymentMethodText(expense.payment_method);
+
+        row.innerHTML = `
+            <td>${expense.operation_number}</td>
+            <td>${formatDate(expense.date)}</td>
+            <td><span class="badge bg-${getTypeBadgeColor(expense.main_category)}">${typeName}</span></td>
+            <td>${description}</td>
+            <td class="text-end">${formatCurrency(expense.amount, expense.currency)}</td>
+            <td>${vendorName}</td>
+            <td><span class="badge bg-info">${paymentMethodText}</span></td>
+            <td><span class="badge bg-${statusClass}">${statusText}</span></td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-primary" onclick="editExpense(${expense.id})" title="تعديل">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-info" onclick="viewAttachments(${expense.id})" title="المرفقات">
+                        <i class="fas fa-paperclip"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" onclick="deleteExpense(${expense.id})" title="حذف">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+
+        tbody.appendChild(row);
+    });
+}
+
+// Update summary cards
+function updateSummaryCards(data) {
+    let totalExpenses = 0;
+    let paidExpenses = 0;
+    let pendingExpenses = 0;
+
+    data.forEach(expense => {
+        totalExpenses += expense.amount;
+
+        if (expense.payment_status === 'paid') {
+            paidExpenses += expense.amount;
+        } else if (expense.payment_status === 'unpaid') {
+            pendingExpenses += expense.amount;
+        } else if (expense.payment_status === 'partial') {
+            paidExpenses += expense.amount * 0.5; // Assume 50% paid for partial
+            pendingExpenses += expense.amount * 0.5;
+        }
+    });
+
+    document.getElementById('total-expenses').textContent = formatCurrency(totalExpenses);
+    document.getElementById('paid-expenses').textContent = formatCurrency(paidExpenses);
+    document.getElementById('pending-expenses').textContent = formatCurrency(pendingExpenses);
+    document.getElementById('expenses-count').textContent = data.length;
+}
+
+// Initialize chart
+function initializeChart() {
+    const ctx = document.getElementById('expensesPieChart').getContext('2d');
+
+    expenseChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: [],
+            datasets: [{
+                data: [],
+                backgroundColor: [
+                    '#FF6384',
+                    '#36A2EB',
+                    '#FFCE56',
+                    '#4BC0C0',
+                    '#9966FF',
+                    '#FF9F40',
+                    '#FF6384',
+                    '#C9CBCF'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+}
+
+// Update chart
+function updateChart(data) {
+    const typeAmounts = {};
+
+    data.forEach(expense => {
+        const typeName = currentLanguage === 'ar' ? expense.type_ar : expense.type_en;
+        if (typeAmounts[typeName]) {
+            typeAmounts[typeName] += expense.amount;
+        } else {
+            typeAmounts[typeName] = expense.amount;
+        }
+    });
+
+    const labels = Object.keys(typeAmounts);
+    const amounts = Object.values(typeAmounts);
+
+    expenseChart.data.labels = labels;
+    expenseChart.data.datasets[0].data = amounts;
+    expenseChart.update();
+}
+
+// Helper functions
+function formatCurrency(amount, currency = 'SAR') {
+    const symbols = {
+        'SAR': 'ريال',
+        'USD': '$',
+        'EUR': '€',
+        'GBP': '£'
+    };
+
+    return new Intl.NumberFormat('ar-SA', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(amount) + ' ' + symbols[currency];
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    if (currentLanguage === 'ar') {
+        return date.toLocaleDateString('ar-SA');
+    } else {
+        return date.toLocaleDateString('en-US');
+    }
+}
+
+function getStatusText(status) {
+    const statuses = {
+        'paid': currentLanguage === 'ar' ? 'مدفوع' : 'Paid',
+        'unpaid': currentLanguage === 'ar' ? 'غير مدفوع' : 'Unpaid',
+        'partial': currentLanguage === 'ar' ? 'مدفوع جزئياً' : 'Partially Paid'
+    };
+    return statuses[status] || status;
+}
+
+function getStatusClass(status) {
+    const classes = {
+        'paid': 'success',
+        'unpaid': 'danger',
+        'partial': 'warning'
+    };
+    return classes[status] || 'secondary';
+}
+
+function getTypeBadgeColor(mainCategory) {
+    const colors = {
+        'operational': 'primary',
+        'administrative': 'warning',
+        'investment': 'info'
+    };
+    return colors[mainCategory] || 'secondary';
+}
+
+function getPaymentMethodText(method) {
+    const methods = {
+        'CASH': currentLanguage === 'ar' ? 'نقدي' : 'Cash',
+        'MADA': 'مدى',
+        'VISA': 'فيزا',
+        'MASTERCARD': 'ماستركارد',
+        'BANK': currentLanguage === 'ar' ? 'تحويل بنكي' : 'Bank Transfer',
+        'CHECK': currentLanguage === 'ar' ? 'شيك' : 'Check'
+    };
+    return methods[method] || method;
+}
+
+// Action functions
+function editExpense(id) {
+    alert(currentLanguage === 'ar' ? 'سيتم فتح نافذة التعديل' : 'Edit modal will be opened');
+}
+
+function viewAttachments(id) {
+    const expense = expensesData.find(e => e.id === id);
+    if (expense && expense.attachments.length > 0) {
+        alert(currentLanguage === 'ar' ? 'عرض المرفقات: ' + expense.attachments.join(', ') : 'View attachments: ' + expense.attachments.join(', '));
+    } else {
+        alert(currentLanguage === 'ar' ? 'لا توجد مرفقات' : 'No attachments');
+    }
+}
+
+function deleteExpense(id) {
+    if (confirm(currentLanguage === 'ar' ? 'هل أنت متأكد من حذف هذا المصروف؟' : 'Are you sure you want to delete this expense?')) {
+        expensesData = expensesData.filter(e => e.id !== id);
+        filterExpenses();
+        alert(currentLanguage === 'ar' ? 'تم حذف المصروف' : 'Expense deleted');
+    }
+}
+
+// Export and print functions
+function exportExpenses() {
+    alert(currentLanguage === 'ar' ? 'سيتم تصدير البيانات إلى Excel' : 'Data will be exported to Excel');
+}
+
+function generateReport() {
+    alert(currentLanguage === 'ar' ? 'سيتم إنشاء تقرير PDF' : 'PDF report will be generated');
+}
+
+function printExpenses() {
+    window.print();
+}
+</script>
+{% endblock %}

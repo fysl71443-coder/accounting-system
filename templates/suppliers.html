@@ -1,0 +1,368 @@
+{% extends "base_simple.html" %}
+
+{% block title %}
+    {% if session.get('language', 'ar') == 'ar' %}
+        إدارة الموردين - نظام المحاسبة
+    {% else %}
+        Suppliers Management - Accounting System
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-truck me-2"></i>
+        {% if session.get('language', 'ar') == 'ar' %}
+            إدارة الموردين
+        {% else %}
+            Suppliers Management
+        {% endif %}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
+                <i class="fas fa-plus me-1"></i>
+                {% if session.get('language', 'ar') == 'ar' %}إضافة مورد{% else %}Add Supplier{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filter -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="input-group">
+            <input type="text" class="form-control" id="searchSuppliers" placeholder="{% if session.get('language', 'ar') == 'ar' %}البحث في الموردين...{% else %}Search suppliers...{% endif %}">
+            <button class="btn btn-outline-secondary" type="button">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <select class="form-select" id="filterCategory">
+            <option value="">{% if session.get('language', 'ar') == 'ar' %}جميع الفئات{% else %}All Categories{% endif %}</option>
+            <option value="food">{% if session.get('language', 'ar') == 'ar' %}أغذية{% else %}Food{% endif %}</option>
+            <option value="spices">{% if session.get('language', 'ar') == 'ar' %}بهارات{% else %}Spices{% endif %}</option>
+            <option value="meat">{% if session.get('language', 'ar') == 'ar' %}لحوم{% else %}Meat{% endif %}</option>
+            <option value="vegetables">{% if session.get('language', 'ar') == 'ar' %}خضروات{% else %}Vegetables{% endif %}</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <select class="form-select" id="filterStatus">
+            <option value="">{% if session.get('language', 'ar') == 'ar' %}جميع الحالات{% else %}All Status{% endif %}</option>
+            <option value="active">{% if session.get('language', 'ar') == 'ar' %}نشط{% else %}Active{% endif %}</option>
+            <option value="inactive">{% if session.get('language', 'ar') == 'ar' %}غير نشط{% else %}Inactive{% endif %}</option>
+        </select>
+    </div>
+</div>
+
+<!-- Suppliers Grid -->
+<div class="row" id="suppliersGrid">
+    <!-- Sample Supplier Cards -->
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card supplier-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0">مورد الأرز المحلي</h6>
+                <span class="badge bg-success">نشط</span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12 mb-2">
+                        <small class="text-muted">
+                            {% if session.get('language', 'ar') == 'ar' %}الفئة:{% else %}Category:{% endif %}
+                        </small>
+                        <span class="badge bg-info">أغذية</span>
+                    </div>
+                    <div class="col-12 mb-2">
+                        <small class="text-muted">
+                            {% if session.get('language', 'ar') == 'ar' %}الهاتف:{% else %}Phone:{% endif %}
+                        </small>
+                        <br>+966 50 123 4567
+                    </div>
+                    <div class="col-12 mb-2">
+                        <small class="text-muted">
+                            {% if session.get('language', 'ar') == 'ar' %}العنوان:{% else %}Address:{% endif %}
+                        </small>
+                        <br>الرياض، المملكة العربية السعودية
+                    </div>
+                    <div class="col-12 mb-2">
+                        <small class="text-muted">
+                            {% if session.get('language', 'ar') == 'ar' %}آخر طلبية:{% else %}Last Order:{% endif %}
+                        </small>
+                        <br>2024-01-15
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="btn-group w-100" role="group">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="viewSupplier(1)">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-warning" onclick="editSupplier(1)">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-success" onclick="newOrder(1)">
+                        <i class="fas fa-shopping-cart"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-info" onclick="viewOrders(1)">
+                        <i class="fas fa-history"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card supplier-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0">مزرعة الدجاج الطازج</h6>
+                <span class="badge bg-success">نشط</span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12 mb-2">
+                        <small class="text-muted">
+                            {% if session.get('language', 'ar') == 'ar' %}الفئة:{% else %}Category:{% endif %}
+                        </small>
+                        <span class="badge bg-warning">لحوم</span>
+                    </div>
+                    <div class="col-12 mb-2">
+                        <small class="text-muted">
+                            {% if session.get('language', 'ar') == 'ar' %}الهاتف:{% else %}Phone:{% endif %}
+                        </small>
+                        <br>+966 55 987 6543
+                    </div>
+                    <div class="col-12 mb-2">
+                        <small class="text-muted">
+                            {% if session.get('language', 'ar') == 'ar' %}العنوان:{% else %}Address:{% endif %}
+                        </small>
+                        <br>الخرج، المملكة العربية السعودية
+                    </div>
+                    <div class="col-12 mb-2">
+                        <small class="text-muted">
+                            {% if session.get('language', 'ar') == 'ar' %}آخر طلبية:{% else %}Last Order:{% endif %}
+                        </small>
+                        <br>2024-01-20
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="btn-group w-100" role="group">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="viewSupplier(2)">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-warning" onclick="editSupplier(2)">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-success" onclick="newOrder(2)">
+                        <i class="fas fa-shopping-cart"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-info" onclick="viewOrders(2)">
+                        <i class="fas fa-history"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card supplier-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0">مورد البهارات الفاخرة</h6>
+                <span class="badge bg-success">نشط</span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12 mb-2">
+                        <small class="text-muted">
+                            {% if session.get('language', 'ar') == 'ar' %}الفئة:{% else %}Category:{% endif %}
+                        </small>
+                        <span class="badge bg-danger">بهارات</span>
+                    </div>
+                    <div class="col-12 mb-2">
+                        <small class="text-muted">
+                            {% if session.get('language', 'ar') == 'ar' %}الهاتف:{% else %}Phone:{% endif %}
+                        </small>
+                        <br>+966 56 456 7890
+                    </div>
+                    <div class="col-12 mb-2">
+                        <small class="text-muted">
+                            {% if session.get('language', 'ar') == 'ar' %}العنوان:{% else %}Address:{% endif %}
+                        </small>
+                        <br>جدة، المملكة العربية السعودية
+                    </div>
+                    <div class="col-12 mb-2">
+                        <small class="text-muted">
+                            {% if session.get('language', 'ar') == 'ar' %}آخر طلبية:{% else %}Last Order:{% endif %}
+                        </small>
+                        <br>2024-01-18
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="btn-group w-100" role="group">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="viewSupplier(3)">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-warning" onclick="editSupplier(3)">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-success" onclick="newOrder(3)">
+                        <i class="fas fa-shopping-cart"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-info" onclick="viewOrders(3)">
+                        <i class="fas fa-history"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Supplier Modal -->
+<div class="modal fade" id="addSupplierModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {% if session.get('language', 'ar') == 'ar' %}إضافة مورد جديد{% else %}Add New Supplier{% endif %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="supplierForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}اسم المورد{% else %}Supplier Name{% endif %}
+                            </label>
+                            <input type="text" class="form-control" name="supplier_name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}الفئة{% else %}Category{% endif %}
+                            </label>
+                            <select class="form-select" name="category" required>
+                                <option value="">{% if session.get('language', 'ar') == 'ar' %}اختر الفئة{% else %}Select Category{% endif %}</option>
+                                <option value="food">{% if session.get('language', 'ar') == 'ar' %}أغذية{% else %}Food{% endif %}</option>
+                                <option value="spices">{% if session.get('language', 'ar') == 'ar' %}بهارات{% else %}Spices{% endif %}</option>
+                                <option value="meat">{% if session.get('language', 'ar') == 'ar' %}لحوم{% else %}Meat{% endif %}</option>
+                                <option value="vegetables">{% if session.get('language', 'ar') == 'ar' %}خضروات{% else %}Vegetables{% endif %}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}رقم الهاتف{% else %}Phone Number{% endif %}
+                            </label>
+                            <input type="tel" class="form-control" name="phone">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}البريد الإلكتروني{% else %}Email{% endif %}
+                            </label>
+                            <input type="email" class="form-control" name="email">
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}العنوان{% else %}Address{% endif %}
+                            </label>
+                            <textarea class="form-control" name="address" rows="3"></textarea>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}شروط الدفع{% else %}Payment Terms{% endif %}
+                            </label>
+                            <select class="form-select" name="payment_terms">
+                                <option value="cash">{% if session.get('language', 'ar') == 'ar' %}نقداً{% else %}Cash{% endif %}</option>
+                                <option value="30_days">{% if session.get('language', 'ar') == 'ar' %}30 يوم{% else %}30 Days{% endif %}</option>
+                                <option value="60_days">{% if session.get('language', 'ar') == 'ar' %}60 يوم{% else %}60 Days{% endif %}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}التقييم{% else %}Rating{% endif %}
+                            </label>
+                            <select class="form-select" name="rating">
+                                <option value="5">⭐⭐⭐⭐⭐ ممتاز</option>
+                                <option value="4">⭐⭐⭐⭐ جيد جداً</option>
+                                <option value="3">⭐⭐⭐ جيد</option>
+                                <option value="2">⭐⭐ مقبول</option>
+                                <option value="1">⭐ ضعيف</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {% if session.get('language', 'ar') == 'ar' %}إلغاء{% else %}Cancel{% endif %}
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveSupplier()">
+                    {% if session.get('language', 'ar') == 'ar' %}حفظ{% else %}Save{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Search functionality
+document.getElementById('searchSuppliers').addEventListener('input', function() {
+    filterSuppliers();
+});
+
+document.getElementById('filterCategory').addEventListener('change', function() {
+    filterSuppliers();
+});
+
+document.getElementById('filterStatus').addEventListener('change', function() {
+    filterSuppliers();
+});
+
+function filterSuppliers() {
+    const searchTerm = document.getElementById('searchSuppliers').value.toLowerCase();
+    const categoryFilter = document.getElementById('filterCategory').value;
+    const statusFilter = document.getElementById('filterStatus').value;
+    
+    // Filter logic would go here
+    console.log('Filtering suppliers:', { searchTerm, categoryFilter, statusFilter });
+}
+
+function viewSupplier(id) {
+    // View supplier details
+    alert('عرض تفاصيل المورد رقم: ' + id);
+}
+
+function editSupplier(id) {
+    // Edit supplier
+    alert('تعديل المورد رقم: ' + id);
+}
+
+function newOrder(id) {
+    // Create new order
+    alert('طلبية جديدة من المورد رقم: ' + id);
+}
+
+function viewOrders(id) {
+    // View order history
+    alert('عرض تاريخ الطلبيات للمورد رقم: ' + id);
+}
+
+function saveSupplier() {
+    const form = document.getElementById('supplierForm');
+    const formData = new FormData(form);
+    
+    // Save supplier logic
+    alert('تم حفظ المورد بنجاح');
+    
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('addSupplierModal'));
+    modal.hide();
+    
+    // Reset form
+    form.reset();
+}
+</script>
+{% endblock %}

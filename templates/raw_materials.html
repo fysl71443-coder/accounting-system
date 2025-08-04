@@ -1,0 +1,293 @@
+{% extends "base_simple.html" %}
+
+{% block title %}
+    {% if session.get('language', 'ar') == 'ar' %}
+        إدارة المكونات الخام - نظام المحاسبة
+    {% else %}
+        Raw Materials Management - Accounting System
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-cubes me-2"></i>
+        {% if session.get('language', 'ar') == 'ar' %}
+            إدارة المكونات الخام
+        {% else %}
+            Raw Materials Management
+        {% endif %}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addMaterialModal">
+                <i class="fas fa-plus me-1"></i>
+                {% if session.get('language', 'ar') == 'ar' %}إضافة مكون{% else %}Add Material{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Search Bar -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <form method="GET" class="d-flex">
+            <input type="text" class="form-control me-2" name="search" value="{{ search }}" 
+                   placeholder="{% if session.get('language', 'ar') == 'ar' %}البحث في المكونات...{% else %}Search materials...{% endif %}">
+            <button class="btn btn-outline-secondary" type="submit">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Materials Table -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            <i class="fas fa-list me-2"></i>
+            {% if session.get('language', 'ar') == 'ar' %}
+                قائمة المكونات الخام ({{ materials|length }} مكون)
+            {% else %}
+                Raw Materials List ({{ materials|length }} materials)
+            {% endif %}
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if materials %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                رمز المكون
+                            {% else %}
+                                Material Code
+                            {% endif %}
+                        </th>
+                        <th>
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                اسم المكون
+                            {% else %}
+                                Material Name
+                            {% endif %}
+                        </th>
+                        <th>
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                الوحدة
+                            {% else %}
+                                Unit
+                            {% endif %}
+                        </th>
+                        <th>
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                التكلفة/الوحدة
+                            {% else %}
+                                Cost/Unit
+                            {% endif %}
+                        </th>
+                        <th>
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                المخزون الحالي
+                            {% else %}
+                                Current Stock
+                            {% endif %}
+                        </th>
+                        <th>
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                المورد
+                            {% else %}
+                                Supplier
+                            {% endif %}
+                        </th>
+                        <th>
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                آخر تحديث
+                            {% else %}
+                                Last Updated
+                            {% endif %}
+                        </th>
+                        <th>
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                إجراءات
+                            {% else %}
+                                Actions
+                            {% endif %}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for material in materials %}
+                    <tr>
+                        <td><strong>{{ material.material_code }}</strong></td>
+                        <td>
+                            <div>
+                                <strong>{{ material.material_name }}</strong>
+                                {% if material.description %}
+                                <br><small class="text-muted">{{ material.description }}</small>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>{{ material.unit_type }}</td>
+                        <td>
+                            <span class="editable-cost" data-material-id="{{ material.id }}" data-current-cost="{{ material.cost_per_unit }}">
+                                {{ "%.3f"|format(material.cost_per_unit) }} ريال
+                            </span>
+                            <button class="btn btn-sm btn-outline-primary ms-1 edit-cost-btn" data-material-id="{{ material.id }}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ 'danger' if material.current_stock <= material.min_stock_level else 'success' }}">
+                                {{ material.current_stock }} {{ material.unit_type }}
+                            </span>
+                        </td>
+                        <td>{{ material.supplier_name or 'غير محدد' }}</td>
+                        <td>{{ material.updated_at[:10] if material.updated_at else 'غير محدد' }}</td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-sm btn-outline-info" onclick="viewMaterialDetails({{ material.id }})">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-warning" onclick="editMaterial({{ material.id }})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-cubes fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">
+                {% if session.get('language', 'ar') == 'ar' %}
+                    لا توجد مكونات خام
+                {% else %}
+                    No raw materials found
+                {% endif %}
+            </h5>
+            <p class="text-muted">
+                {% if search %}
+                    {% if session.get('language', 'ar') == 'ar' %}
+                        لم يتم العثور على نتائج للبحث "{{ search }}"
+                    {% else %}
+                        No results found for "{{ search }}"
+                    {% endif %}
+                {% else %}
+                    {% if session.get('language', 'ar') == 'ar' %}
+                        ابدأ بإضافة المكونات الخام لمنتجاتك
+                    {% else %}
+                        Start by adding raw materials for your products
+                    {% endif %}
+                {% endif %}
+            </p>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMaterialModal">
+                <i class="fas fa-plus me-2"></i>
+                {% if session.get('language', 'ar') == 'ar' %}إضافة مكون جديد{% else %}Add New Material{% endif %}
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Low Stock Alert -->
+{% set low_stock_materials = [] %}
+{% if low_stock_materials %}
+<div class="alert alert-warning mt-4">
+    <h6>
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        {% if session.get('language', 'ar') == 'ar' %}
+            تنبيه: مكونات بمخزون منخفض
+        {% else %}
+            Warning: Low Stock Materials
+        {% endif %}
+    </h6>
+    <ul class="mb-0">
+        {% for material in low_stock_materials %}
+        <li>{{ material.material_name }} - {{ material.current_stock }} {{ material.unit_type }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// تحديث تكلفة المكون
+function updateMaterialCost(materialId, newCost) {
+    fetch('/api/update_material_cost', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            material_id: materialId,
+            new_cost: newCost
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // تحديث العرض
+            const costElement = document.querySelector(`[data-material-id="${materialId}"]`);
+            costElement.textContent = parseFloat(newCost).toFixed(3) + ' ريال';
+            costElement.setAttribute('data-current-cost', newCost);
+            
+            // إظهار رسالة نجاح
+            showAlert('success', data.message);
+            
+            // إظهار المنتجات المتأثرة
+            if (data.affected_products && data.affected_products.length > 0) {
+                let affectedMsg = 'المنتجات المتأثرة:\n';
+                data.affected_products.forEach(product => {
+                    affectedMsg += `- ${product.product_name}: ${product.new_material_cost.toFixed(2)} ريال\n`;
+                });
+                showAlert('info', affectedMsg);
+            }
+        } else {
+            showAlert('error', data.message);
+        }
+    })
+    .catch(error => {
+        showAlert('error', 'خطأ في الاتصال بالخادم');
+    });
+}
+
+// تحرير التكلفة
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.edit-cost-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const materialId = this.getAttribute('data-material-id');
+            const costElement = document.querySelector(`[data-material-id="${materialId}"]`);
+            const currentCost = costElement.getAttribute('data-current-cost');
+            
+            const newCost = prompt('أدخل التكلفة الجديدة:', currentCost);
+            if (newCost && !isNaN(newCost) && parseFloat(newCost) >= 0) {
+                updateMaterialCost(materialId, parseFloat(newCost));
+            }
+        });
+    });
+});
+
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container-fluid');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // إخفاء التنبيه تلقائياً بعد 5 ثوان
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+</script>
+{% endblock %}

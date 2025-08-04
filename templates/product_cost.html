@@ -1,0 +1,415 @@
+{% extends "base_simple.html" %}
+
+{% block title %}
+    {% if session.get('language', 'ar') == 'ar' %}
+        حساب تكلفة الوجبات{% if product %} - {{ product.product_name }}{% endif %}
+    {% else %}
+        Meal Cost Calculation{% if product %} - {{ product.product_name }}{% endif %}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-calculator me-2"></i>
+        {% if session.get('language', 'ar') == 'ar' %}
+            حساب تكلفة المنتج
+        {% else %}
+            Product Cost Calculation
+        {% endif %}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('products') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>
+                {% if session.get('language', 'ar') == 'ar' %}العودة{% else %}Back{% endif %}
+            </a>
+            <button type="button" class="btn btn-sm btn-primary" onclick="recalculateCost()">
+                <i class="fas fa-sync-alt me-1"></i>
+                {% if session.get('language', 'ar') == 'ar' %}إعادة حساب{% else %}Recalculate{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Product Info -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-box me-2"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}
+                        معلومات المنتج
+                    {% else %}
+                        Product Information
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <strong>
+                            {% if session.get('language', 'ar') == 'ar' %}رمز المنتج:{% else %}Product Code:{% endif %}
+                        </strong>
+                        <br>{{ product.product_code if product else 'P001' }}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>
+                            {% if session.get('language', 'ar') == 'ar' %}اسم المنتج:{% else %}Product Name:{% endif %}
+                        </strong>
+                        <br>{{ product.product_name if product else 'منتج تجريبي' }}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>
+                            {% if session.get('language', 'ar') == 'ar' %}الفئة:{% else %}Category:{% endif %}
+                        </strong>
+                        <br>{{ product.category if product else 'وجبات رئيسية' }}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>
+                            {% if session.get('language', 'ar') == 'ar' %}التكلفة الحالية:{% else %}Current Cost:{% endif %}
+                        </strong>
+                        <br><span class="badge bg-primary fs-6">
+                            {% if product and product.get('unit_cost') %}
+                                {{ "%.2f"|format(product.unit_cost) }} ريال
+                            {% else %}
+                                0.00 ريال
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cost Breakdown -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-list-ul me-2"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}
+                        تفصيل تكلفة المكونات
+                    {% else %}
+                        Material Cost Breakdown
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if cost_breakdown %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>
+                                    {% if session.get('language', 'ar') == 'ar' %}المكون{% else %}Material{% endif %}
+                                </th>
+                                <th>
+                                    {% if session.get('language', 'ar') == 'ar' %}الكمية{% else %}Quantity{% endif %}
+                                </th>
+                                <th>
+                                    {% if session.get('language', 'ar') == 'ar' %}التكلفة/الوحدة{% else %}Cost/Unit{% endif %}
+                                </th>
+                                <th>
+                                    {% if session.get('language', 'ar') == 'ar' %}التكلفة الإجمالية{% else %}Total Cost{% endif %}
+                                </th>
+                                <th>
+                                    {% if session.get('language', 'ar') == 'ar' %}ملاحظات{% else %}Notes{% endif %}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="cost-breakdown-table">
+                            {% for item in cost_breakdown %}
+                            <tr>
+                                <td><strong>{{ item.material_name }}</strong></td>
+                                <td>{{ item.quantity }} {{ item.unit }}</td>
+                                <td>{{ "%.3f"|format(item.cost_per_unit) }} ريال</td>
+                                <td>{{ "%.3f"|format(item.total_cost) }} ريال</td>
+                                <td><small class="text-muted">{{ item.notes or '-' }}</small></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-primary">
+                                <th colspan="3">
+                                    {% if session.get('language', 'ar') == 'ar' %}إجمالي تكلفة المكونات:{% else %}Total Material Cost:{% endif %}
+                                </th>
+                                <th id="total-material-cost">0.000 ريال</th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-exclamation-circle fa-3x text-warning mb-3"></i>
+                    <h5 class="text-muted">
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            لا توجد وصفة محددة لهذا المنتج
+                        {% else %}
+                            No recipe defined for this product
+                        {% endif %}
+                    </h5>
+                    <p class="text-muted">
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            يجب إضافة المكونات أولاً لحساب التكلفة
+                        {% else %}
+                            Add ingredients first to calculate cost
+                        {% endif %}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-cogs me-2"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}
+                        حساب التكلفة النهائية
+                    {% else %}
+                        Final Cost Calculation
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="cost-calculation-form">
+                    <input type="hidden" id="product-id" value="{{ product.id if product else '' }}">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}تكلفة المكونات{% else %}Material Cost{% endif %}
+                        </label>
+                        <input type="number" class="form-control" id="material-cost-input"
+                               value="0.000" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}تكلفة العمالة (ريال){% else %}Labor Cost (SAR){% endif %}
+                        </label>
+                        <input type="number" class="form-control" id="labor-cost" 
+                               step="0.01" min="0" value="0" onchange="calculateFinalCost()">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}التكاليف الإضافية (ريال){% else %}Overhead Cost (SAR){% endif %}
+                        </label>
+                        <input type="number" class="form-control" id="overhead-cost" 
+                               step="0.01" min="0" value="0" onchange="calculateFinalCost()">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}هامش الربح (%){% else %}Profit Margin (%){% endif %}
+                        </label>
+                        <input type="number" class="form-control" id="profit-margin" 
+                               step="0.1" min="0" value="20" onchange="calculateFinalCost()">
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <strong>
+                                {% if session.get('language', 'ar') == 'ar' %}التكلفة النهائية{% else %}Final Cost{% endif %}
+                            </strong>
+                        </label>
+                        <div class="input-group">
+                            <input type="number" class="form-control fw-bold" id="final-cost" readonly>
+                            <span class="input-group-text">ريال</span>
+                        </div>
+                    </div>
+                    
+                    <button type="button" class="btn btn-primary w-100" onclick="updateProductCost()">
+                        <i class="fas fa-save me-2"></i>
+                        {% if session.get('language', 'ar') == 'ar' %}تحديث تكلفة المنتج{% else %}Update Product Cost{% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cost History -->
+{% if cost_history %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-history me-2"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}
+                        سجل تحديثات التكلفة
+                    {% else %}
+                        Cost Update History
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>
+                                    {% if session.get('language', 'ar') == 'ar' %}التاريخ{% else %}Date{% endif %}
+                                </th>
+                                <th>
+                                    {% if session.get('language', 'ar') == 'ar' %}التكلفة السابقة{% else %}Old Cost{% endif %}
+                                </th>
+                                <th>
+                                    {% if session.get('language', 'ar') == 'ar' %}التكلفة الجديدة{% else %}New Cost{% endif %}
+                                </th>
+                                <th>
+                                    {% if session.get('language', 'ar') == 'ar' %}تكلفة المكونات{% else %}Material Cost{% endif %}
+                                </th>
+                                <th>
+                                    {% if session.get('language', 'ar') == 'ar' %}هامش الربح{% else %}Profit Margin{% endif %}
+                                </th>
+                                <th>
+                                    {% if session.get('language', 'ar') == 'ar' %}المحدث بواسطة{% else %}Updated By{% endif %}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for update in cost_history %}
+                            <tr>
+                                <td>{{ update.created_at[:16] }}</td>
+                                <td>{{ "%.2f"|format(update.old_cost) }} ريال</td>
+                                <td>{{ "%.2f"|format(update.new_cost) }} ريال</td>
+                                <td>{{ "%.2f"|format(update.material_costs) }} ريال</td>
+                                <td>{{ "%.1f"|format(update.profit_margin) }}%</td>
+                                <td>{{ update.updated_by_name or 'النظام' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// حساب التكلفة النهائية
+function calculateFinalCost() {
+    const materialCost = parseFloat(document.getElementById('material-cost-input').value) || 0;
+    const laborCost = parseFloat(document.getElementById('labor-cost').value) || 0;
+    const overheadCost = parseFloat(document.getElementById('overhead-cost').value) || 0;
+    const profitMargin = parseFloat(document.getElementById('profit-margin').value) || 0;
+    
+    const totalCost = materialCost + laborCost + overheadCost;
+    const finalCost = totalCost * (1 + profitMargin / 100);
+    
+    document.getElementById('final-cost').value = finalCost.toFixed(2);
+}
+
+// تحديث تكلفة المنتج
+function updateProductCost() {
+    const productId = document.getElementById('product-id').value;
+    const laborCost = parseFloat(document.getElementById('labor-cost').value) || 0;
+    const overheadCost = parseFloat(document.getElementById('overhead-cost').value) || 0;
+    const profitMargin = parseFloat(document.getElementById('profit-margin').value) || 0;
+    
+    fetch('/api/update_product_cost', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            product_id: productId,
+            labor_cost: laborCost,
+            overhead_cost: overheadCost,
+            profit_margin: profitMargin
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            showAlert('success', data.message);
+            // تحديث التكلفة المعروضة
+            document.querySelector('.badge.bg-primary').textContent = data.new_cost.toFixed(2) + ' ريال';
+            // إعادة تحميل الصفحة لإظهار السجل المحدث
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showAlert('error', data.message);
+        }
+    })
+    .catch(error => {
+        showAlert('error', 'خطأ في الاتصال بالخادم');
+    });
+}
+
+// إعادة حساب التكلفة
+function recalculateCost() {
+    const productId = document.getElementById('product-id').value;
+    
+    fetch(`/api/recalculate_cost/${productId}`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // تحديث جدول المكونات
+            updateCostBredownTable(data.cost_breakdown);
+            // تحديث التكلفة الإجمالية
+            document.getElementById('material-cost-input').value = data.material_cost.toFixed(3);
+            document.getElementById('total-material-cost').textContent = data.material_cost.toFixed(3) + ' ريال';
+            // إعادة حساب التكلفة النهائية
+            calculateFinalCost();
+            showAlert('success', 'تم إعادة حساب التكلفة بنجاح');
+        } else {
+            showAlert('error', data.message);
+        }
+    })
+    .catch(error => {
+        showAlert('error', 'خطأ في الاتصال بالخادم');
+    });
+}
+
+function updateCostBredownTable(costBreakdown) {
+    const tbody = document.getElementById('cost-breakdown-table');
+    tbody.innerHTML = '';
+    
+    costBreakdown.forEach(item => {
+        const row = tbody.insertRow();
+        row.innerHTML = `
+            <td><strong>${item.material_name}</strong></td>
+            <td>${item.quantity} ${item.unit}</td>
+            <td>${item.cost_per_unit.toFixed(3)} ريال</td>
+            <td>${item.total_cost.toFixed(3)} ريال</td>
+            <td><small class="text-muted">${item.notes || '-'}</small></td>
+        `;
+    });
+}
+
+function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container-fluid');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+
+// حساب التكلفة النهائية عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    calculateFinalCost();
+});
+</script>
+{% endblock %}
