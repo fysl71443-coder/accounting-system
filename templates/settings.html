@@ -1,4 +1,4 @@
-{% extends "base_simple.html" %}
+{% extends "base_unified.html" %}
 
 {% block title %}
     {% if session.get('language', 'ar') == 'ar' %}
@@ -8,26 +8,30 @@
     {% endif %}
 {% endblock %}
 
+{% block page_icon %}<i class="fas fa-cog"></i>{% endblock %}
+
+{% block page_title %}
+{% if session.get('language', 'ar') == 'ar' %}
+    إعدادات النظام
+{% else %}
+    System Settings
+{% endif %}
+{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <button type="button" class="btn btn-success" onclick="saveAllSettings()">
+        <i class="fas fa-save me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}حفظ جميع الإعدادات{% else %}Save All Settings{% endif %}
+    </button>
+    <button type="button" class="btn btn-warning" onclick="resetSettings()">
+        <i class="fas fa-undo me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}إعادة تعيين{% else %}Reset{% endif %}
+    </button>
+</div>
+{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">
-        <i class="fas fa-cog me-2"></i>
-        {% if session.get('language', 'ar') == 'ar' %}
-            إعدادات النظام
-        {% else %}
-            System Settings
-        {% endif %}
-    </h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-            <button type="button" class="btn btn-sm btn-success" onclick="saveAllSettings()">
-                <i class="fas fa-save me-1"></i>
-                {% if session.get('language', 'ar') == 'ar' %}حفظ جميع الإعدادات{% else %}Save All Settings{% endif %}
-            </button>
-            <button type="button" class="btn btn-sm btn-warning" onclick="resetSettings()">
-                <i class="fas fa-undo me-1"></i>
-                {% if session.get('language', 'ar') == 'ar' %}إعادة تعيين{% else %}Reset{% endif %}
-            </button>
         </div>
     </div>
 </div>

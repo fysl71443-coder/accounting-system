@@ -1,4 +1,4 @@
-{% extends "base_simple.html" %}
+{% extends "base_unified.html" %}
 
 {% block title %}
     {% if session.get('language', 'ar') == 'ar' %}
@@ -8,26 +8,30 @@
     {% endif %}
 {% endblock %}
 
+{% block page_icon %}<i class="fas fa-boxes"></i>{% endblock %}
+
+{% block page_title %}
+{% if session.get('language', 'ar') == 'ar' %}
+    إدارة المخزون
+{% else %}
+    Inventory Management
+{% endif %}
+{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">
+        <i class="fas fa-plus me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}إضافة صنف{% else %}Add Item{% endif %}
+    </button>
+    <button type="button" class="btn btn-success" onclick="exportInventory()">
+        <i class="fas fa-download me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تصدير{% else %}Export{% endif %}
+    </button>
+</div>
+{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">
-        <i class="fas fa-boxes me-2"></i>
-        {% if session.get('language', 'ar') == 'ar' %}
-            إدارة المخزون
-        {% else %}
-            Inventory Management
-        {% endif %}
-    </h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">
-                <i class="fas fa-plus me-1"></i>
-                {% if session.get('language', 'ar') == 'ar' %}إضافة صنف{% else %}Add Item{% endif %}
-            </button>
-            <button type="button" class="btn btn-sm btn-success" onclick="exportInventory()">
-                <i class="fas fa-download me-1"></i>
-                {% if session.get('language', 'ar') == 'ar' %}تصدير{% else %}Export{% endif %}
-            </button>
             <button type="button" class="btn btn-sm btn-warning" onclick="stockAlert()">
                 <i class="fas fa-exclamation-triangle me-1"></i>
                 {% if session.get('language', 'ar') == 'ar' %}تنبيهات المخزون{% else %}Stock Alerts{% endif %}

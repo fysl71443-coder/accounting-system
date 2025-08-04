@@ -1,4 +1,4 @@
-{% extends "base_simple_test.html" %}
+{% extends "base_unified.html" %}
 
 {% block title %}
 {% if session.get('language', 'ar') == 'ar' %}
@@ -8,29 +8,30 @@ Dashboard - Accounting System
 {% endif %}
 {% endblock %}
 
-{% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">
-        <i class="fas fa-tachometer-alt me-2"></i>
-        {% if session.get('language', 'ar') == 'ar' %}
-            لوحة التحكم الرئيسية
-        {% else %}
-            Main Dashboard
-        {% endif %}
-    </h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshDashboard()">
-                <i class="fas fa-sync-alt me-1"></i>
-                {% if session.get('language', 'ar') == 'ar' %}تحديث{% else %}Refresh{% endif %}
-            </button>
-            <button type="button" class="btn btn-sm btn-outline-primary ms-2" onclick="showQuickActions()">
-                <i class="fas fa-bolt me-1"></i>
-                {% if session.get('language', 'ar') == 'ar' %}إجراءات سريعة{% else %}Quick Actions{% endif %}
-            </button>
-        </div>
-    </div>
+{% block page_icon %}<i class="fas fa-tachometer-alt"></i>{% endblock %}
+
+{% block page_title %}
+{% if session.get('language', 'ar') == 'ar' %}
+    لوحة التحكم الرئيسية
+{% else %}
+    Main Dashboard
+{% endif %}
+{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <button type="button" class="btn btn-outline-secondary" onclick="refreshDashboard()">
+        <i class="fas fa-sync-alt me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تحديث{% else %}Refresh{% endif %}
+    </button>
+    <button type="button" class="btn btn-outline-primary" onclick="showQuickActions()">
+        <i class="fas fa-bolt me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}إجراءات سريعة{% else %}Quick Actions{% endif %}
+    </button>
 </div>
+{% endblock %}
+
+{% block content %}
 
 <!-- Statistics Cards -->
 <div class="row mb-4">
@@ -522,6 +523,40 @@ Dashboard - Accounting System
 
 {% block extra_js %}
 <script>
+// Initialize dashboard when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    loadDashboardData();
+
+    // Auto-refresh every 5 minutes
+    setInterval(updateDashboardData, 300000);
+});
+
+function loadDashboardData() {
+    // This would normally load from server
+    console.log('Loading dashboard data...');
+}
+
+function refreshDashboard() {
+    const refreshBtn = event.target;
+    showLoading(refreshBtn);
+
+    // Simulate API call
+    setTimeout(() => {
+        hideLoading(refreshBtn);
+        showToast(isRTL ? 'تم تحديث البيانات' : 'Data refreshed', 'success');
+        updateDashboardData();
+
+        // Update charts
+        if (salesChart) {
+            salesChart.data.datasets[0].data = [1200, 1900, 3000, 5000, 2000, 3000, Math.floor(Math.random() * 6000)];
+            salesChart.update();
+        }
+
+        if (categoryChart) {
+            categoryChart.update();
+        }
+    }, 1000);
+}
 // Sales Chart
 const ctx = document.getElementById('salesChart').getContext('2d');
 

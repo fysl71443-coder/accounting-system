@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="{{ session.get('language', 'ar') }}" dir="{{ 'rtl' if session.get('language', 'ar') == 'ar' else 'ltr' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}نظام المحاسبة المتكامل{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap RTL for Arabic -->
+    {% if session.get('language', 'ar') == 'ar' %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    {% endif %}
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary-color: #64748b;
+            --success-color: #059669;
+            --danger-color: #dc2626;
+            --warning-color: #d97706;
+            --info-color: #0891b2;
+            --light-color: #f8fafc;
+            --dark-color: #1e293b;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --sidebar-width: 280px;
+        }
+        
+        body {
+            font-family: {% if session.get('language', 'ar') == 'ar' %}'Cairo', sans-serif{% else %}'Inter', sans-serif{% endif %};
+            background-color: var(--light-color);
+            direction: {{ 'rtl' if session.get('language', 'ar') == 'ar' else 'ltr' }};
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        /* Sidebar Styles */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            {{ 'right' if session.get('language', 'ar') == 'ar' else 'left' }}: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-brand {
+            padding: 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .sidebar-brand h4 {
+            color: white;
+            font-weight: 700;
+            margin: 0;
+            font-size: 1.2rem;
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 15px 20px;
+            margin: 5px 15px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+        
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX({{ '5px' if session.get('language', 'ar') == 'ar' else '-5px' }});
+        }
+        
+        .sidebar .nav-link i {
+            width: 20px;
+            text-align: center;
+            {{ 'margin-left' if session.get('language', 'ar') == 'ar' else 'margin-right' }}: 10px;
+        }
+        
+        /* Main Content */
+        .main-content {
+            {{ 'margin-right' if session.get('language', 'ar') == 'ar' else 'margin-left' }}: var(--sidebar-width);
+            min-height: 100vh;
+            padding: 0;
+        }
+        
+        /* Top Navigation */
+        .top-navbar {
+            background: white;
+            box-shadow: var(--shadow-sm);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .page-header {
+            background: white;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 0;
+        }
+        
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .page-title i {
+            {{ 'margin-left' if session.get('language', 'ar') == 'ar' else 'margin-right' }}: 0.5rem;
+            color: var(--primary-color);
+        }
+        
+        /* Back Button */
+        .back-button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            margin-bottom: 1rem;
+        }
+        
+        .back-button:hover {
+            background: var(--primary-dark);
+            color: white;
+            text-decoration: none;
+            transform: translateY(-1px);
+        }
+        
+        .back-button i {
+            {{ 'margin-left' if session.get('language', 'ar') == 'ar' else 'margin-right' }}: 0.5rem;
+        }
+        
+        /* Content Area */
+        .content-area {
+            padding: 2rem;
+        }
+        
+        /* Cards */
+        .card {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease;
+        }
+        
+        .card:hover {
+            box-shadow: var(--shadow-md);
+        }
+        
+        .card-header {
+            background: var(--light-color);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+        }
+        
+        /* Buttons */
+        .btn {
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+        
+        /* Language Toggle */
+        .language-toggle {
+            position: absolute;
+            top: 1rem;
+            {{ 'left' if session.get('language', 'ar') == 'ar' else 'right' }}: 1rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX({{ '100%' if session.get('language', 'ar') == 'ar' else '-100%' }});
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                margin-right: 0;
+            }
+            
+            .content-area {
+                padding: 1rem;
+            }
+        }
+        
+        /* Custom Scrollbar */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 3px;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.5);
+        }
+        
+        {% block extra_css %}{% endblock %}
+    </style>
+</head>
+<body>
+    <!-- Language Toggle -->
+    <div class="language-toggle">
+        <form method="POST" action="{{ url_for('set_language') }}" style="display: inline;">
+            <select name="language" onchange="this.form.submit()" class="form-select form-select-sm">
+                <option value="ar" {{ 'selected' if session.get('language', 'ar') == 'ar' else '' }}>العربية</option>
+                <option value="en" {{ 'selected' if session.get('language', 'ar') == 'en' else '' }}>English</option>
+            </select>
+        </form>
+    </div>
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="sidebar-brand">
+            <h4>
+                <i class="fas fa-calculator"></i>
+                {% if session.get('language', 'ar') == 'ar' %}
+                    نظام المحاسبة
+                {% else %}
+                    Accounting System
+                {% endif %}
+            </h4>
+        </div>
+        
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'dashboard' else '' }}" href="{{ url_for('dashboard') }}">
+                    <i class="fas fa-tachometer-alt"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}الرئيسية{% else %}Dashboard{% endif %}
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'new_sale' else '' }}" href="{{ url_for('new_sale') }}">
+                    <i class="fas fa-plus-circle"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}فاتورة جديدة{% else %}New Sale{% endif %}
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'sales' else '' }}" href="{{ url_for('sales') }}">
+                    <i class="fas fa-receipt"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}المبيعات{% else %}Sales{% endif %}
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'products' else '' }}" href="{{ url_for('products') }}">
+                    <i class="fas fa-box"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}المنتجات{% else %}Products{% endif %}
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'customers' else '' }}" href="{{ url_for('customers') }}">
+                    <i class="fas fa-users"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}العملاء{% else %}Customers{% endif %}
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'suppliers' else '' }}" href="{{ url_for('suppliers') }}">
+                    <i class="fas fa-truck"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}الموردين{% else %}Suppliers{% endif %}
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'inventory' else '' }}" href="{{ url_for('inventory') }}">
+                    <i class="fas fa-warehouse"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}المخزون{% else %}Inventory{% endif %}
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'reports' else '' }}" href="{{ url_for('reports') }}">
+                    <i class="fas fa-chart-bar"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}التقارير{% else %}Reports{% endif %}
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'settings' else '' }}" href="{{ url_for('settings') }}">
+                    <i class="fas fa-cog"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}الإعدادات{% else %}Settings{% endif %}
+                </a>
+            </li>
+            <li class="nav-item mt-auto">
+                <a class="nav-link" href="{{ url_for('logout') }}">
+                    <i class="fas fa-sign-out-alt"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}تسجيل الخروج{% else %}Logout{% endif %}
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Navigation -->
+        <div class="top-navbar d-flex justify-content-between align-items-center">
+            <div>
+                <button class="btn btn-link d-md-none" id="sidebarToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div class="d-flex align-items-center">
+                <span class="me-3">
+                    {% if session.get('language', 'ar') == 'ar' %}
+                        مرحباً، {{ current_user.username if current_user.is_authenticated else 'مستخدم' }}
+                    {% else %}
+                        Welcome, {{ current_user.username if current_user.is_authenticated else 'User' }}
+                    {% endif %}
+                </span>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('settings') }}">
+                            <i class="fas fa-cog me-2"></i>
+                            {% if session.get('language', 'ar') == 'ar' %}الإعدادات{% else %}Settings{% endif %}
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('logout') }}">
+                            <i class="fas fa-sign-out-alt me-2"></i>
+                            {% if session.get('language', 'ar') == 'ar' %}تسجيل الخروج{% else %}Logout{% endif %}
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="page-title">
+                    {% block page_icon %}<i class="fas fa-home"></i>{% endblock %}
+                    {% block page_title %}{% if session.get('language', 'ar') == 'ar' %}الصفحة الرئيسية{% else %}Home{% endif %}{% endblock %}
+                </h1>
+                <div>
+                    {% block page_actions %}{% endblock %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="content-area">
+            <!-- Back Button (if not dashboard) -->
+            {% if request.endpoint != 'dashboard' %}
+            <a href="{{ url_for('dashboard') }}" class="back-button">
+                <i class="fas fa-arrow-{{ 'right' if session.get('language', 'ar') == 'ar' else 'left' }}"></i>
+                {% if session.get('language', 'ar') == 'ar' %}العودة للرئيسية{% else %}Back to Dashboard{% endif %}
+            </a>
+            {% endif %}
+            
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <!-- Page Content -->
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Common JavaScript -->
+    <script>
+        // Global variables
+        let currentLanguage = '{{ session.get("language", "ar") }}';
+        let isRTL = currentLanguage === 'ar';
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCommonFeatures();
+        });
+
+        function initializeCommonFeatures() {
+            // Sidebar toggle for mobile
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function() {
+                    document.querySelector('.sidebar').classList.toggle('show');
+                });
+            }
+
+            // Auto-hide alerts after 5 seconds
+            setTimeout(function() {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(alert => {
+                    if (alert.classList.contains('show')) {
+                        alert.classList.remove('show');
+                        setTimeout(() => alert.remove(), 150);
+                    }
+                });
+            }, 5000);
+
+            // Initialize tooltips
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
+            // Initialize popovers
+            const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+            popoverTriggerList.map(function (popoverTriggerEl) {
+                return new bootstrap.Popover(popoverTriggerEl);
+            });
+        }
+
+        // Common utility functions
+        function showLoading(element, loadingText = null) {
+            if (element) {
+                const text = loadingText || (isRTL ? 'جاري التحميل...' : 'Loading...');
+                element.dataset.originalText = element.innerHTML;
+                element.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>${text}`;
+                element.disabled = true;
+            }
+        }
+
+        function hideLoading(element) {
+            if (element && element.dataset.originalText) {
+                element.innerHTML = element.dataset.originalText;
+                element.disabled = false;
+                delete element.dataset.originalText;
+            }
+        }
+
+        function showToast(message, type = 'success', duration = 5000) {
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+            toast.style.cssText = `top: 20px; ${isRTL ? 'left' : 'right'}: 20px; z-index: 9999; min-width: 300px; max-width: 400px;`;
+            toast.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-${getIconForType(type)} me-2"></i>
+                    <span>${message}</span>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 150);
+                }
+            }, duration);
+        }
+
+        function getIconForType(type) {
+            const icons = {
+                'success': 'check-circle',
+                'danger': 'exclamation-triangle',
+                'warning': 'exclamation-circle',
+                'info': 'info-circle',
+                'primary': 'info-circle'
+            };
+            return icons[type] || 'info-circle';
+        }
+
+        function confirmAction(message, callback, title = null) {
+            const confirmTitle = title || (isRTL ? 'تأكيد العملية' : 'Confirm Action');
+            const confirmMessage = message || (isRTL ? 'هل أنت متأكد من هذا الإجراء؟' : 'Are you sure about this action?');
+
+            if (confirm(`${confirmTitle}\n\n${confirmMessage}`)) {
+                if (typeof callback === 'function') {
+                    callback();
+                }
+                return true;
+            }
+            return false;
+        }
+
+        function formatCurrency(amount, currency = 'ريال') {
+            const formatted = new Intl.NumberFormat(isRTL ? 'ar-SA' : 'en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount);
+
+            return isRTL ? `${formatted} ${currency}` : `${currency} ${formatted}`;
+        }
+
+        function formatDate(date, format = 'short') {
+            const options = format === 'long' ?
+                { year: 'numeric', month: 'long', day: 'numeric' } :
+                { year: 'numeric', month: '2-digit', day: '2-digit' };
+
+            return new Intl.DateTimeFormat(isRTL ? 'ar-SA' : 'en-US', options).format(new Date(date));
+        }
+
+        // AJAX helper functions
+        function makeRequest(url, options = {}) {
+            const defaultOptions = {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            };
+
+            return fetch(url, { ...defaultOptions, ...options })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .catch(error => {
+                    console.error('Request failed:', error);
+                    showToast(isRTL ? 'حدث خطأ في الطلب' : 'Request failed', 'danger');
+                    throw error;
+                });
+        }
+
+        // Form validation helpers
+        function validateForm(formElement) {
+            const requiredFields = formElement.querySelectorAll('[required]');
+            let isValid = true;
+
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+
+            return isValid;
+        }
+
+        function clearFormValidation(formElement) {
+            const fields = formElement.querySelectorAll('.is-invalid');
+            fields.forEach(field => field.classList.remove('is-invalid'));
+        }
+
+        // Export functions
+        function exportToExcel(data, filename = 'export') {
+            // This would need a proper Excel export library
+            console.log('Excel export requested:', filename, data);
+            showToast(isRTL ? 'جاري تصدير البيانات...' : 'Exporting data...', 'info');
+        }
+
+        function exportToPDF(elementId, filename = 'export') {
+            // This would need a proper PDF export library
+            console.log('PDF export requested:', filename, elementId);
+            showToast(isRTL ? 'جاري تصدير PDF...' : 'Exporting PDF...', 'info');
+        }
+
+        // Search and filter helpers
+        function initializeSearch(inputId, tableId, columnIndexes = []) {
+            const searchInput = document.getElementById(inputId);
+            const table = document.getElementById(tableId);
+
+            if (searchInput && table) {
+                searchInput.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase();
+                    const rows = table.querySelectorAll('tbody tr');
+
+                    rows.forEach(row => {
+                        const cells = row.querySelectorAll('td');
+                        let found = false;
+
+                        if (columnIndexes.length === 0) {
+                            // Search all columns
+                            found = Array.from(cells).some(cell =>
+                                cell.textContent.toLowerCase().includes(searchTerm)
+                            );
+                        } else {
+                            // Search specific columns
+                            found = columnIndexes.some(index =>
+                                cells[index] && cells[index].textContent.toLowerCase().includes(searchTerm)
+                            );
+                        }
+
+                        row.style.display = found ? '' : 'none';
+                    });
+                });
+            }
+        }
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

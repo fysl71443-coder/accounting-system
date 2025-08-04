@@ -1,4 +1,4 @@
-{% extends "base_simple.html" %}
+{% extends "base_unified.html" %}
 
 {% block title %}
     {% if session.get('language', 'ar') == 'ar' %}
@@ -8,29 +8,30 @@
     {% endif %}
 {% endblock %}
 
-{% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">
-        <i class="fas fa-users me-2"></i>
-        {% if session.get('language', 'ar') == 'ar' %}
-            إدارة العملاء
-        {% else %}
-            Customers Management
-        {% endif %}
-    </h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
-                <i class="fas fa-plus me-1"></i>
-                {% if session.get('language', 'ar') == 'ar' %}إضافة عميل{% else %}Add Customer{% endif %}
-            </button>
-            <button type="button" class="btn btn-sm btn-success" onclick="exportCustomers()">
-                <i class="fas fa-download me-1"></i>
-                {% if session.get('language', 'ar') == 'ar' %}تصدير{% else %}Export{% endif %}
-            </button>
-        </div>
-    </div>
+{% block page_icon %}<i class="fas fa-users"></i>{% endblock %}
+
+{% block page_title %}
+{% if session.get('language', 'ar') == 'ar' %}
+    إدارة العملاء
+{% else %}
+    Customers Management
+{% endif %}
+{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+        <i class="fas fa-plus me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}إضافة عميل{% else %}Add Customer{% endif %}
+    </button>
+    <button type="button" class="btn btn-success" onclick="exportCustomers()">
+        <i class="fas fa-download me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تصدير{% else %}Export{% endif %}
+    </button>
 </div>
+{% endblock %}
+
+{% block content %}
 
 <!-- Statistics Cards -->
 <div class="row mb-4">
@@ -437,35 +438,91 @@ function toggleView(viewType) {
     }
 }
 
+// Initialize page when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initializeSearch('searchCustomers', 'customersTable', [1, 2, 3]); // Search in name, phone, email columns
+    loadCustomers();
+});
+
+function loadCustomers() {
+    // This would normally load from server
+    console.log('Loading customers...');
+}
+
 function viewCustomer(id) {
-    alert('عرض تفاصيل العميل رقم: ' + id);
+    showToast(isRTL ? `عرض تفاصيل العميل رقم: ${id}` : `Viewing customer: ${id}`, 'info');
+    // This would show customer details in a modal or navigate to details page
 }
 
 function editCustomer(id) {
-    alert('تعديل العميل رقم: ' + id);
+    // This would fetch customer data and populate the modal
+    const modal = new bootstrap.Modal(document.getElementById('addCustomerModal'));
+    modal.show();
+    showToast(isRTL ? `تعديل العميل رقم: ${id}` : `Editing customer: ${id}`, 'info');
+}
+
+function deleteCustomer(id) {
+    const message = isRTL ? 'هل أنت متأكد من حذف هذا العميل؟' : 'Are you sure you want to delete this customer?';
+
+    confirmAction(message, function() {
+        const deleteBtn = event.target.closest('button');
+        showLoading(deleteBtn);
+
+        // Simulate API call
+        setTimeout(() => {
+            hideLoading(deleteBtn);
+            showToast(isRTL ? 'تم حذف العميل بنجاح' : 'Customer deleted successfully', 'success');
+            // Remove row from table
+            deleteBtn.closest('tr').remove();
+        }, 1000);
+    });
 }
 
 function newOrder(id) {
-    alert('طلبية جديدة للعميل رقم: ' + id);
+    // Redirect to new sale page with customer pre-selected
+    window.location.href = `/new_sale?customer_id=${id}`;
 }
 
 function viewOrders(id) {
-    alert('عرض طلبيات العميل رقم: ' + id);
+    // Redirect to sales page filtered by customer
+    window.location.href = `/sales?customer_id=${id}`;
 }
 
 function saveCustomer() {
     const form = document.getElementById('customerForm');
-    const formData = new FormData(form);
-    
-    alert('تم حفظ العميل بنجاح');
-    
-    const modal = bootstrap.Modal.getInstance(document.getElementById('addCustomerModal'));
-    modal.hide();
-    form.reset();
+
+    if (!validateForm(form)) {
+        showToast(isRTL ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill all required fields', 'warning');
+        return;
+    }
+
+    const saveBtn = document.querySelector('#addCustomerModal .btn-primary');
+    showLoading(saveBtn);
+
+    // Simulate API call
+    setTimeout(() => {
+        hideLoading(saveBtn);
+        showToast(isRTL ? 'تم حفظ العميل بنجاح' : 'Customer saved successfully', 'success');
+
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('addCustomerModal'));
+        modal.hide();
+
+        // Reload customers
+        loadCustomers();
+    }, 1000);
 }
 
 function exportCustomers() {
-    alert('تصدير قائمة العملاء');
+    showToast(isRTL ? 'جاري تصدير العملاء...' : 'Exporting customers...', 'info');
+    exportToExcel([], 'customers');
 }
+
+// Reset modal when closed
+document.getElementById('addCustomerModal')?.addEventListener('hidden.bs.modal', function () {
+    const form = document.getElementById('customerForm');
+    form.reset();
+    clearFormValidation(form);
+});
 </script>
 {% endblock %}
