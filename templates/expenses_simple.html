@@ -1,0 +1,143 @@
+{% extends "base_unified.html" %}
+
+{% block title %}المصروفات - نظام المحاسبة{% endblock %}
+{% block page_icon %}<i class="fas fa-receipt"></i>{% endblock %}
+{% block page_title %}إدارة المصروفات{% endblock %}
+
+{% block content %}
+
+<!-- أزرار الإجراءات -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">🔧 أزرار الإجراءات</h5>
+        <div class="btn-group">
+            <button type="button" class="btn btn-success" id="addExpenseBtn">
+                <i class="fas fa-plus me-1"></i>إضافة مصروف جديد
+            </button>
+            <button type="button" class="btn btn-warning" id="editExpenseBtn">
+                <i class="fas fa-edit me-1"></i>تعديل
+            </button>
+            <button type="button" class="btn btn-danger" id="deleteExpenseBtn">
+                <i class="fas fa-trash me-1"></i>حذف
+            </button>
+            <button type="button" class="btn btn-info" id="exportExpenseBtn">
+                <i class="fas fa-download me-1"></i>تصدير
+            </button>
+            <button type="button" class="btn btn-secondary" id="printExpenseBtn">
+                <i class="fas fa-print me-1"></i>طباعة
+            </button>
+        </div>
+    </div>
+</div>
+<div class="alert alert-info">
+    <h5>🧪 اختبار الأزرار</h5>
+    <p>انقر على الأزرار أعلاه لاختبارها</p>
+    <div id="testResults"></div>
+</div>
+
+<!-- جدول المصروفات -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>تحديد</th>
+                        <th>رقم المصروف</th>
+                        <th>الوصف</th>
+                        <th>المبلغ</th>
+                        <th>التاريخ</th>
+                        <th>الحالة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for expense in expenses %}
+                    <tr>
+                        <td>
+                            <input type="radio" name="selected_expense" value="{{ expense.id }}" 
+                                   data-expense-number="{{ expense.expense_number }}">
+                        </td>
+                        <td>{{ expense.expense_number }}</td>
+                        <td>{{ expense.description }}</td>
+                        <td>{{ "%.2f"|format(expense.amount) }} ريال</td>
+                        <td>{{ expense.date.strftime('%Y-%m-%d') if expense.date else '-' }}</td>
+                        <td>
+                            {% if expense.payment_status == 'paid' %}
+                                <span class="badge bg-success">مدفوع</span>
+                            {% else %}
+                                <span class="badge bg-danger">غير مدفوع</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+console.log('🚀 بدء تحميل شاشة المصروفات البسيطة...');
+
+// دوال بسيطة جداً
+function addExpense() {
+    console.log('➕ إضافة مصروف');
+    alert('✅ زر الإضافة يعمل!');
+    document.getElementById('testResults').innerHTML += '<div>✅ زر الإضافة يعمل</div>';
+}
+
+function editExpense() {
+    console.log('✏️ تعديل مصروف');
+    const selected = document.querySelector('input[name="selected_expense"]:checked');
+    if (selected) {
+        alert('✅ زر التعديل يعمل! المصروف المحدد: ' + selected.value);
+        document.getElementById('testResults').innerHTML += '<div>✅ زر التعديل يعمل - المصروف: ' + selected.value + '</div>';
+    } else {
+        alert('⚠️ يرجى تحديد مصروف أولاً');
+        document.getElementById('testResults').innerHTML += '<div>⚠️ لم يتم تحديد مصروف</div>';
+    }
+}
+
+function deleteExpense() {
+    console.log('🗑️ حذف مصروف');
+    const selected = document.querySelector('input[name="selected_expense"]:checked');
+    if (selected) {
+        if (confirm('هل تريد حذف المصروف؟')) {
+            alert('✅ زر الحذف يعمل! سيتم حذف المصروف: ' + selected.value);
+            document.getElementById('testResults').innerHTML += '<div>✅ زر الحذف يعمل - المصروف: ' + selected.value + '</div>';
+        }
+    } else {
+        alert('⚠️ يرجى تحديد مصروف أولاً');
+        document.getElementById('testResults').innerHTML += '<div>⚠️ لم يتم تحديد مصروف للحذف</div>';
+    }
+}
+
+function exportExpenses() {
+    console.log('📥 تصدير المصروفات');
+    alert('✅ زر التصدير يعمل!');
+    document.getElementById('testResults').innerHTML += '<div>✅ زر التصدير يعمل</div>';
+}
+
+function printExpenses() {
+    console.log('🖨️ طباعة المصروفات');
+    alert('✅ زر الطباعة يعمل!');
+    document.getElementById('testResults').innerHTML += '<div>✅ زر الطباعة يعمل</div>';
+}
+
+// ربط الأزرار عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔗 ربط الأزرار...');
+    
+    document.getElementById('addExpenseBtn').addEventListener('click', addExpense);
+    document.getElementById('editExpenseBtn').addEventListener('click', editExpense);
+    document.getElementById('deleteExpenseBtn').addEventListener('click', deleteExpense);
+    document.getElementById('exportExpenseBtn').addEventListener('click', exportExpenses);
+    document.getElementById('printExpenseBtn').addEventListener('click', printExpenses);
+    
+    console.log('✅ تم ربط جميع الأزرار');
+    document.getElementById('testResults').innerHTML = '<div class="badge bg-success">✅ تم تحميل الصفحة وربط الأزرار</div>';
+});
+</script>
+{% endblock %}

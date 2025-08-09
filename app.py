@@ -54,6 +54,15 @@ class Customer(db.Model):
     phone = db.Column(db.String(20))
     email = db.Column(db.String(100))
     address = db.Column(db.Text)
+
+class Product(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    price = db.Column(db.Float, nullable=False, default=0)
+    cost = db.Column(db.Float, default=0)
+    quantity = db.Column(db.Integer, default=0)  # Changed from stock_quantity to quantity
+    category = db.Column(db.String(50))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Supplier(db.Model):
@@ -64,21 +73,16 @@ class Supplier(db.Model):
     address = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-class Product(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text)
-    price = db.Column(db.Float, nullable=False)
-    cost = db.Column(db.Float, default=0)
-    quantity = db.Column(db.Integer, default=0)
-    category = db.Column(db.String(50))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+# Product class already defined above - removing duplicate
 
 class Sale(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    invoice_number = db.Column(db.String(50), unique=True)
     customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'))
     subtotal = db.Column(db.Float, nullable=False, default=0)
     discount = db.Column(db.Float, nullable=False, default=0)
+    tax_rate = db.Column(db.Float, default=15.0)  # Default VAT rate 15%
+    tax_amount = db.Column(db.Float, default=0)
     total = db.Column(db.Float, nullable=False)
     date = db.Column(db.DateTime, default=datetime.utcnow)
     notes = db.Column(db.Text)
@@ -88,6 +92,20 @@ class Sale(db.Model):
     payment_date = db.Column(db.DateTime)
     payment_method = db.Column(db.String(50))
     customer = db.relationship('Customer', backref='sales')
+
+class SaleItem(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    sale_id = db.Column(db.Integer, db.ForeignKey('sale.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'))
+    product_name = db.Column(db.String(100), nullable=False)  # Store name in case product is deleted
+    quantity = db.Column(db.Float, nullable=False, default=1)
+    unit_price = db.Column(db.Float, nullable=False, default=0)
+    total_price = db.Column(db.Float, nullable=False, default=0)
+    discount = db.Column(db.Float, default=0)
+    notes = db.Column(db.Text)
+
+    sale = db.relationship('Sale', backref='items')
+    product = db.relationship('Product', backref='sale_items')
 
 class Purchase(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -106,10 +124,14 @@ class Purchase(db.Model):
 
 class Expense(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    expense_number = db.Column(db.String(50), unique=True)
     description = db.Column(db.String(200), nullable=False)
     amount = db.Column(db.Float, nullable=False)
+    expense_type = db.Column(db.String(100))  # نوع المصروف
     category = db.Column(db.String(50))
     date = db.Column(db.DateTime, default=datetime.utcnow)
+    reference = db.Column(db.String(100))  # رقم المرجع
+    vendor = db.Column(db.String(200))  # المورد
     notes = db.Column(db.Text)
     # حقول نظام المدفوعات
     payment_status = db.Column(db.String(20), default='unpaid')
@@ -174,6 +196,23 @@ with app.app_context():
         db.session.commit()
         logger.info("✅ تم إنشاء المستخدم الافتراضي")
 
+    # إنشاء منتجات تجريبية (معطل مؤقتاً لحل مشكلة قاعدة البيانات)
+    # إنشاء منتجات تجريبية (معطل مؤقتاً لحل مشكلة قاعدة البيانات)
+    # if Product.query.count() == 0:
+    #     sample_products = [
+    #         Product(name='لابتوب ديل', description='لابتوب ديل انسبايرون 15', price=2500.00, cost=2000.00, stock_quantity=10, category='إلكترونيات'),
+    #         Product(name='ماوس لاسلكي', description='ماوس لاسلكي لوجيتك', price=150.00, cost=100.00, stock_quantity=50, category='إكسسوارات'),
+    #         Product(name='كيبورد ميكانيكي', description='كيبورد ميكانيكي للألعاب', price=300.00, cost=200.00, stock_quantity=25, category='إكسسوارات'),
+    #         Product(name='شاشة 24 بوصة', description='شاشة LED 24 بوصة', price=800.00, cost=600.00, stock_quantity=15, category='إلكترونيات'),
+    #         Product(name='طابعة HP', description='طابعة HP ليزر', price=1200.00, cost=900.00, stock_quantity=8, category='مكتبية')
+    #     ]
+    #
+    #     for product in sample_products:
+    #         db.session.add(product)
+    #
+    #     db.session.commit()
+    #     logger.info("✅ تم إنشاء المنتجات التجريبية")
+
 # Routes الأساسية
 @app.route('/')
 def home():
@@ -222,7 +261,8 @@ def dashboard():
         'total_purchases': db.session.query(db.func.sum(Purchase.total)).scalar() or 0,
         'total_expenses': db.session.query(db.func.sum(Expense.amount)).scalar() or 0,
         'total_discount_sales': db.session.query(db.func.sum(Sale.discount)).scalar() or 0,
-        'total_discount_purchases': db.session.query(db.func.sum(Purchase.discount)).scalar() or 0
+        'total_discount_purchases': db.session.query(db.func.sum(Purchase.discount)).scalar() or 0,
+        'total_salaries': db.session.query(db.func.sum(Employee.salary)).scalar() or 0
     }
 
     return render_template('dashboard_new.html', stats=stats)
@@ -303,18 +343,155 @@ def purchases():
 @app.route('/expenses')
 @login_required
 def expenses():
-    """صفحة المصروفات"""
+    """صفحة المصروفات - تم إعادة توجيهها للصفحة الجديدة التي تعمل"""
     expenses_list = Expense.query.order_by(Expense.date.desc()).all()
 
     # حساب الإحصائيات
     summary_data = {
         'total_expenses': sum(e.amount for e in expenses_list),
         'expenses_count': len(expenses_list),
-        'pending_expenses': sum(e.amount for e in expenses_list if e.date.month == datetime.now().month),
+        'pending_expenses': sum(e.amount for e in expenses_list if e.payment_status != 'paid'),
         'avg_expense': sum(e.amount for e in expenses_list) / len(expenses_list) if expenses_list else 0
     }
 
-    return render_template('expenses.html', expenses=expenses_list, summary_data=summary_data)
+    # استخدام الصفحة الجديدة التي تعمل
+    return render_template('expenses_new.html', expenses=expenses_list, summary_data=summary_data)
+
+# مسارات إنشاء الفواتير الجديدة
+@app.route('/sales/new')
+@login_required
+def new_sale():
+    """صفحة إنشاء فاتورة مبيعات جديدة"""
+    from datetime import datetime
+    today = datetime.now().strftime('%Y-%m-%d')
+    return render_template('sale_form.html', today=today)
+
+@app.route('/purchases/new')
+@login_required
+def new_purchase():
+    """صفحة إنشاء فاتورة مشتريات جديدة"""
+    from datetime import datetime
+    today = datetime.now().strftime('%Y-%m-%d')
+    return render_template('purchase_form.html', today=today)
+
+@app.route('/purchases/simple')
+@login_required
+def simple_purchase():
+    """صفحة إنشاء فاتورة مشتريات بسيطة"""
+    from datetime import datetime
+    today = datetime.now().strftime('%Y-%m-%d')
+    return render_template('purchase_form.html', today=today)
+
+# مسارات التعديل والطباعة
+@app.route('/sales/edit/<int:sale_id>')
+@login_required
+def edit_sale(sale_id):
+    """صفحة تعديل فاتورة مبيعات"""
+    flash(f'🚧 صفحة تعديل فاتورة المبيعات رقم {sale_id} قيد التطوير', 'info')
+    return redirect(url_for('sales'))
+
+@app.route('/purchases/edit/<int:purchase_id>')
+@login_required
+def edit_purchase(purchase_id):
+    """صفحة تعديل فاتورة مشتريات"""
+    flash(f'🚧 صفحة تعديل فاتورة المشتريات رقم {purchase_id} قيد التطوير', 'info')
+    return redirect(url_for('purchases'))
+
+@app.route('/sales/print/<int:sale_id>')
+@login_required
+def print_sale_page(sale_id):
+    """طباعة فاتورة مبيعات"""
+    flash(f'🚧 طباعة فاتورة المبيعات رقم {sale_id} قيد التطوير', 'info')
+    return redirect(url_for('sales'))
+
+@app.route('/purchases/print/<int:purchase_id>')
+@login_required
+def print_purchase_page(purchase_id):
+    """طباعة فاتورة مشتريات"""
+    flash(f'🚧 طباعة فاتورة المشتريات رقم {purchase_id} قيد التطوير', 'info')
+    return redirect(url_for('purchases'))
+
+@app.route('/sales/preview/<int:sale_id>')
+@login_required
+def preview_sale_page(sale_id):
+    """معاينة فاتورة مبيعات"""
+    flash(f'🚧 معاينة فاتورة المبيعات رقم {sale_id} قيد التطوير', 'info')
+    return redirect(url_for('sales'))
+
+@app.route('/purchases/preview/<int:purchase_id>')
+@login_required
+def preview_purchase_page(purchase_id):
+    """معاينة فاتورة مشتريات"""
+    flash(f'🚧 معاينة فاتورة المشتريات رقم {purchase_id} قيد التطوير', 'info')
+    return redirect(url_for('purchases'))
+
+# مسارات API للتصدير
+@app.route('/api/sales/export')
+@login_required
+def export_sales_api():
+    """تصدير المبيعات"""
+    try:
+        # يمكن إضافة منطق التصدير الفعلي هنا
+        flash('🚧 تصدير المبيعات قيد التطوير', 'info')
+        return redirect(url_for('sales'))
+    except Exception as e:
+        flash(f'❌ خطأ في تصدير المبيعات: {str(e)}', 'error')
+        return redirect(url_for('sales'))
+
+@app.route('/api/purchases/export')
+@login_required
+def export_purchases_api():
+    """تصدير المشتريات"""
+    try:
+        # يمكن إضافة منطق التصدير الفعلي هنا
+        flash('🚧 تصدير المشتريات قيد التطوير', 'info')
+        return redirect(url_for('purchases'))
+    except Exception as e:
+        flash(f'❌ خطأ في تصدير المشتريات: {str(e)}', 'error')
+        return redirect(url_for('purchases'))
+
+@app.route('/expenses_test')
+@login_required
+def expenses_test():
+    """صفحة اختبار المصروفات البسيطة"""
+    expenses_list = Expense.query.order_by(Expense.date.desc()).all()
+    return render_template('expenses_simple.html', expenses=expenses_list)
+
+@app.route('/test_buttons')
+@login_required
+def test_buttons():
+    """صفحة اختبار الأزرار فقط"""
+    expenses_list = Expense.query.order_by(Expense.date.desc()).all()
+    return render_template('test_buttons.html', expenses=expenses_list)
+
+@app.route('/expenses_new')
+@login_required
+def expenses_new():
+    """صفحة المصروفات الجديدة - تعمل بشكل صحيح"""
+    expenses_list = Expense.query.order_by(Expense.date.desc()).all()
+
+    # حساب الإحصائيات
+    summary_data = {
+        'total_expenses': sum(e.amount for e in expenses_list),
+        'expenses_count': len(expenses_list),
+        'pending_expenses': sum(e.amount for e in expenses_list if e.payment_status != 'paid'),
+        'avg_expense': sum(e.amount for e in expenses_list) / len(expenses_list) if expenses_list else 0
+    }
+
+    return render_template('expenses_new.html', expenses=expenses_list, summary_data=summary_data)
+
+@app.route('/expenses/new')
+@login_required
+def new_expense():
+    """صفحة إضافة مصروف جديد"""
+    return render_template('expense_form.html', action='add')
+
+@app.route('/expenses/edit/<int:expense_id>')
+@login_required
+def edit_expense_page(expense_id):
+    """صفحة تعديل مصروف"""
+    expense = Expense.query.get_or_404(expense_id)
+    return render_template('expense_form.html', expense=expense, action='edit')
 
 @app.route('/employees')
 @login_required
@@ -798,23 +975,72 @@ def create_sale():
         if not data.get('subtotal') or not data.get('total'):
             return jsonify({'success': False, 'message': 'البيانات المطلوبة مفقودة'})
 
+        # Generate unique invoice number
+        last_sale = Sale.query.order_by(Sale.id.desc()).first()
+        next_number = (last_sale.id + 1) if last_sale else 1
+        invoice_number = f"INV-{next_number:06d}"
+
         # إنشاء مبيعة جديدة
         new_sale = Sale(
+            invoice_number=invoice_number,
             customer_id=data.get('customer_id') if data.get('customer_id') else None,
             subtotal=float(data.get('subtotal', 0)),
             discount=float(data.get('discount', 0)),
+            tax_rate=float(data.get('tax_rate', 15.0)),
+            tax_amount=float(data.get('tax_amount', 0)),
             total=float(data.get('total', 0)),
             date=datetime.strptime(data.get('date'), '%Y-%m-%d') if data.get('date') else datetime.utcnow(),
             notes=data.get('notes', '')
         )
 
         db.session.add(new_sale)
+        db.session.flush()  # Get the sale ID
+
+        # Handle sale items if provided
+        items_data = data.get('items', [])
+        total_calculated = 0
+
+        for item_data in items_data:
+            if not item_data.get('product_name') or not item_data.get('quantity'):
+                continue
+
+            quantity = float(item_data.get('quantity', 1))
+            unit_price = float(item_data.get('unit_price', 0))
+            item_discount = float(item_data.get('discount', 0))
+            total_price = (quantity * unit_price) - item_discount
+
+            sale_item = SaleItem(
+                sale_id=new_sale.id,
+                product_id=item_data.get('product_id'),
+                product_name=item_data.get('product_name'),
+                quantity=quantity,
+                unit_price=unit_price,
+                total_price=total_price,
+                discount=item_discount,
+                notes=item_data.get('notes', '')
+            )
+
+            db.session.add(sale_item)
+            total_calculated += total_price
+
+            # Update product stock if product_id is provided
+            if item_data.get('product_id'):
+                product = Product.query.get(item_data.get('product_id'))
+                if product:
+                    product.stock_quantity = max(0, product.stock_quantity - quantity)
+
+        # If items were provided, update the sale total
+        if items_data:
+            new_sale.subtotal = total_calculated + new_sale.discount
+            new_sale.total = total_calculated
+
         db.session.commit()
 
         return jsonify({
             'success': True,
             'message': 'تم حفظ المبيعة بنجاح',
-            'sale_id': new_sale.id
+            'sale_id': new_sale.id,
+            'invoice_number': new_sale.invoice_number
         })
 
     except Exception as e:
@@ -862,12 +1088,22 @@ def create_expense():
         if not data.get('amount') or not data.get('description'):
             return jsonify({'success': False, 'message': 'البيانات المطلوبة مفقودة'})
 
+        # Generate unique expense number
+        last_expense = Expense.query.order_by(Expense.id.desc()).first()
+        next_number = (last_expense.id + 1) if last_expense else 1
+        expense_number = f"EXP-{next_number:06d}"
+
         # إنشاء مصروف جديد
         new_expense = Expense(
+            expense_number=expense_number,
             description=data.get('description'),
             amount=float(data.get('amount', 0)),
+            expense_type=data.get('expense_type', 'general'),
+            category=data.get('category', 'general'),
             date=datetime.strptime(data.get('date'), '%Y-%m-%d') if data.get('date') else datetime.utcnow(),
-            category=data.get('type', 'general'),
+            reference=data.get('reference', ''),
+            vendor=data.get('vendor', ''),
+            payment_method=data.get('payment_method', 'cash'),
             notes=data.get('notes', '')
         )
 
@@ -879,6 +1115,270 @@ def create_expense():
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': f'خطأ في حفظ المصروف: {str(e)}'})
+
+@app.route('/print_expense/<int:expense_id>')
+@login_required
+def print_expense(expense_id):
+    """طباعة مصروف"""
+    try:
+        expense = Expense.query.get_or_404(expense_id)
+
+        # Generate expense number if not exists
+        if not expense.expense_number:
+            expense.expense_number = f"EXP-{expense.id:06d}"
+            db.session.commit()
+
+        # Company information
+        company_info = {
+            'name': 'شركة المحاسبة المتكاملة',
+            'name_en': 'Integrated Accounting Company',
+            'address': 'الرياض، المملكة العربية السعودية',
+            'phone': '+966 11 123 4567',
+            'email': 'info@accounting.com',
+            'tax_number': '123456789012345'
+        }
+
+        return render_template('print_expense.html',
+                             expense=expense,
+                             company=company_info,
+                             print_date=datetime.now())
+
+    except Exception as e:
+        flash(f'خطأ في طباعة المصروف: {str(e)}', 'error')
+        return redirect(url_for('expenses'))
+
+@app.route('/api/expenses/delete/<int:expense_id>', methods=['DELETE'])
+@login_required
+def delete_expense(expense_id):
+    """حذف مصروف"""
+    try:
+        expense = Expense.query.get_or_404(expense_id)
+
+        # Check if expense is paid - prevent deletion of paid expenses
+        if expense.payment_status == 'paid' and expense.paid_amount > 0:
+            return jsonify({
+                'success': False,
+                'message': 'لا يمكن حذف مصروف مدفوع. يرجى إلغاء الدفعة أولاً.'
+            })
+
+        # Store expense info for response
+        expense_number = expense.expense_number or f"EXP-{expense.id:06d}"
+
+        # Delete the expense
+        db.session.delete(expense)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': f'تم حذف المصروف {expense_number} بنجاح'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'خطأ في حذف المصروف: {str(e)}'
+        })
+
+@app.route('/api/expenses/update/<int:expense_id>', methods=['PUT'])
+@login_required
+def update_expense(expense_id):
+    """تحديث مصروف"""
+    try:
+        expense = Expense.query.get_or_404(expense_id)
+        data = request.get_json()
+
+        # Check if expense is paid - prevent editing of paid expenses
+        if expense.payment_status == 'paid' and expense.paid_amount > 0:
+            return jsonify({
+                'success': False,
+                'message': 'لا يمكن تعديل مصروف مدفوع. يرجى إلغاء الدفعة أولاً.'
+            })
+
+        # Update expense fields
+        if 'description' in data:
+            expense.description = data.get('description')
+        if 'amount' in data:
+            expense.amount = float(data.get('amount', 0))
+        if 'expense_type' in data:
+            expense.expense_type = data.get('expense_type')
+        if 'category' in data:
+            expense.category = data.get('category')
+        if 'date' in data:
+            expense.date = datetime.strptime(data.get('date'), '%Y-%m-%d') if data.get('date') else expense.date
+        if 'reference' in data:
+            expense.reference = data.get('reference', '')
+        if 'vendor' in data:
+            expense.vendor = data.get('vendor', '')
+        if 'payment_method' in data:
+            expense.payment_method = data.get('payment_method')
+        if 'notes' in data:
+            expense.notes = data.get('notes', '')
+
+        db.session.commit()
+
+        expense_number = expense.expense_number or f"EXP-{expense.id:06d}"
+        return jsonify({
+            'success': True,
+            'message': f'تم تحديث المصروف {expense_number} بنجاح'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'خطأ في تحديث المصروف: {str(e)}'
+        })
+
+@app.route('/api/expenses/search', methods=['GET'])
+@login_required
+def search_expenses():
+    """البحث والتصفية في المصروفات"""
+    try:
+        # Get search parameters
+        search_term = request.args.get('search', '').strip()
+        expense_type = request.args.get('expense_type', '')
+        payment_method = request.args.get('payment_method', '')
+        date_from = request.args.get('date_from', '')
+        date_to = request.args.get('date_to', '')
+        min_amount = request.args.get('min_amount', '')
+        max_amount = request.args.get('max_amount', '')
+
+        # Start with base query
+        query = Expense.query
+
+        # Apply search term filter
+        if search_term:
+            query = query.filter(
+                db.or_(
+                    Expense.description.contains(search_term),
+                    Expense.expense_number.contains(search_term),
+                    Expense.vendor.contains(search_term),
+                    Expense.reference.contains(search_term)
+                )
+            )
+
+        # Apply expense type filter
+        if expense_type:
+            query = query.filter(Expense.expense_type == expense_type)
+
+        # Apply payment method filter
+        if payment_method:
+            query = query.filter(Expense.payment_method == payment_method)
+
+        # Apply date range filter
+        if date_from:
+            query = query.filter(Expense.date >= datetime.strptime(date_from, '%Y-%m-%d'))
+        if date_to:
+            query = query.filter(Expense.date <= datetime.strptime(date_to, '%Y-%m-%d'))
+
+        # Apply amount range filter
+        if min_amount:
+            query = query.filter(Expense.amount >= float(min_amount))
+        if max_amount:
+            query = query.filter(Expense.amount <= float(max_amount))
+
+        # Execute query
+        expenses = query.order_by(Expense.date.desc()).all()
+
+        # Format results
+        results = []
+        for expense in expenses:
+            results.append({
+                'id': expense.id,
+                'expense_number': expense.expense_number or f"EXP-{expense.id:06d}",
+                'description': expense.description,
+                'amount': expense.amount,
+                'expense_type': expense.expense_type or expense.category,
+                'date': expense.date.strftime('%Y-%m-%d') if expense.date else '',
+                'payment_method': expense.payment_method,
+                'vendor': expense.vendor,
+                'reference': expense.reference,
+                'payment_status': expense.payment_status,
+                'notes': expense.notes
+            })
+
+        return jsonify({
+            'success': True,
+            'expenses': results,
+            'count': len(results)
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'خطأ في البحث: {str(e)}'
+        })
+
+@app.route('/api/expenses/export')
+@login_required
+def export_expenses():
+    """تصدير المصروفات إلى Excel"""
+    try:
+        # Get filter parameters
+        expense_type = request.args.get('expense_type', '')
+        payment_method = request.args.get('payment_method', '')
+        date_from = request.args.get('date_from', '')
+        date_to = request.args.get('date_to', '')
+
+        # Build query with filters
+        query = Expense.query
+
+        if expense_type:
+            query = query.filter(Expense.expense_type == expense_type)
+        if payment_method:
+            query = query.filter(Expense.payment_method == payment_method)
+        if date_from:
+            query = query.filter(Expense.date >= datetime.strptime(date_from, '%Y-%m-%d'))
+        if date_to:
+            query = query.filter(Expense.date <= datetime.strptime(date_to, '%Y-%m-%d'))
+
+        expenses = query.order_by(Expense.date.desc()).all()
+
+        # Create CSV content
+        import io
+        import csv
+
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        # Write header
+        writer.writerow([
+            'رقم المصروف', 'التاريخ', 'نوع المصروف', 'الوصف',
+            'المبلغ', 'طريقة الدفع', 'المورد', 'رقم المرجع',
+            'حالة الدفع', 'ملاحظات'
+        ])
+
+        # Write data
+        for expense in expenses:
+            writer.writerow([
+                expense.expense_number or f"EXP-{expense.id:06d}",
+                expense.date.strftime('%Y-%m-%d') if expense.date else '',
+                expense.expense_type or expense.category or '',
+                expense.description or '',
+                expense.amount or 0,
+                expense.payment_method or '',
+                expense.vendor or '',
+                expense.reference or '',
+                'مدفوع' if expense.payment_status == 'paid' else 'غير مدفوع',
+                expense.notes or ''
+            ])
+
+        # Prepare response
+        output.seek(0)
+
+        from flask import make_response
+        response = make_response(output.getvalue())
+        response.headers['Content-Type'] = 'text/csv; charset=utf-8'
+        response.headers['Content-Disposition'] = f'attachment; filename=expenses_{datetime.now().strftime("%Y%m%d")}.csv'
+
+        return response
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'خطأ في التصدير: {str(e)}'
+        })
 
 @app.route('/api/save_expense', methods=['POST'])
 @login_required
@@ -969,18 +1469,7 @@ def delete_purchase(purchase_id):
         db.session.rollback()
         return jsonify({'success': False, 'message': f'خطأ في حذف فاتورة المشتريات: {str(e)}'})
 
-@app.route('/api/expenses/delete/<int:expense_id>', methods=['DELETE'])
-@login_required
-def delete_expense(expense_id):
-    """حذف مصروف"""
-    try:
-        expense = Expense.query.get_or_404(expense_id)
-        db.session.delete(expense)
-        db.session.commit()
-        return jsonify({'success': True, 'message': 'تم حذف المصروف بنجاح'})
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'success': False, 'message': f'خطأ في حذف المصروف: {str(e)}'})
+# delete_expense function already defined above - removing duplicate
 
 # ============================================================================
 # ADVANCED AUTO-SAVE SYSTEM API ENDPOINTS
@@ -1336,6 +1825,151 @@ def get_sales_list():
 
     except Exception as e:
         return jsonify({'success': False, 'message': f'خطأ في جلب المبيعات: {str(e)}'})
+
+@app.route('/sales/print/<int:sale_id>')
+@login_required
+def print_sale(sale_id):
+    """طباعة فاتورة مبيعات"""
+    try:
+        sale = Sale.query.get_or_404(sale_id)
+
+        # Generate invoice number if not exists
+        if not hasattr(sale, 'invoice_number') or not sale.invoice_number:
+            sale.invoice_number = f"INV-{sale.id:06d}"
+            db.session.commit()
+
+        # Company information
+        company_info = {
+            'name': 'شركة المحاسبة المتكاملة',
+            'name_en': 'Integrated Accounting Company',
+            'address': 'الرياض، المملكة العربية السعودية',
+            'phone': '+966 11 123 4567',
+            'email': 'info@accounting.com',
+            'tax_number': '123456789012345'
+        }
+
+        return render_template('print_sale.html',
+                             sale=sale,
+                             company=company_info,
+                             print_date=datetime.now())
+
+    except Exception as e:
+        flash(f'خطأ في طباعة الفاتورة: {str(e)}', 'error')
+        return redirect(url_for('sales'))
+
+# delete_sale function already defined above - removing duplicate
+
+@app.route('/api/sales/update/<int:sale_id>', methods=['PUT'])
+@login_required
+def update_sale(sale_id):
+    """تحديث فاتورة مبيعات"""
+    try:
+        sale = Sale.query.get_or_404(sale_id)
+        data = request.get_json()
+
+        # Check if sale has payments
+        if sale.paid_amount and sale.paid_amount > 0:
+            return jsonify({
+                'success': False,
+                'message': 'لا يمكن تعديل فاتورة تحتوي على مدفوعات. يرجى إلغاء المدفوعات أولاً.'
+            })
+
+        # Update sale fields
+        if 'customer_id' in data:
+            sale.customer_id = data.get('customer_id') if data.get('customer_id') else None
+        if 'subtotal' in data:
+            sale.subtotal = float(data.get('subtotal', 0))
+        if 'discount' in data:
+            sale.discount = float(data.get('discount', 0))
+        if 'tax_rate' in data:
+            sale.tax_rate = float(data.get('tax_rate', 15.0))
+        if 'tax_amount' in data:
+            sale.tax_amount = float(data.get('tax_amount', 0))
+        if 'total' in data:
+            sale.total = float(data.get('total', 0))
+        if 'date' in data:
+            sale.date = datetime.strptime(data.get('date'), '%Y-%m-%d') if data.get('date') else sale.date
+        if 'notes' in data:
+            sale.notes = data.get('notes', '')
+
+        # Handle sale items update if provided
+        if 'items' in data:
+            # Delete existing items
+            SaleItem.query.filter_by(sale_id=sale.id).delete()
+
+            # Add new items
+            items_data = data.get('items', [])
+            total_calculated = 0
+
+            for item_data in items_data:
+                if not item_data.get('product_name') or not item_data.get('quantity'):
+                    continue
+
+                quantity = float(item_data.get('quantity', 1))
+                unit_price = float(item_data.get('unit_price', 0))
+                item_discount = float(item_data.get('discount', 0))
+                total_price = (quantity * unit_price) - item_discount
+
+                sale_item = SaleItem(
+                    sale_id=sale.id,
+                    product_id=item_data.get('product_id'),
+                    product_name=item_data.get('product_name'),
+                    quantity=quantity,
+                    unit_price=unit_price,
+                    total_price=total_price,
+                    discount=item_discount,
+                    notes=item_data.get('notes', '')
+                )
+
+                db.session.add(sale_item)
+                total_calculated += total_price
+
+            # Update sale total if items were provided
+            if items_data:
+                sale.subtotal = total_calculated + sale.discount
+                sale.total = total_calculated + sale.tax_amount
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': f'تم تحديث الفاتورة {sale.invoice_number} بنجاح'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'خطأ في تحديث الفاتورة: {str(e)}'
+        })
+
+@app.route('/api/products/list', methods=['GET'])
+@login_required
+def get_products_list():
+    """جلب قائمة المنتجات"""
+    try:
+        products = Product.query.filter_by(is_active=True).all()
+        products_data = []
+
+        for product in products:
+            products_data.append({
+                'id': product.id,
+                'name': product.name,
+                'description': product.description,
+                'price': product.price,
+                'stock_quantity': product.stock_quantity,
+                'barcode': product.barcode,
+                'category': product.category
+            })
+
+        return jsonify({
+            'success': True,
+            'products': products_data,
+            'count': len(products_data)
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'خطأ في جلب المنتجات: {str(e)}'})
 
 @app.route('/api/purchases/list', methods=['GET'])
 @login_required

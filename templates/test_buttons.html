@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار الأزرار</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>🧪 اختبار الأزرار</h1>
+        
+        <!-- اختبار JavaScript الأساسي -->
+        <div class="alert alert-info">
+            <h5>اختبار JavaScript الأساسي:</h5>
+            <button class="btn btn-primary" onclick="alert('JavaScript يعمل!')">اختبار JavaScript</button>
+            <button class="btn btn-success" onclick="console.log('Console يعمل!'); document.getElementById('result').innerHTML = 'Console يعمل!'">اختبار Console</button>
+            <div id="result" class="mt-2"></div>
+        </div>
+        
+        <!-- أزرار المصروفات -->
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">أزرار المصروفات</h5>
+                <div class="btn-group mb-3">
+                    <button type="button" class="btn btn-success" id="addBtn">
+                        <i class="fas fa-plus me-1"></i>إضافة
+                    </button>
+                    <button type="button" class="btn btn-warning" id="editBtn">
+                        <i class="fas fa-edit me-1"></i>تعديل
+                    </button>
+                    <button type="button" class="btn btn-danger" id="deleteBtn">
+                        <i class="fas fa-trash me-1"></i>حذف
+                    </button>
+                    <button type="button" class="btn btn-info" id="exportBtn">
+                        <i class="fas fa-download me-1"></i>تصدير
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="printBtn">
+                        <i class="fas fa-print me-1"></i>طباعة
+                    </button>
+                </div>
+                <div id="buttonResults"></div>
+            </div>
+        </div>
+        
+        <!-- جدول المصروفات -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5 class="card-title">المصروفات</h5>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>تحديد</th>
+                            <th>رقم المصروف</th>
+                            <th>الوصف</th>
+                            <th>المبلغ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for expense in expenses %}
+                        <tr>
+                            <td><input type="radio" name="selected_expense" value="{{ expense.id }}"></td>
+                            <td>{{ expense.expense_number }}</td>
+                            <td>{{ expense.description }}</td>
+                            <td>{{ "%.2f"|format(expense.amount) }} ريال</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        console.log('🚀 بدء تحميل صفحة الاختبار...');
+        
+        // دوال بسيطة جداً
+        function addExpense() {
+            console.log('➕ زر الإضافة');
+            alert('✅ زر الإضافة يعمل!');
+            document.getElementById('buttonResults').innerHTML += '<div class="badge bg-success me-1">✅ إضافة</div>';
+        }
+        
+        function editExpense() {
+            console.log('✏️ زر التعديل');
+            alert('✅ زر التعديل يعمل!');
+            document.getElementById('buttonResults').innerHTML += '<div class="badge bg-warning me-1">✅ تعديل</div>';
+        }
+        
+        function deleteExpense() {
+            console.log('🗑️ زر الحذف');
+            alert('✅ زر الحذف يعمل!');
+            document.getElementById('buttonResults').innerHTML += '<div class="badge bg-danger me-1">✅ حذف</div>';
+        }
+        
+        function exportExpenses() {
+            console.log('📥 زر التصدير');
+            alert('✅ زر التصدير يعمل!');
+            document.getElementById('buttonResults').innerHTML += '<div class="badge bg-info me-1">✅ تصدير</div>';
+        }
+        
+        function printExpenses() {
+            console.log('🖨️ زر الطباعة');
+            alert('✅ زر الطباعة يعمل!');
+            document.getElementById('buttonResults').innerHTML += '<div class="badge bg-secondary me-1">✅ طباعة</div>';
+        }
+        
+        // ربط الأزرار عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔗 ربط الأزرار...');
+            
+            const addBtn = document.getElementById('addBtn');
+            const editBtn = document.getElementById('editBtn');
+            const deleteBtn = document.getElementById('deleteBtn');
+            const exportBtn = document.getElementById('exportBtn');
+            const printBtn = document.getElementById('printBtn');
+            
+            if (addBtn) {
+                addBtn.addEventListener('click', addExpense);
+                console.log('✅ تم ربط زر الإضافة');
+            } else {
+                console.error('❌ زر الإضافة غير موجود');
+            }
+            
+            if (editBtn) {
+                editBtn.addEventListener('click', editExpense);
+                console.log('✅ تم ربط زر التعديل');
+            } else {
+                console.error('❌ زر التعديل غير موجود');
+            }
+            
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', deleteExpense);
+                console.log('✅ تم ربط زر الحذف');
+            } else {
+                console.error('❌ زر الحذف غير موجود');
+            }
+            
+            if (exportBtn) {
+                exportBtn.addEventListener('click', exportExpenses);
+                console.log('✅ تم ربط زر التصدير');
+            } else {
+                console.error('❌ زر التصدير غير موجود');
+            }
+            
+            if (printBtn) {
+                printBtn.addEventListener('click', printExpenses);
+                console.log('✅ تم ربط زر الطباعة');
+            } else {
+                console.error('❌ زر الطباعة غير موجود');
+            }
+            
+            console.log('✅ تم تحميل الصفحة وربط جميع الأزرار');
+            document.getElementById('buttonResults').innerHTML = '<div class="badge bg-success">✅ تم ربط الأزرار</div>';
+        });
+    </script>
+</body>
+</html>

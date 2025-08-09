@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فاتورة مبيعات - {{ sale.invoice_number or ('INV-' + sale.id|string) }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { margin: 0; }
+            .container { max-width: none; margin: 0; padding: 0; }
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+        }
+        
+        .invoice-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            margin: 20px auto;
+            max-width: 800px;
+            padding: 30px;
+        }
+        
+        .company-header {
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .company-logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .invoice-title {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .invoice-details {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .amount-section {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .total-amount {
+            font-size: 1.5em;
+            font-weight: bold;
+            text-align: center;
+            border: 2px dashed rgba(255,255,255,0.5);
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .print-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+        
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 100px;
+            color: rgba(0,0,0,0.05);
+            z-index: -1;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Print Button -->
+    <button class="btn btn-primary print-btn no-print" onclick="window.print()">
+        <i class="fas fa-print me-2"></i>طباعة
+    </button>
+    
+    <div class="container">
+        <div class="invoice-container position-relative">
+            <!-- Watermark -->
+            <div class="watermark">فاتورة</div>
+            
+            <!-- Company Header -->
+            <div class="company-header">
+                <div class="row align-items-center">
+                    <div class="col-md-2">
+                        <div class="company-logo">
+                            <i class="fas fa-building"></i>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h2 class="mb-1">{{ company.name }}</h2>
+                        <h5 class="text-muted mb-2">{{ company.name_en }}</h5>
+                        <p class="mb-1"><i class="fas fa-map-marker-alt me-2"></i>{{ company.address }}</p>
+                        <p class="mb-1"><i class="fas fa-phone me-2"></i>{{ company.phone }}</p>
+                        <p class="mb-0"><i class="fas fa-envelope me-2"></i>{{ company.email }}</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <p class="mb-1"><strong>الرقم الضريبي:</strong></p>
+                        <p class="mb-0">{{ company.tax_number }}</p>
+                        <p class="mt-3 mb-1"><strong>تاريخ الطباعة:</strong></p>
+                        <p class="mb-0">{{ print_date.strftime('%Y-%m-%d %H:%M') }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Invoice Title -->
+            <div class="invoice-title">
+                <h3 class="mb-0">
+                    <i class="fas fa-file-invoice me-2"></i>
+                    فاتورة مبيعات
+                </h3>
+            </div>
+            
+            <!-- Invoice Details -->
+            <div class="invoice-details">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-hashtag me-2"></i>رقم الفاتورة</h5>
+                        <p class="fs-4 fw-bold text-primary">{{ sale.invoice_number or ('INV-' + sale.id|string) }}</p>
+                        
+                        <h5 class="mt-4"><i class="fas fa-calendar me-2"></i>تاريخ الفاتورة</h5>
+                        <p>{{ sale.date.strftime('%Y-%m-%d') if sale.date else 'غير محدد' }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-user me-2"></i>العميل</h5>
+                        <p class="fs-5">{{ sale.customer.name if sale.customer else 'عميل نقدي' }}</p>
+                        
+                        <h5 class="mt-4"><i class="fas fa-credit-card me-2"></i>حالة الدفع</h5>
+                        <span class="badge bg-{% if sale.payment_status == 'paid' %}success{% elif sale.payment_status == 'partial' %}warning{% else %}danger{% endif %} fs-6">
+                            {% if sale.payment_status == 'paid' %}مدفوع{% elif sale.payment_status == 'partial' %}مدفوع جزئياً{% else %}غير مدفوع{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Amount Breakdown -->
+            <div class="amount-section">
+                <h4 class="mb-4 text-center">
+                    <i class="fas fa-calculator me-2"></i>
+                    تفاصيل المبلغ
+                </h4>
+                
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <h6>المبلغ الفرعي</h6>
+                        <p class="fs-5 fw-bold">{{ "%.2f"|format(sale.subtotal) }} ريال</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h6>الخصم</h6>
+                        <p class="fs-5 fw-bold">{{ "%.2f"|format(sale.discount) }} ريال</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h6>الضريبة ({{ "%.1f"|format(sale.tax_rate or 0) }}%)</h6>
+                        <p class="fs-5 fw-bold">{{ "%.2f"|format(sale.tax_amount or 0) }} ريال</p>
+                    </div>
+                    <div class="col-md-3">
+                        <h6>المبلغ المدفوع</h6>
+                        <p class="fs-5 fw-bold">{{ "%.2f"|format(sale.paid_amount or 0) }} ريال</p>
+                    </div>
+                </div>
+                
+                <div class="total-amount">
+                    <h3>إجمالي المبلغ: {{ "%.2f"|format(sale.total) }} ريال</h3>
+                </div>
+            </div>
+            
+            <!-- Notes Section -->
+            {% if sale.notes %}
+            <div class="mt-4">
+                <h5><i class="fas fa-sticky-note me-2"></i>ملاحظات</h5>
+                <div class="alert alert-info">
+                    {{ sale.notes }}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Footer -->
+            <div class="text-center mt-5 pt-4 border-top">
+                <p class="text-muted">شكراً لتعاملكم معنا</p>
+                <p class="small text-muted">تم إنشاء هذه الفاتورة بواسطة نظام المحاسبة المتكامل</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Auto print when page loads (optional)
+        // window.onload = function() { window.print(); }
+    </script>
+</body>
+</html>
