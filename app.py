@@ -225,7 +225,7 @@ def dashboard():
         'total_discount_purchases': db.session.query(db.func.sum(Purchase.discount)).scalar() or 0
     }
 
-    return render_template('dashboard.html', stats=stats)
+    return render_template('dashboard_new.html', stats=stats)
 
 @app.route('/payments_dues')
 @login_required
