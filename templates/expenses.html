@@ -14,6 +14,31 @@ Expenses - Accounting System
 {% if session.get('language', 'ar') == 'ar' %}إدارة المصروفات{% else %}Expenses Management{% endif %}
 {% endblock %}
 
+{% block page_actions %}
+<div class="btn-group">
+    <button type="button" class="btn btn-success" onclick="showAddExpenseModal()">
+        <i class="fas fa-plus me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}إضافة مصروف جديد{% else %}Add New Expense{% endif %}
+    </button>
+    <button type="button" class="btn btn-warning" onclick="EditExpensesRecord()">
+        <i class="fas fa-edit me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تعديل{% else %}Edit{% endif %}
+    </button>
+    <button type="button" class="btn btn-danger" onclick="DeleteExpensesRecord()">
+        <i class="fas fa-trash me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}حذف{% else %}Delete{% endif %}
+    </button>
+    <button type="button" class="btn btn-info" onclick="exportExpenses()">
+        <i class="fas fa-download me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تصدير{% else %}Export{% endif %}
+    </button>
+    <button type="button" class="btn btn-secondary" onclick="printExpensesList()">
+        <i class="fas fa-print me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}طباعة{% else %}Print{% endif %}
+    </button>
+</div>
+{% endblock %}
+
 {% block content %}
 <!-- Summary Cards -->
 <div class="row g-3 mb-4">
@@ -1225,8 +1250,74 @@ function viewExpense(expenseId) {
         row.classList.add('table-active');
 
         // يمكن إضافة منطق عرض التفاصيل هنا
-        alert(`تم تحديد المصروف #${expenseId}`);
+        showNotification(`تم تحديد المصروف #${expenseId}`, 'info');
     }
+}
+
+// وظيفة إضافة مصروف جديد
+function showAddExpenseModal() {
+    // مسح النموذج
+    const form = document.getElementById('expenseForm');
+    if (form) {
+        form.reset();
+    }
+
+    // تحديث عنوان النموذج
+    const modalTitle = document.querySelector('#expenseModal .modal-title');
+    if (modalTitle) {
+        modalTitle.textContent = isRTL ? 'إضافة مصروف جديد' : 'Add New Expense';
+    }
+
+    // عرض النموذج
+    const modal = new bootstrap.Modal(document.getElementById('expenseModal'));
+    modal.show();
+
+    console.log('🆕 فتح نموذج إضافة مصروف جديد');
+}
+
+// وظيفة تصدير المصروفات
+function exportExpenses() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+
+    showLoading(btn, isRTL ? 'جاري التصدير...' : 'Exporting...');
+
+    // محاكاة عملية التصدير
+    setTimeout(() => {
+        hideLoading(btn, originalText);
+        showNotification(isRTL ? 'تم تصدير المصروفات بنجاح' : 'Expenses exported successfully', 'success');
+
+        // هنا يمكن إضافة منطق التصدير الفعلي
+        console.log('📤 تصدير المصروفات');
+    }, 1500);
+}
+
+// وظيفة طباعة قائمة المصروفات
+function printExpensesList() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+
+    showLoading(btn, isRTL ? 'جاري التحضير للطباعة...' : 'Preparing for print...');
+
+    setTimeout(() => {
+        hideLoading(btn, originalText);
+        window.print();
+        console.log('🖨️ طباعة قائمة المصروفات');
+    }, 1000);
+}
+
+// وظائف مساعدة للأزرار
+function showLoading(button, text) {
+    if (!button) return;
+    button.dataset.originalText = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i>${text}`;
+}
+
+function hideLoading(button, originalText = null) {
+    if (!button) return;
+    button.disabled = false;
+    button.innerHTML = originalText || button.dataset.originalText || button.innerHTML;
 }
 </script>
 

@@ -880,6 +880,39 @@ def create_expense():
         db.session.rollback()
         return jsonify({'success': False, 'message': f'خطأ في حفظ المصروف: {str(e)}'})
 
+@app.route('/api/save_expense', methods=['POST'])
+@login_required
+def save_expense():
+    """حفظ مصروف جديد - endpoint للتوافق مع الواجهة"""
+    try:
+        data = request.get_json()
+
+        # التحقق من البيانات المطلوبة
+        if not data.get('amount') or not data.get('description'):
+            return jsonify({'success': False, 'message': 'البيانات المطلوبة مفقودة'})
+
+        # إنشاء مصروف جديد
+        new_expense = Expense(
+            description=data.get('description'),
+            amount=float(data.get('amount', 0)),
+            date=datetime.strptime(data.get('date'), '%Y-%m-%d') if data.get('date') else datetime.utcnow(),
+            category=data.get('expense_type', 'general'),
+            notes=data.get('reference', '')
+        )
+
+        db.session.add(new_expense)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'تم حفظ المصروف بنجاح',
+            'expense_id': new_expense.id
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'خطأ في حفظ المصروف: {str(e)}'})
+
 @app.route('/api/employees/create', methods=['POST'])
 @login_required
 def create_employee():
