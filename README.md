@@ -109,11 +109,18 @@ export DATABASE_URL="sqlite:///accounting.db"  # للتطوير
 ```
 
 #### 5. تشغيل التطبيق
+
+**للتطوير المحلي:**
 ```bash
 python app.py
 ```
 
-التطبيق سيعمل على: `http://localhost:5000`
+**للإنتاج (باستخدام gunicorn):**
+```bash
+gunicorn app:app --bind 0.0.0.0:8000
+```
+
+التطبيق سيعمل على: `http://localhost:5000` (التطوير) أو `http://localhost:8000` (الإنتاج)
 
 ### النشر على Render - Deploy to Render
 
