@@ -1,4 +1,4 @@
-{% extends "base_simple.html" %}
+{% extends "base_unified.html" %}
 
 {% block title %}
     {% if session.get('language', 'ar') == 'ar' %}
@@ -6,6 +6,16 @@
     {% else %}
         Raw Materials Management - Accounting System
     {% endif %}
+{% endblock %}
+
+{% block page_icon %}<i class="fas fa-seedling"></i>{% endblock %}
+
+{% block page_title %}
+{% if session.get('language', 'ar') == 'ar' %}
+    إدارة المواد الخام
+{% else %}
+    Raw Materials Management
+{% endif %}
 {% endblock %}
 
 {% block content %}

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>طباعة فاتورة المشتريات - {{ purchase.invoice_number }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { font-size: 12px; }
+            .container { max-width: 100% !important; }
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        
+        .invoice-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            margin: 20px auto;
+            max-width: 800px;
+        }
+        
+        .invoice-header {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 30px;
+            border-radius: 10px 10px 0 0;
+        }
+        
+        .company-info {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .invoice-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        .table th {
+            background-color: #e9ecef;
+            font-weight: 600;
+        }
+        
+        .total-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        
+        .print-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <!-- Print Button -->
+    <button class="btn btn-primary print-btn no-print" onclick="window.print()">
+        <i class="fas fa-print me-2"></i>طباعة
+    </button>
+
+    <div class="container">
+        <div class="invoice-container">
+            <!-- Header -->
+            <div class="invoice-header">
+                <div class="company-info">
+                    <h2 class="mb-1">نظام إدارة المطاعم</h2>
+                    <p class="mb-0">الرياض، المملكة العربية السعودية</p>
+                    <p class="mb-0">هاتف: 0112345678 | البريد الإلكتروني: info@restaurant.com</p>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <h4 class="mb-3">فاتورة مشتريات</h4>
+                        <p class="mb-1"><strong>رقم الفاتورة:</strong> {{ purchase.invoice_number }}</p>
+                        <p class="mb-1"><strong>التاريخ:</strong> {{ purchase.invoice_date.strftime('%Y-%m-%d') }}</p>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <h5>بيانات المورد</h5>
+                        <p class="mb-1"><strong>{{ purchase.supplier_name or 'مورد غير محدد' }}</strong></p>
+                        {% if purchase.supplier_phone %}
+                        <p class="mb-1">هاتف: {{ purchase.supplier_phone }}</p>
+                        {% endif %}
+                        {% if purchase.supplier_address %}
+                        <p class="mb-1">العنوان: {{ purchase.supplier_address }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Invoice Details -->
+            <div class="p-4">
+                <div class="invoice-details">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <strong>طريقة الدفع:</strong><br>
+                            {{ purchase.payment_method or 'غير محدد' }}
+                        </div>
+                        <div class="col-md-4">
+                            <strong>حالة الدفع:</strong><br>
+                            {% if purchase.payment_status == 'paid' %}
+                                <span class="badge bg-success">مدفوع</span>
+                            {% elif purchase.payment_status == 'partial' %}
+                                <span class="badge bg-warning">مدفوع جزئياً</span>
+                            {% else %}
+                                <span class="badge bg-danger">غير مدفوع</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <strong>تاريخ الإنشاء:</strong><br>
+                            {{ purchase.created_at.strftime('%Y-%m-%d %H:%M') if purchase.created_at else 'غير محدد' }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Items Table -->
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th width="5%">#</th>
+                                <th width="40%">المنتج</th>
+                                <th width="15%">الكمية</th>
+                                <th width="15%">سعر الوحدة</th>
+                                <th width="25%">الإجمالي</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if purchase_items %}
+                                {% for item in purchase_items %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ item.product_name }}</td>
+                                    <td class="text-center">{{ item.quantity }}</td>
+                                    <td class="text-end">{{ "%.2f"|format(item.unit_price) }} ريال</td>
+                                    <td class="text-end">{{ "%.2f"|format(item.total_price) }} ريال</td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">لا توجد عناصر في هذه الفاتورة</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Totals -->
+                <div class="total-section">
+                    <div class="row">
+                        <div class="col-md-6">
+                            {% if purchase.notes %}
+                            <h6>ملاحظات:</h6>
+                            <p>{{ purchase.notes }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>المجموع الفرعي:</strong></td>
+                                    <td class="text-end"><strong>{{ "%.2f"|format(purchase.subtotal or 0) }} ريال</strong></td>
+                                </tr>
+                                {% if purchase.discount_amount and purchase.discount_amount > 0 %}
+                                <tr>
+                                    <td>الخصم:</td>
+                                    <td class="text-end text-success">- {{ "%.2f"|format(purchase.discount_amount) }} ريال</td>
+                                </tr>
+                                {% endif %}
+                                {% if purchase.tax_amount and purchase.tax_amount > 0 %}
+                                <tr>
+                                    <td>ضريبة القيمة المضافة (15%):</td>
+                                    <td class="text-end">{{ "%.2f"|format(purchase.tax_amount) }} ريال</td>
+                                </tr>
+                                {% endif %}
+                                <tr class="table-primary">
+                                    <td><strong>الإجمالي النهائي:</strong></td>
+                                    <td class="text-end"><strong>{{ "%.2f"|format(purchase.final_amount or 0) }} ريال</strong></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="text-center mt-4 pt-4 border-top">
+                    <p class="text-muted mb-1">شكراً لتعاملكم معنا</p>
+                    <p class="text-muted small">تم إنشاء هذه الفاتورة بواسطة نظام إدارة المطاعم</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto print when page loads (optional)
+        // window.onload = function() { window.print(); }
+    </script>
+</body>
+</html>

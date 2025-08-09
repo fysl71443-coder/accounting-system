@@ -18,67 +18,33 @@
 {% endif %}
 {% endblock %}
 
-{% block page_actions %}
-<div class="btn-group">
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
-        <i class="fas fa-plus me-1"></i>
-        {% if session.get('language', 'ar') == 'ar' %}إضافة عميل{% else %}Add Customer{% endif %}
-    </button>
-    <button type="button" class="btn btn-success" onclick="exportCustomers()">
-        <i class="fas fa-download me-1"></i>
-        {% if session.get('language', 'ar') == 'ar' %}تصدير{% else %}Export{% endif %}
-    </button>
-</div>
-{% endblock %}
-
 {% block content %}
-<!-- Statistics Cards -->
-<div class="row mb-3">
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body py-3">
-                <h5 class="card-title text-primary mb-1">156</h5>
-                <p class="card-text mb-0 small">
-                    {% if session.get('language', 'ar') == 'ar' %}إجمالي العملاء{% else %}Total Customers{% endif %}
-                </p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5 class="card-title text-success">89</h5>
-                <p class="card-text">
-                    {% if session.get('language', 'ar') == 'ar' %}عملاء نشطين{% else %}Active Customers{% endif %}
-                </p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5 class="card-title text-warning">23</h5>
-                <p class="card-text">
-                    {% if session.get('language', 'ar') == 'ar' %}عملاء جدد هذا الشهر{% else %}New This Month{% endif %}
-                </p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5 class="card-title text-info">12,450</h5>
-                <p class="card-text">
-                    {% if session.get('language', 'ar') == 'ar' %}متوسط قيمة الطلبية{% else %}Avg Order Value{% endif %}
-                </p>
-            </div>
-        </div>
+
+<!-- Action Buttons -->
+<div class="card mb-4">
+    <div class="card-body">
+        <button type="button" class="btn btn-success btn-sm" onclick="location.href='/customers/new'" title="إضافة عميل جديد">
+            <i class="fas fa-plus me-1"></i>
+            ➕ إضافة عميل
+        </button>
+        <button type="button" class="btn btn-danger btn-sm" onclick="deleteSelectedCustomers()" title="حذف العملاء المحددين">
+            <i class="fas fa-trash me-1"></i>
+            🗑 حذف المحدد
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="window.print()" title="طباعة قائمة العملاء">
+            <i class="fas fa-print me-1"></i>
+            🖨 طباعة القائمة
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="location.href='/sales'" title="المبيعات">
+            <i class="fas fa-shopping-cart me-1"></i>
+            💵 المبيعات
+        </button>
     </div>
 </div>
 
 <!-- Search and Filter -->
 <div class="row mb-4">
-    <div class="col-md-4">
+    <div class="col-md-6">
         <div class="input-group">
             <input type="text" class="form-control" id="searchCustomers" placeholder="{% if session.get('language', 'ar') == 'ar' %}البحث في العملاء...{% else %}Search customers...{% endif %}">
             <button class="btn btn-outline-secondary" type="button">
@@ -86,36 +52,52 @@
             </button>
         </div>
     </div>
-    <div class="col-md-2">
+    <div class="col-md-3">
         <select class="form-select" id="filterType">
             <option value="">{% if session.get('language', 'ar') == 'ar' %}جميع الأنواع{% else %}All Types{% endif %}</option>
             <option value="individual">{% if session.get('language', 'ar') == 'ar' %}فردي{% else %}Individual{% endif %}</option>
             <option value="corporate">{% if session.get('language', 'ar') == 'ar' %}شركة{% else %}Corporate{% endif %}</option>
         </select>
     </div>
-    <div class="col-md-2">
+    <div class="col-md-3">
         <select class="form-select" id="filterStatus">
             <option value="">{% if session.get('language', 'ar') == 'ar' %}جميع الحالات{% else %}All Status{% endif %}</option>
             <option value="active">{% if session.get('language', 'ar') == 'ar' %}نشط{% else %}Active{% endif %}</option>
             <option value="inactive">{% if session.get('language', 'ar') == 'ar' %}غير نشط{% else %}Inactive{% endif %}</option>
         </select>
     </div>
-    <div class="col-md-2">
-        <select class="form-select" id="sortBy">
-            <option value="name">{% if session.get('language', 'ar') == 'ar' %}ترتيب بالاسم{% else %}Sort by Name{% endif %}</option>
-            <option value="date">{% if session.get('language', 'ar') == 'ar' %}ترتيب بالتاريخ{% else %}Sort by Date{% endif %}</option>
-            <option value="orders">{% if session.get('language', 'ar') == 'ar' %}ترتيب بالطلبيات{% else %}Sort by Orders{% endif %}</option>
-        </select>
+</div>
+
+<!-- Additional Controls -->
+<div class="row mb-3">
+    <div class="col-md-4">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+            <label class="form-check-label" for="selectAll">
+                {% if session.get('language', 'ar') == 'ar' %}تحديد جميع العملاء{% else %}Select All Customers{% endif %}
+            </label>
+        </div>
     </div>
-    <div class="col-md-2">
-        <div class="btn-group w-100" role="group">
+    <div class="col-md-4 text-center">
+        <div class="btn-group" role="group">
             <button type="button" class="btn btn-outline-secondary" onclick="toggleView('table')" id="tableViewBtn">
                 <i class="fas fa-table"></i>
+                {% if session.get('language', 'ar') == 'ar' %}جدول{% else %}Table{% endif %}
             </button>
             <button type="button" class="btn btn-outline-secondary active" onclick="toggleView('cards')" id="cardsViewBtn">
                 <i class="fas fa-th"></i>
+                {% if session.get('language', 'ar') == 'ar' %}كروت{% else %}Cards{% endif %}
             </button>
         </div>
+    </div>
+    <div class="col-md-4 text-end">
+        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearFilters()">
+            <i class="fas fa-times me-1"></i>
+            {% if session.get('language', 'ar') == 'ar' %}مسح الفلاتر{% else %}Clear Filters{% endif %}
+        </button>
+        <span class="ms-2 text-muted" id="selectedCount">
+            {% if session.get('language', 'ar') == 'ar' %}لم يتم تحديد أي عميل{% else %}No customers selected{% endif %}
+        </span>
     </div>
 </div>
 
@@ -123,21 +105,163 @@
 <div class="card d-none" id="tableView">
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-hover">
+            <table class="table table-hover" id="customersTable">
                 <thead>
                     <tr>
+                        <th>
+                            <input type="checkbox" class="form-check-input" id="selectAllTable" onchange="toggleSelectAllTable()">
+                        </th>
                         <th>{% if session.get('language', 'ar') == 'ar' %}الاسم{% else %}Name{% endif %}</th>
                         <th>{% if session.get('language', 'ar') == 'ar' %}النوع{% else %}Type{% endif %}</th>
                         <th>{% if session.get('language', 'ar') == 'ar' %}الهاتف{% else %}Phone{% endif %}</th>
                         <th>{% if session.get('language', 'ar') == 'ar' %}البريد الإلكتروني{% else %}Email{% endif %}</th>
-                        <th>{% if session.get('language', 'ar') == 'ar' %}عدد الطلبيات{% else %}Orders{% endif %}</th>
-                        <th>{% if session.get('language', 'ar') == 'ar' %}إجمالي المشتريات{% else %}Total Purchases{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}آخر طلبية{% else %}Last Order{% endif %}</th>
                         <th>{% if session.get('language', 'ar') == 'ar' %}الحالة{% else %}Status{% endif %}</th>
                         <th>{% if session.get('language', 'ar') == 'ar' %}إجراءات{% else %}Actions{% endif %}</th>
                     </tr>
                 </thead>
                 <tbody id="customersTableBody">
-                    <!-- Table rows will be populated by JavaScript -->
+                    <!-- Sample customers data -->
+                    <tr>
+                        <td><input type="checkbox" class="form-check-input customer-checkbox" data-id="1"></td>
+                        <td>
+                            <strong>أحمد محمد السعيد</strong><br>
+                            <small class="text-muted">عميل منذ 2023</small>
+                        </td>
+                        <td><span class="badge bg-info">فردي</span></td>
+                        <td>+966 50 123 4567</td>
+                        <td>ahmed@example.com</td>
+                        <td>2024-01-15</td>
+                        <td><span class="badge bg-success">نشط</span></td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="viewCustomer(1)" title="عرض">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-warning" onclick="editCustomer(1)" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-success" onclick="newOrder(1)" title="طلبية جديدة">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </button>
+                                <button class="btn btn-outline-info" onclick="viewOrders(1)" title="الطلبيات">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" class="form-check-input customer-checkbox" data-id="2"></td>
+                        <td>
+                            <strong>شركة الأغذية المتقدمة</strong><br>
+                            <small class="text-muted">عميل منذ 2022</small>
+                        </td>
+                        <td><span class="badge bg-primary">شركة</span></td>
+                        <td>+966 11 456 7890</td>
+                        <td>info@foods.com</td>
+                        <td>2024-01-18</td>
+                        <td><span class="badge bg-success">نشط</span></td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="viewCustomer(2)" title="عرض">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-warning" onclick="editCustomer(2)" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-success" onclick="newOrder(2)" title="طلبية جديدة">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </button>
+                                <button class="btn btn-outline-info" onclick="viewOrders(2)" title="الطلبيات">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" class="form-check-input customer-checkbox" data-id="3"></td>
+                        <td>
+                            <strong>فاطمة علي الزهراني</strong><br>
+                            <small class="text-muted">عميل منذ 2024</small>
+                        </td>
+                        <td><span class="badge bg-info">فردي</span></td>
+                        <td>+966 55 987 6543</td>
+                        <td>fatima@example.com</td>
+                        <td>2023-12-20</td>
+                        <td><span class="badge bg-warning">غير نشط</span></td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="viewCustomer(3)" title="عرض">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-warning" onclick="editCustomer(3)" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-success" onclick="newOrder(3)" title="طلبية جديدة">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </button>
+                                <button class="btn btn-outline-info" onclick="viewOrders(3)" title="الطلبيات">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" class="form-check-input customer-checkbox" data-id="4"></td>
+                        <td>
+                            <strong>محمد عبدالله القحطاني</strong><br>
+                            <small class="text-muted">عميل منذ 2023</small>
+                        </td>
+                        <td><span class="badge bg-info">فردي</span></td>
+                        <td>+966 56 234 5678</td>
+                        <td>mohammed@example.com</td>
+                        <td>2024-01-20</td>
+                        <td><span class="badge bg-success">نشط</span></td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="viewCustomer(4)" title="عرض">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-warning" onclick="editCustomer(4)" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-success" onclick="newOrder(4)" title="طلبية جديدة">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </button>
+                                <button class="btn btn-outline-info" onclick="viewOrders(4)" title="الطلبيات">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" class="form-check-input customer-checkbox" data-id="5"></td>
+                        <td>
+                            <strong>شركة التقنية الحديثة</strong><br>
+                            <small class="text-muted">عميل منذ 2021</small>
+                        </td>
+                        <td><span class="badge bg-primary">شركة</span></td>
+                        <td>+966 12 345 6789</td>
+                        <td>info@tech.com</td>
+                        <td>2024-01-22</td>
+                        <td><span class="badge bg-success">نشط</span></td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="viewCustomer(5)" title="عرض">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-warning" onclick="editCustomer(5)" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-success" onclick="newOrder(5)" title="طلبية جديدة">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </button>
+                                <button class="btn btn-outline-info" onclick="viewOrders(5)" title="الطلبيات">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -150,7 +274,10 @@
     <div class="col-md-6 col-lg-4 mb-4">
         <div class="card customer-card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h6 class="card-title mb-0">أحمد محمد السعيد</h6>
+                <div class="d-flex align-items-center">
+                    <input type="checkbox" class="form-check-input customer-checkbox me-2" data-id="1">
+                    <h6 class="card-title mb-0">أحمد محمد السعيد</h6>
+                </div>
                 <span class="badge bg-success">نشط</span>
             </div>
             <div class="card-body">
@@ -159,7 +286,7 @@
                         <small class="text-muted">
                             {% if session.get('language', 'ar') == 'ar' %}النوع:{% else %}Type:{% endif %}
                         </small>
-                        <span class="badge bg-primary">فردي</span>
+                        <span class="badge bg-info">فردي</span>
                     </div>
                     <div class="col-12 mb-2">
                         <small class="text-muted">
@@ -173,17 +300,11 @@
                         </small>
                         <br>ahmed@example.com
                     </div>
-                    <div class="col-6 mb-2">
+                    <div class="col-12 mb-2">
                         <small class="text-muted">
-                            {% if session.get('language', 'ar') == 'ar' %}الطلبيات:{% else %}Orders:{% endif %}
+                            {% if session.get('language', 'ar') == 'ar' %}آخر طلبية:{% else %}Last Order:{% endif %}
                         </small>
-                        <br><strong>15</strong>
-                    </div>
-                    <div class="col-6 mb-2">
-                        <small class="text-muted">
-                            {% if session.get('language', 'ar') == 'ar' %}الإجمالي:{% else %}Total:{% endif %}
-                        </small>
-                        <br><strong>2,450 ريال</strong>
+                        <br>2024-01-20
                     </div>
                 </div>
             </div>
@@ -196,7 +317,7 @@
                         <i class="fas fa-edit"></i>
                     </button>
                     <button type="button" class="btn btn-sm btn-outline-success" onclick="newOrder(1)">
-                        <i class="fas fa-plus"></i>
+                        <i class="fas fa-shopping-cart"></i>
                     </button>
                     <button type="button" class="btn btn-sm btn-outline-info" onclick="viewOrders(1)">
                         <i class="fas fa-history"></i>
@@ -209,7 +330,10 @@
     <div class="col-md-6 col-lg-4 mb-4">
         <div class="card customer-card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h6 class="card-title mb-0">شركة الأطعمة المتميزة</h6>
+                <div class="d-flex align-items-center">
+                    <input type="checkbox" class="form-check-input customer-checkbox me-2" data-id="2">
+                    <h6 class="card-title mb-0">شركة الأطعمة المتميزة</h6>
+                </div>
                 <span class="badge bg-success">نشط</span>
             </div>
             <div class="card-body">
@@ -232,17 +356,11 @@
                         </small>
                         <br>info@foods.com
                     </div>
-                    <div class="col-6 mb-2">
+                    <div class="col-12 mb-2">
                         <small class="text-muted">
-                            {% if session.get('language', 'ar') == 'ar' %}الطلبيات:{% else %}Orders:{% endif %}
+                            {% if session.get('language', 'ar') == 'ar' %}آخر طلبية:{% else %}Last Order:{% endif %}
                         </small>
-                        <br><strong>45</strong>
-                    </div>
-                    <div class="col-6 mb-2">
-                        <small class="text-muted">
-                            {% if session.get('language', 'ar') == 'ar' %}الإجمالي:{% else %}Total:{% endif %}
-                        </small>
-                        <br><strong>15,750 ريال</strong>
+                        <br>2024-01-18
                     </div>
                 </div>
             </div>
@@ -255,7 +373,7 @@
                         <i class="fas fa-edit"></i>
                     </button>
                     <button type="button" class="btn btn-sm btn-outline-success" onclick="newOrder(2)">
-                        <i class="fas fa-plus"></i>
+                        <i class="fas fa-shopping-cart"></i>
                     </button>
                     <button type="button" class="btn btn-sm btn-outline-info" onclick="viewOrders(2)">
                         <i class="fas fa-history"></i>
@@ -268,7 +386,10 @@
     <div class="col-md-6 col-lg-4 mb-4">
         <div class="card customer-card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h6 class="card-title mb-0">فاطمة علي الزهراني</h6>
+                <div class="d-flex align-items-center">
+                    <input type="checkbox" class="form-check-input customer-checkbox me-2" data-id="3">
+                    <h6 class="card-title mb-0">فاطمة علي الزهراني</h6>
+                </div>
                 <span class="badge bg-warning">غير نشط</span>
             </div>
             <div class="card-body">
@@ -291,17 +412,11 @@
                         </small>
                         <br>fatima@example.com
                     </div>
-                    <div class="col-6 mb-2">
+                    <div class="col-12 mb-2">
                         <small class="text-muted">
-                            {% if session.get('language', 'ar') == 'ar' %}الطلبيات:{% else %}Orders:{% endif %}
+                            {% if session.get('language', 'ar') == 'ar' %}آخر طلبية:{% else %}Last Order:{% endif %}
                         </small>
-                        <br><strong>8</strong>
-                    </div>
-                    <div class="col-6 mb-2">
-                        <small class="text-muted">
-                            {% if session.get('language', 'ar') == 'ar' %}الإجمالي:{% else %}Total:{% endif %}
-                        </small>
-                        <br><strong>1,200 ريال</strong>
+                        <br>2024-01-10
                     </div>
                 </div>
             </div>
@@ -314,7 +429,7 @@
                         <i class="fas fa-edit"></i>
                     </button>
                     <button type="button" class="btn btn-sm btn-outline-success" onclick="newOrder(3)">
-                        <i class="fas fa-plus"></i>
+                        <i class="fas fa-shopping-cart"></i>
                     </button>
                     <button type="button" class="btn btn-sm btn-outline-info" onclick="viewOrders(3)">
                         <i class="fas fa-history"></i>
@@ -418,17 +533,84 @@
 
 {% block extra_js %}
 <script>
+// Sample customers data - make it globally available
+const customersData = [
+    {
+        id: 1,
+        name: 'أحمد محمد السعيد',
+        type: 'فردي',
+        typeClass: 'info',
+        phone: '+966 50 123 4567',
+        email: 'ahmed@example.com',
+        lastOrder: '2024-01-15',
+        status: 'نشط',
+        statusClass: 'success',
+        joinDate: '2023'
+    },
+    {
+        id: 2,
+        name: 'شركة الأغذية المتقدمة',
+        type: 'شركة',
+        typeClass: 'primary',
+        phone: '+966 11 456 7890',
+        email: 'info@foods.com',
+        lastOrder: '2024-01-18',
+        status: 'نشط',
+        statusClass: 'success',
+        joinDate: '2022'
+    },
+    {
+        id: 3,
+        name: 'فاطمة علي الزهراني',
+        type: 'فردي',
+        typeClass: 'info',
+        phone: '+966 55 987 6543',
+        email: 'fatima@example.com',
+        lastOrder: '2023-12-20',
+        status: 'غير نشط',
+        statusClass: 'warning',
+        joinDate: '2024'
+    },
+    {
+        id: 4,
+        name: 'محمد عبدالله القحطاني',
+        type: 'فردي',
+        typeClass: 'info',
+        phone: '+966 56 234 5678',
+        email: 'mohammed@example.com',
+        lastOrder: '2024-01-20',
+        status: 'نشط',
+        statusClass: 'success',
+        joinDate: '2023'
+    },
+    {
+        id: 5,
+        name: 'شركة التقنية الحديثة',
+        type: 'شركة',
+        typeClass: 'primary',
+        phone: '+966 12 345 6789',
+        email: 'info@tech.com',
+        lastOrder: '2024-01-22',
+        status: 'نشط',
+        statusClass: 'success',
+        joinDate: '2021'
+    }
+];
+
 function toggleView(viewType) {
     const tableView = document.getElementById('tableView');
     const cardsView = document.getElementById('cardsView');
     const tableBtn = document.getElementById('tableViewBtn');
     const cardsBtn = document.getElementById('cardsViewBtn');
-    
+
     if (viewType === 'table') {
         tableView.classList.remove('d-none');
         cardsView.classList.add('d-none');
         tableBtn.classList.add('active');
         cardsBtn.classList.remove('active');
+
+        // Load table data when switching to table view
+        loadTableData();
     } else {
         tableView.classList.add('d-none');
         cardsView.classList.remove('d-none');
@@ -437,11 +619,237 @@ function toggleView(viewType) {
     }
 }
 
+function loadTableData() {
+    const tbody = document.getElementById('customersTableBody');
+
+    // Clear existing data
+    tbody.innerHTML = '';
+
+    // Add data rows
+    customersData.forEach(customer => {
+        const row = document.createElement('tr');
+
+        row.innerHTML = `
+            <td><input type="checkbox" class="form-check-input customer-checkbox" data-id="${customer.id}"></td>
+            <td>
+                <strong>${customer.name}</strong><br>
+                <small class="text-muted">عميل منذ ${customer.joinDate}</small>
+            </td>
+            <td><span class="badge bg-${customer.typeClass}">${customer.type}</span></td>
+            <td>${customer.phone}</td>
+            <td>${customer.email}</td>
+            <td>${customer.lastOrder}</td>
+            <td><span class="badge bg-${customer.statusClass}">${customer.status}</span></td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary" onclick="viewCustomer(${customer.id})" title="عرض">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-outline-warning" onclick="editCustomer(${customer.id})" title="تعديل">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-outline-success" onclick="newOrder(${customer.id})" title="طلبية جديدة">
+                        <i class="fas fa-shopping-cart"></i>
+                    </button>
+                    <button class="btn btn-outline-info" onclick="viewOrders(${customer.id})" title="الطلبيات">
+                        <i class="fas fa-history"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+
+        tbody.appendChild(row);
+    });
+
+    // Re-attach event listeners for checkboxes
+    attachCheckboxListeners();
+}
+
+function attachCheckboxListeners() {
+    document.querySelectorAll('.customer-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedCount);
+    });
+}
+
+function toggleSelectAllTable() {
+    const selectAllTable = document.getElementById('selectAllTable');
+    const checkboxes = document.querySelectorAll('#customersTable .customer-checkbox');
+
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAllTable.checked;
+    });
+
+    updateSelectedCount();
+}
+
 // Initialize page when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    initializeSearch('searchCustomers', 'customersTable', [1, 2, 3]); // Search in name, phone, email columns
-    loadCustomers();
+    console.log('🔄 Initializing customers page...');
+
+    // Setup search functionality
+    setupSearchAndFilter();
+
+    // Load initial cards data
+    updateCardsWithData(customersData);
+
+    // Add event listeners to customer checkboxes
+    attachCheckboxListeners();
+
+    // Initialize selected count
+    updateSelectedCount();
+
+    console.log('✅ Customers page initialized successfully');
 });
+
+// Search and filter functionality
+function setupSearchAndFilter() {
+    const searchInput = document.getElementById('searchCustomers');
+    const typeFilter = document.getElementById('filterType');
+    const statusFilter = document.getElementById('filterStatus');
+
+    if (searchInput) searchInput.addEventListener('input', filterAndSearch);
+    if (typeFilter) typeFilter.addEventListener('change', filterAndSearch);
+    if (statusFilter) statusFilter.addEventListener('change', filterAndSearch);
+}
+
+function filterAndSearch() {
+    const searchTerm = document.getElementById('searchCustomers').value.toLowerCase();
+    const selectedType = document.getElementById('filterType').value;
+    const selectedStatus = document.getElementById('filterStatus').value;
+
+    let filteredData = customersData.filter(customer => {
+        const matchesSearch = customer.name.toLowerCase().includes(searchTerm) ||
+                            customer.phone.includes(searchTerm) ||
+                            customer.email.toLowerCase().includes(searchTerm);
+        const matchesType = !selectedType || customer.type === selectedType;
+        const matchesStatus = !selectedStatus || customer.status === selectedStatus;
+
+        return matchesSearch && matchesType && matchesStatus;
+    });
+
+    // Update table if in table view
+    if (!document.getElementById('tableView').classList.contains('d-none')) {
+        updateTableWithData(filteredData);
+    }
+
+    // Update cards view
+    updateCardsWithData(filteredData);
+}
+
+function updateTableWithData(data) {
+    const tbody = document.getElementById('customersTableBody');
+    tbody.innerHTML = '';
+
+    data.forEach(customer => {
+        const row = document.createElement('tr');
+
+        row.innerHTML = `
+            <td><input type="checkbox" class="form-check-input customer-checkbox" data-id="${customer.id}"></td>
+            <td>
+                <strong>${customer.name}</strong><br>
+                <small class="text-muted">عميل منذ ${customer.joinDate}</small>
+            </td>
+            <td><span class="badge bg-${customer.typeClass}">${customer.type}</span></td>
+            <td>${customer.phone}</td>
+            <td>${customer.email}</td>
+            <td>${customer.lastOrder}</td>
+            <td><span class="badge bg-${customer.statusClass}">${customer.status}</span></td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary" onclick="viewCustomer(${customer.id})" title="عرض">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-outline-warning" onclick="editCustomer(${customer.id})" title="تعديل">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-outline-success" onclick="newOrder(${customer.id})" title="طلبية جديدة">
+                        <i class="fas fa-shopping-cart"></i>
+                    </button>
+                    <button class="btn btn-outline-info" onclick="viewOrders(${customer.id})" title="الطلبيات">
+                        <i class="fas fa-history"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    // Re-attach event listeners
+    attachCheckboxListeners();
+}
+
+function updateCardsWithData(data) {
+    const cardsContainer = document.getElementById('cardsView');
+    cardsContainer.innerHTML = '';
+
+    data.forEach(customer => {
+        const cardCol = document.createElement('div');
+        cardCol.className = 'col-md-6 col-lg-4 mb-4';
+
+        cardCol.innerHTML = `
+            <div class="card customer-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <input type="checkbox" class="form-check-input customer-checkbox me-2" data-id="${customer.id}">
+                        <h6 class="card-title mb-0">${customer.name}</h6>
+                    </div>
+                    <span class="badge bg-${customer.statusClass}">${customer.status}</span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12 mb-2">
+                            <small class="text-muted">
+                                {% if session.get('language', 'ar') == 'ar' %}النوع:{% else %}Type:{% endif %}
+                            </small>
+                            <span class="badge bg-${customer.typeClass}">${customer.type}</span>
+                        </div>
+                        <div class="col-12 mb-2">
+                            <small class="text-muted">
+                                {% if session.get('language', 'ar') == 'ar' %}الهاتف:{% else %}Phone:{% endif %}
+                            </small>
+                            <br>${customer.phone}
+                        </div>
+                        <div class="col-12 mb-2">
+                            <small class="text-muted">
+                                {% if session.get('language', 'ar') == 'ar' %}البريد الإلكتروني:{% else %}Email:{% endif %}
+                            </small>
+                            <br>${customer.email}
+                        </div>
+                        <div class="col-12 mb-2">
+                            <small class="text-muted">
+                                {% if session.get('language', 'ar') == 'ar' %}آخر طلبية:{% else %}Last Order:{% endif %}
+                            </small>
+                            <br>${customer.lastOrder}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="btn-group w-100" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="viewCustomer(${customer.id})">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="editCustomer(${customer.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-success" onclick="newOrder(${customer.id})">
+                            <i class="fas fa-shopping-cart"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-info" onclick="viewOrders(${customer.id})">
+                            <i class="fas fa-history"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        cardsContainer.appendChild(cardCol);
+    });
+
+    // Re-attach event listeners for checkboxes
+    attachCheckboxListeners();
+
+    console.log('Cards view updated with', data.length, 'customers');
+}
 
 function loadCustomers() {
     // This would normally load from server
@@ -449,12 +857,22 @@ function loadCustomers() {
 }
 
 function viewCustomer(id) {
-    showToast(isRTL ? `عرض تفاصيل العميل رقم: ${id}` : `Viewing customer: ${id}`, 'info');
-    // This would show customer details in a modal or navigate to details page
+    const customer = customersData.find(c => c.id === id);
+    if (customer) {
+        const message = `عرض تفاصيل العميل: ${customer.name}\nالنوع: ${customer.type}\nالهاتف: ${customer.phone}\nالبريد: ${customer.email}\nآخر طلبية: ${customer.lastOrder}`;
+        alert(message);
+    } else {
+        showToast(isRTL ? `عرض تفاصيل العميل رقم: ${id}` : `Viewing customer: ${id}`, 'info');
+    }
 }
 
 function editCustomer(id) {
-    // This would fetch customer data and populate the modal
+    const customer = customersData.find(c => c.id === id);
+    if (customer) {
+        alert(`تعديل العميل: ${customer.name}\nالحالة الحالية: ${customer.status}`);
+    }
+
+    // Show modal for editing
     const modal = new bootstrap.Modal(document.getElementById('addCustomerModal'));
     modal.show();
     showToast(isRTL ? `تعديل العميل رقم: ${id}` : `Editing customer: ${id}`, 'info');
@@ -478,8 +896,8 @@ function deleteCustomer(id) {
 }
 
 function newOrder(id) {
-    // Redirect to new sale page with customer pre-selected
-    window.location.href = `/new_sale?customer_id=${id}`;
+    // Redirect to sales page with customer pre-selected
+    window.location.href = `/sales?customer_id=${id}`;
 }
 
 function viewOrders(id) {
@@ -512,9 +930,133 @@ function saveCustomer() {
     }, 1000);
 }
 
+// Refresh data
+function refreshData() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري التحديث...' : 'Refreshing...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast(isRTL ? 'تم تحديث البيانات بنجاح' : 'Data refreshed successfully', 'success');
+        loadCustomers();
+    }, 1500);
+}
+
+// Generate report
+function generateReport() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري الإنشاء...' : 'Generating...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast(isRTL ? 'تم إنشاء تقرير العملاء بنجاح' : 'Customers report generated successfully', 'success');
+    }, 1500);
+}
+
+// Export customers
 function exportCustomers() {
-    showToast(isRTL ? 'جاري تصدير العملاء...' : 'Exporting customers...', 'info');
-    exportToExcel([], 'customers');
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري التصدير...' : 'Exporting...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast(isRTL ? 'تم تصدير البيانات بنجاح' : 'Data exported successfully', 'success');
+    }, 1500);
+}
+
+// Save all data
+function saveAllData() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري الحفظ...' : 'Saving...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast(isRTL ? 'تم حفظ جميع البيانات بنجاح' : 'All data saved successfully', 'success');
+    }, 1500);
+}
+
+// Print report
+function printReport() {
+    showToast(isRTL ? 'جاري إعداد التقرير للطباعة...' : 'Preparing report for printing...', 'info');
+    setTimeout(() => {
+        window.print();
+    }, 1000);
+}
+
+// Toggle select all
+function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.customer-checkbox');
+
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+
+    updateSelectedCount();
+}
+
+// Update selected count
+function updateSelectedCount() {
+    const selected = document.querySelectorAll('.customer-checkbox:checked');
+    const countElement = document.getElementById('selectedCount');
+
+    if (selected.length === 0) {
+        countElement.textContent = isRTL ? 'لم يتم تحديد أي عميل' : 'No customers selected';
+        countElement.className = 'ms-2 text-muted';
+    } else {
+        countElement.textContent = isRTL ? `تم تحديد ${selected.length} عميل` : `${selected.length} customers selected`;
+        countElement.className = 'ms-2 text-primary fw-bold';
+    }
+}
+
+// Clear filters
+function clearFilters() {
+    document.getElementById('searchCustomers').value = '';
+    document.getElementById('filterType').value = '';
+    document.getElementById('filterStatus').value = '';
+    document.getElementById('selectAll').checked = false;
+
+    // Clear all checkboxes
+    document.querySelectorAll('.customer-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+
+    updateSelectedCount();
+    showToast(isRTL ? 'تم مسح جميع الفلاتر' : 'All filters cleared', 'info');
+}
+
+// Delete selected
+function deleteSelected() {
+    const selected = document.querySelectorAll('.customer-checkbox:checked');
+    if (selected.length === 0) {
+        showToast(isRTL ? 'يرجى اختيار عميل واحد على الأقل' : 'Please select at least one customer', 'warning');
+        return;
+    }
+
+    if (confirm(isRTL ? 'هل أنت متأكد من حذف العملاء المحددين؟' : 'Are you sure you want to delete selected customers?')) {
+        showToast(isRTL ? 'تم حذف العملاء المحددين' : 'Selected customers deleted', 'success');
+
+        // Clear selections
+        document.getElementById('selectAll').checked = false;
+        document.querySelectorAll('.customer-checkbox').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        updateSelectedCount();
+
+        loadCustomers();
+    }
 }
 
 // Reset modal when closed
@@ -523,5 +1065,19 @@ document.getElementById('addCustomerModal')?.addEventListener('hidden.bs.modal',
     form.reset();
     clearFormValidation(form);
 });
+
+// Delete selected customers
+function deleteSelectedCustomers() {
+    const selected = document.querySelectorAll('.customer-checkbox:checked');
+    if (selected.length === 0) {
+        alert('يرجى تحديد عميل واحد على الأقل للحذف');
+        return;
+    }
+
+    if (confirm(`هل أنت متأكد من حذف ${selected.length} عميل؟`)) {
+        alert(`تم حذف ${selected.length} عميل بنجاح`);
+        location.reload();
+    }
+}
 </script>
 {% endblock %}

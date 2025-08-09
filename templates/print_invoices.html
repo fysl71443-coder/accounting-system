@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>طباعة الفواتير - {{ month }}</title>
+    <style>
+        /* Print-optimized styles - No colors, minimal design */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #000;
+            background: white;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 11px;
+        }
+        
+        .summary {
+            border: 1px solid #000;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .summary h3 {
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-align: center;
+            border-bottom: 1px solid #000;
+            padding-bottom: 5px;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            text-align: center;
+        }
+        
+        .summary-item {
+            border: 1px solid #ccc;
+            padding: 8px;
+        }
+        
+        .summary-item .number {
+            font-size: 16px;
+            font-weight: bold;
+            display: block;
+        }
+        
+        .summary-item .label {
+            font-size: 10px;
+            margin-top: 2px;
+        }
+        
+        .invoices-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        .invoices-table th,
+        .invoices-table td {
+            border: 1px solid #000;
+            padding: 6px;
+            text-align: center;
+            font-size: 10px;
+        }
+        
+        .invoices-table th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        
+        .invoices-table .invoice-number {
+            font-weight: bold;
+        }
+        
+        .invoices-table .amount {
+            text-align: right;
+            font-weight: bold;
+        }
+        
+        .status {
+            font-size: 9px;
+            padding: 2px 4px;
+            border: 1px solid #000;
+            border-radius: 3px;
+        }
+        
+        .status-paid { background-color: #f0f0f0; }
+        .status-partial { background-color: #e0e0e0; }
+        .status-pending { background-color: #d0d0d0; }
+        
+        .footer {
+            border-top: 1px solid #000;
+            padding-top: 10px;
+            margin-top: 20px;
+            text-align: center;
+            font-size: 10px;
+        }
+        
+        .page-break {
+            page-break-before: always;
+        }
+        
+        @media print {
+            body { margin: 0; }
+            .container { padding: 10px; }
+        }
+        
+        @page {
+            margin: 1cm;
+            size: A4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>تقرير الفواتير</h1>
+            <div class="header-info">
+                <div>
+                    <strong>النوع:</strong>
+                    {% if invoice_type == 'sales' %}فواتير المبيعات
+                    {% elif invoice_type == 'purchases' %}فواتير المشتريات
+                    {% elif invoice_type == 'expenses' %}فواتير المصروفات
+                    {% endif %}
+                </div>
+                <div><strong>الشهر:</strong> {{ month_num }}/{{ year }}</div>
+                <div>
+                    <strong>الحالة:</strong>
+                    {% if status == 'all' %}جميع الحالات
+                    {% elif status == 'paid' %}مدفوع
+                    {% elif status == 'partial' %}مدفوع جزئياً
+                    {% elif status == 'pending' %}غير مدفوع
+                    {% endif %}
+                </div>
+                <div><strong>التاريخ:</strong> {{ current_date }}</div>
+            </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="summary">
+            <h3>ملخص الفواتير</h3>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <span class="number">{{ invoices|length }}</span>
+                    <div class="label">إجمالي الفواتير</div>
+                </div>
+                <div class="summary-item">
+                    <span class="number">
+                        {% set total_amount = invoices|sum(attribute='final_amount' if invoice_type != 'expenses' else 'amount') %}
+                        {{ "%.2f"|format(total_amount) }}
+                    </span>
+                    <div class="label">إجمالي المبلغ (ريال)</div>
+                </div>
+                <div class="summary-item">
+                    <span class="number">
+                        {% set paid_invoices = invoices|selectattr('payment_status', 'equalto', 'paid')|list %}
+                        {{ paid_invoices|length }}
+                    </span>
+                    <div class="label">فواتير مدفوعة</div>
+                </div>
+                <div class="summary-item">
+                    <span class="number">
+                        {% set pending_invoices = invoices|selectattr('payment_status', 'equalto', 'pending')|list %}
+                        {{ pending_invoices|length }}
+                    </span>
+                    <div class="label">فواتير معلقة</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoices Table -->
+        {% if invoices %}
+        <table class="invoices-table">
+            <thead>
+                <tr>
+                    <th>م</th>
+                    <th>رقم الفاتورة</th>
+                    <th>التاريخ</th>
+                    <th>
+                        {% if invoice_type == 'sales' %}العميل
+                        {% elif invoice_type == 'purchases' %}المورد
+                        {% elif invoice_type == 'expenses' %}نوع المصروف
+                        {% endif %}
+                    </th>
+                    <th>المبلغ (ريال)</th>
+                    <th>طريقة الدفع</th>
+                    <th>الحالة</th>
+                    {% if include_details %}
+                    <th>المدفوع</th>
+                    <th>المتبقي</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for invoice in invoices %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td class="invoice-number">
+                        {% if invoice_type == 'sales' %}{{ invoice.invoice_number }}
+                        {% elif invoice_type == 'purchases' %}{{ invoice.invoice_number }}
+                        {% elif invoice_type == 'expenses' %}{{ invoice.expense_number }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if invoice_type == 'expenses' %}
+                            {{ invoice.expense_date.strftime('%Y-%m-%d') }}
+                        {% else %}
+                            {{ invoice.invoice_date.strftime('%Y-%m-%d') }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if invoice_type == 'sales' %}
+                            {{ invoice.customer_name or 'عميل نقدي' }}
+                        {% elif invoice_type == 'purchases' %}
+                            {{ invoice.supplier_name or 'مورد' }}
+                        {% elif invoice_type == 'expenses' %}
+                            {{ invoice.expense_type }}
+                        {% endif %}
+                    </td>
+                    <td class="amount">
+                        {% if invoice_type == 'expenses' %}
+                            {{ "%.2f"|format(invoice.amount) }}
+                        {% else %}
+                            {{ "%.2f"|format(invoice.final_amount) }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if invoice_type == 'expenses' %}
+                            {{ invoice.payment_method }}
+                        {% else %}
+                            {{ invoice.payment_method or 'غير محدد' }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="status status-{{ invoice.payment_status }}">
+                            {% if invoice.payment_status == 'paid' %}مدفوع
+                            {% elif invoice.payment_status == 'partial' %}جزئي
+                            {% else %}معلق
+                            {% endif %}
+                        </span>
+                    </td>
+                    {% if include_details %}
+                    <td class="amount">{{ "%.2f"|format(invoice.get_total_paid()) }}</td>
+                    <td class="amount">{{ "%.2f"|format(invoice.get_remaining_amount()) }}</td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="text-align: center; padding: 40px; border: 1px solid #000;">
+            <h3>لا توجد فواتير</h3>
+            <p>لم يتم العثور على فواتير تطابق المعايير المحددة في هذا الشهر</p>
+        </div>
+        {% endif %}
+
+        <!-- Footer -->
+        <div class="footer">
+            <div>تم إنشاء هذا التقرير في {{ current_datetime }}</div>
+            <div>نظام المحاسبة - إدارة الفواتير والمدفوعات</div>
+            <div style="margin-top: 10px;">
+                <strong>إجمالي الفواتير:</strong> {{ invoices|length }} |
+                <strong>إجمالي المبلغ:</strong> 
+                {% set total_amount = invoices|sum(attribute='final_amount' if invoice_type != 'expenses' else 'amount') %}
+                {{ "%.2f"|format(total_amount) }} ريال
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-print when page loads
+        window.onload = function() {
+            setTimeout(function() {
+                window.print();
+            }, 500);
+        };
+    </script>
+</body>
+</html>

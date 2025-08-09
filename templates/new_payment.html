@@ -1,0 +1,367 @@
+{% extends "base_unified.html" %}
+
+{% block page_title %}
+{% if session.get('language', 'ar') == 'ar' %}
+    تسجيل دفعة جديدة
+{% else %}
+    Record New Payment
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">
+                        <i class="fas fa-money-bill-wave me-2"></i>
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            تسجيل دفعة جديدة
+                        {% else %}
+                            Record New Payment
+                        {% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/payments/submit" id="paymentForm">
+                        <!-- معلومات الدفعة -->
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        {% if session.get('language', 'ar') == 'ar' %}مبلغ الدفعة{% else %}Payment Amount{% endif %}
+                                    </label>
+                                    <input type="number" class="form-control" name="amount" id="paymentAmount"
+                                           step="0.01" min="0" required
+                                           placeholder="0.00"
+                                           lang="en"
+                                           dir="ltr"
+                                           inputmode="decimal"
+                                           oninput="validateDecimalInput(this)"
+                                           style="text-align: left;">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        {% if session.get('language', 'ar') == 'ar' %}طريقة الدفع{% else %}Payment Method{% endif %}
+                                    </label>
+                                    <select class="form-select" name="payment_method" required>
+                                        <option value="">
+                                            {% if session.get('language', 'ar') == 'ar' %}اختر طريقة الدفع{% else %}Select Payment Method{% endif %}
+                                        </option>
+                                        <option value="نقداً">{% if session.get('language', 'ar') == 'ar' %}نقداً{% else %}Cash{% endif %}</option>
+                                        <option value="تحويل بنكي">{% if session.get('language', 'ar') == 'ar' %}تحويل بنكي{% else %}Bank Transfer{% endif %}</option>
+                                        <option value="بطاقة ائتمان">{% if session.get('language', 'ar') == 'ar' %}بطاقة ائتمان{% else %}Credit Card{% endif %}</option>
+                                        <option value="مدى">{% if session.get('language', 'ar') == 'ar' %}مدى{% else %}Mada{% endif %}</option>
+                                        <option value="شيك">{% if session.get('language', 'ar') == 'ar' %}شيك{% else %}Check{% endif %}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        {% if session.get('language', 'ar') == 'ar' %}تاريخ الدفعة{% else %}Payment Date{% endif %}
+                                    </label>
+                                    <input type="date" class="form-control" name="payment_date"
+                                           value="{{ today_date }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        {% if session.get('language', 'ar') == 'ar' %}ملاحظات{% else %}Notes{% endif %}
+                                    </label>
+                                    <textarea class="form-control" name="notes" rows="2" 
+                                              placeholder="{% if session.get('language', 'ar') == 'ar' %}ملاحظات إضافية (اختياري){% else %}Additional notes (optional){% endif %}"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- الفواتير غير المدفوعة -->
+                        <div class="mb-4">
+                            <h5>
+                                {% if session.get('language', 'ar') == 'ar' %}الفواتير غير المدفوعة{% else %}Unpaid Invoices{% endif %}
+                            </h5>
+                            
+                            {% if invoices %}
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th width="50">
+                                                <input type="checkbox" id="selectAllInvoices" onchange="toggleAllInvoices()">
+                                            </th>
+                                            <th>{% if session.get('language', 'ar') == 'ar' %}النوع{% else %}Type{% endif %}</th>
+                                            <th>{% if session.get('language', 'ar') == 'ar' %}رقم الفاتورة{% else %}Invoice #{% endif %}</th>
+                                            <th>{% if session.get('language', 'ar') == 'ar' %}الاسم{% else %}Name{% endif %}</th>
+                                            <th>{% if session.get('language', 'ar') == 'ar' %}المبلغ الإجمالي{% else %}Total Amount{% endif %}</th>
+                                            <th>{% if session.get('language', 'ar') == 'ar' %}المدفوع{% else %}Paid{% endif %}</th>
+                                            <th>{% if session.get('language', 'ar') == 'ar' %}المتبقي{% else %}Remaining{% endif %}</th>
+                                            <th>{% if session.get('language', 'ar') == 'ar' %}المبلغ المطبق{% else %}Applied Amount{% endif %}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for invoice in invoices %}
+                                        <tr>
+                                            <td>
+                                                <input type="checkbox" class="invoice-checkbox"
+                                                       name="selected_invoices" value="{{ invoice.type }}_{{ invoice.id }}"
+                                                       {% if selected_invoice_id and selected_invoice_id|int == invoice.id %}checked{% endif %}
+                                                       onchange="updatePaymentDistribution()">
+                                            </td>
+                                            <td>
+                                                {% if invoice.type == 'sale' %}
+                                                    <span class="badge bg-success">مبيعات</span>
+                                                {% elif invoice.type == 'purchase' %}
+                                                    <span class="badge bg-primary">مشتريات</span>
+                                                {% elif invoice.type == 'expense' %}
+                                                    <span class="badge bg-warning">مصروفات</span>
+                                                {% elif invoice.type == 'payroll' %}
+                                                    <span class="badge bg-info">رواتب</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ invoice.invoice_number }}</td>
+                                            <td>{{ invoice.customer_name }}</td>
+                                            <td>{{ "%.2f"|format(invoice.total_amount) }} ريال</td>
+                                            <td>{{ "%.2f"|format(invoice.paid_amount) }} ريال</td>
+                                            <td class="text-danger fw-bold">{{ "%.2f"|format(invoice.remaining_amount) }} ريال</td>
+                                            <td>
+                                                <input type="number" class="form-control form-control-sm applied-amount"
+                                                       name="applied_amount_{{ invoice.type }}_{{ invoice.id }}"
+                                                       step="0.01" min="0" max="{{ "%.2f"|format(invoice.remaining_amount) }}"
+                                                       value="{% if selected_invoice_id and selected_invoice_id|int == invoice.id %}{{ "%.2f"|format(invoice.remaining_amount) }}{% else %}0.00{% endif %}"
+                                                       placeholder="0.00"
+                                                       lang="en"
+                                                       dir="ltr"
+                                                       inputmode="decimal"
+                                                       onchange="updatePaymentSummary()"
+                                                       oninput="validateDecimalInput(this)"
+                                                       style="text-align: left;">
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                {% if session.get('language', 'ar') == 'ar' %}
+                                    لا توجد فواتير غير مدفوعة حالياً
+                                {% else %}
+                                    No unpaid invoices currently available
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- ملخص الدفعة -->
+                        <div class="row mb-4">
+                            <div class="col-md-6 offset-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="card-title mb-0">
+                                            {% if session.get('language', 'ar') == 'ar' %}ملخص الدفعة{% else %}Payment Summary{% endif %}
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <strong>{% if session.get('language', 'ar') == 'ar' %}مبلغ الدفعة:{% else %}Payment Amount:{% endif %}</strong>
+                                            </div>
+                                            <div class="col-6 text-end">
+                                                <span id="displayPaymentAmount">0.00</span> ريال
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <strong>{% if session.get('language', 'ar') == 'ar' %}إجمالي المطبق:{% else %}Total Applied:{% endif %}</strong>
+                                            </div>
+                                            <div class="col-6 text-end">
+                                                <span id="totalApplied">0.00</span> ريال
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <strong>{% if session.get('language', 'ar') == 'ar' %}المتبقي من الدفعة:{% else %}Remaining Payment:{% endif %}</strong>
+                                            </div>
+                                            <div class="col-6 text-end">
+                                                <strong><span id="remainingPayment">0.00</span> ريال</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- أزرار الحفظ -->
+                        <div class="text-end">
+                            <a href="{{ url_for('sales') }}" class="btn btn-secondary me-2">
+                                {% if session.get('language', 'ar') == 'ar' %}إلغاء{% else %}Cancel{% endif %}
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>
+                                {% if session.get('language', 'ar') == 'ar' %}حفظ الدفعة{% else %}Save Payment{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// تحديث توزيع الدفعة
+function updatePaymentDistribution() {
+    const paymentAmountValue = convertArabicToEnglishNumbers(document.getElementById('paymentAmount').value);
+    const paymentAmount = parseFloat(paymentAmountValue) || 0;
+    const checkedInvoices = document.querySelectorAll('.invoice-checkbox:checked');
+
+    if (checkedInvoices.length === 0) {
+        // مسح جميع المبالغ المطبقة
+        document.querySelectorAll('.applied-amount').forEach(input => {
+            input.value = '0.00';
+        });
+    } else {
+        let remainingAmount = paymentAmount;
+
+        checkedInvoices.forEach(checkbox => {
+            const row = checkbox.closest('tr');
+            const appliedInput = row.querySelector('.applied-amount');
+            const maxAmount = parseFloat(convertArabicToEnglishNumbers(appliedInput.max)) || 0;
+
+            const applicableAmount = Math.min(maxAmount, remainingAmount);
+            appliedInput.value = applicableAmount.toFixed(2);
+            remainingAmount -= applicableAmount;
+        });
+    }
+
+    updatePaymentSummary();
+}
+
+
+
+// تحديد/إلغاء تحديد جميع الفواتير
+function toggleAllInvoices() {
+    const selectAll = document.getElementById('selectAllInvoices');
+    const checkboxes = document.querySelectorAll('.invoice-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+    
+    updatePaymentDistribution();
+}
+
+// تحديث عند تغيير مبلغ الدفعة
+document.getElementById('paymentAmount').addEventListener('input', function() {
+    updatePaymentDistribution();
+});
+
+// تحديث عند تغيير المبالغ المطبقة
+document.addEventListener('input', function(e) {
+    if (e.target.classList.contains('applied-amount')) {
+        updatePaymentSummary();
+    }
+});
+
+// دالة لتحويل الأرقام العربية إلى إنجليزية
+function convertArabicToEnglishNumbers(str) {
+    const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    const englishNumbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+
+    let result = str.toString();
+    for (let i = 0; i < arabicNumbers.length; i++) {
+        result = result.replace(new RegExp(arabicNumbers[i], 'g'), englishNumbers[i]);
+    }
+    return result;
+}
+
+// دالة لتحويل الأرقام الإنجليزية إلى عربية للعرض
+function convertEnglishToArabicNumbers(str) {
+    const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    const englishNumbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+
+    let result = str.toString();
+    for (let i = 0; i < englishNumbers.length; i++) {
+        result = result.replace(new RegExp(englishNumbers[i], 'g'), arabicNumbers[i]);
+    }
+    return result;
+}
+
+// دالة للتحقق من صحة الإدخال العشري
+function validateDecimalInput(input) {
+    // تحويل الأرقام العربية إلى إنجليزية
+    let value = convertArabicToEnglishNumbers(input.value);
+
+    // إزالة أي أحرف غير صالحة (فقط الأرقام والنقطة العشرية)
+    value = value.replace(/[^0-9.]/g, '');
+
+    // التأكد من وجود نقطة عشرية واحدة فقط
+    const parts = value.split('.');
+    if (parts.length > 2) {
+        value = parts[0] + '.' + parts.slice(1).join('');
+    }
+
+    // تحديد عدد الأرقام بعد الفاصلة العشرية إلى رقمين
+    if (parts.length === 2 && parts[1].length > 2) {
+        value = parts[0] + '.' + parts[1].substring(0, 2);
+    }
+
+    // تحديث القيمة في الحقل
+    input.value = value;
+
+    // التحقق من الحد الأقصى
+    const maxValue = parseFloat(input.max);
+    const currentValue = parseFloat(value);
+    if (currentValue > maxValue) {
+        input.value = maxValue.toFixed(2);
+    }
+}
+
+// تحديث دالة updatePaymentSummary لاستخدام الأرقام الإنجليزية
+function updatePaymentSummary() {
+    const paymentAmount = parseFloat(convertArabicToEnglishNumbers(document.getElementById('paymentAmount').value)) || 0;
+    let totalApplied = 0;
+
+    document.querySelectorAll('.applied-amount').forEach(input => {
+        const value = convertArabicToEnglishNumbers(input.value);
+        totalApplied += parseFloat(value) || 0;
+    });
+
+    const remainingPayment = paymentAmount - totalApplied;
+
+    // عرض الأرقام بالصيغة العربية
+    document.getElementById('displayPaymentAmount').textContent = convertEnglishToArabicNumbers(paymentAmount.toFixed(2));
+    document.getElementById('totalApplied').textContent = convertEnglishToArabicNumbers(totalApplied.toFixed(2));
+    document.getElementById('remainingPayment').textContent = convertEnglishToArabicNumbers(remainingPayment.toFixed(2));
+
+    // تغيير لون المتبقي حسب القيمة
+    const remainingElement = document.getElementById('remainingPayment');
+    if (remainingPayment > 0) {
+        remainingElement.className = 'text-warning';
+    } else if (remainingPayment < 0) {
+        remainingElement.className = 'text-danger';
+    } else {
+        remainingElement.className = 'text-success';
+    }
+}
+
+// تحديث أولي
+updatePaymentSummary();
+
+// إذا كانت هناك فاتورة محددة مسبقاً، قم بتحديث التوزيع
+{% if selected_invoice_id %}
+updatePaymentDistribution();
+{% endif %}
+</script>
+{% endblock %}

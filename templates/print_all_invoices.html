@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #333;
+            background: white;
+        }
+        
+        .print-container {
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 10mm;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 15px;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .header .subtitle {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .info-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 11px;
+        }
+        
+        .info-box {
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+        .invoices-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 10px;
+        }
+        
+        .invoices-table th,
+        .invoices-table td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            text-align: center;
+        }
+        
+        .invoices-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            font-size: 11px;
+        }
+        
+        .invoices-table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .invoices-table tbody tr:hover {
+            background-color: #e9ecef;
+        }
+        
+        .amount {
+            font-weight: bold;
+            color: #28a745;
+        }
+        
+        .discount {
+            color: #dc3545;
+        }
+        
+        .summary {
+            background: #f8f9fa;
+            border: 2px solid #333;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        
+        .summary h3 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+        
+        .summary-row.total {
+            font-weight: bold;
+            font-size: 14px;
+            border-top: 1px solid #333;
+            padding-top: 5px;
+            margin-top: 10px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 10px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+        
+        @media print {
+            body {
+                font-size: 10px;
+            }
+            
+            .print-container {
+                padding: 5mm;
+            }
+            
+            .invoices-table {
+                font-size: 8px;
+            }
+            
+            .invoices-table th,
+            .invoices-table td {
+                padding: 3px;
+            }
+        }
+        
+        @page {
+            size: A4;
+            margin: 10mm;
+        }
+    </style>
+</head>
+<body>
+    <div class="print-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>{{ title }}</h1>
+            <div class="subtitle">نظام المحاسبة المتكامل</div>
+        </div>
+        
+        <!-- Info Section -->
+        <div class="info-section">
+            <div class="info-box">
+                <strong>تاريخ الطباعة:</strong> <script>document.write(new Date().toLocaleDateString('ar-SA') + ' ' + new Date().toLocaleTimeString('ar-SA'));</script>
+            </div>
+            <div class="info-box">
+                <strong>عدد الفواتير:</strong> {{ count }}
+            </div>
+            <div class="info-box">
+                <strong>نوع التقرير:</strong> 
+                {% if invoice_type == 'sales' %}مبيعات
+                {% elif invoice_type == 'purchases' %}مشتريات
+                {% elif invoice_type == 'expenses' %}مصروفات
+                {% elif invoice_type == 'payroll' %}رواتب
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Invoices Table -->
+        <table class="invoices-table">
+            <thead>
+                <tr>
+                    {% for header in headers %}
+                    <th>{{ header }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for invoice in invoices %}
+                <tr>
+                    {% if invoice_type == 'sales' %}
+                        <td>S-{{ invoice.id }}</td>
+                        <td>{{ invoice.date.strftime('%Y-%m-%d') if invoice.date else '-' }}</td>
+                        <td>{{ invoice.customer.name if invoice.customer else 'عميل نقدي' }}</td>
+                        <td class="amount">{{ "%.2f"|format(invoice.subtotal) }}</td>
+                        <td class="discount">{{ "%.2f"|format(invoice.discount) }}</td>
+                        <td class="amount">{{ "%.2f"|format(invoice.total) }}</td>
+                        <td>{{ invoice.notes or '-' }}</td>
+                    {% elif invoice_type == 'purchases' %}
+                        <td>P-{{ invoice.id }}</td>
+                        <td>{{ invoice.date.strftime('%Y-%m-%d') if invoice.date else '-' }}</td>
+                        <td>{{ invoice.supplier.name if invoice.supplier else 'مورد غير محدد' }}</td>
+                        <td class="amount">{{ "%.2f"|format(invoice.subtotal) }}</td>
+                        <td class="discount">{{ "%.2f"|format(invoice.discount) }}</td>
+                        <td class="amount">{{ "%.2f"|format(invoice.total) }}</td>
+                        <td>{{ invoice.notes or '-' }}</td>
+                    {% elif invoice_type == 'expenses' %}
+                        <td>E-{{ invoice.id }}</td>
+                        <td>{{ invoice.date.strftime('%Y-%m-%d') if invoice.date else '-' }}</td>
+                        <td>{{ invoice.description or 'بدون وصف' }}</td>
+                        <td>{{ invoice.category or 'عام' }}</td>
+                        <td class="amount">{{ "%.2f"|format(invoice.amount) }}</td>
+                        <td>{{ invoice.notes or '-' }}</td>
+                    {% elif invoice_type == 'payroll' %}
+                        <td>PR-{{ invoice.id }}</td>
+                        <td>{{ invoice.date.strftime('%Y-%m-%d') if invoice.date else '-' }}</td>
+                        <td>{{ invoice.employee.name if invoice.employee else 'موظف غير محدد' }}</td>
+                        <td>{{ invoice.employee.position if invoice.employee else '-' }}</td>
+                        <td class="amount">{{ "%.2f"|format(invoice.amount) }}</td>
+                        <td>{{ invoice.notes or '-' }}</td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- Summary -->
+        <div class="summary">
+            <h3>ملخص الإجماليات</h3>
+            {% if invoice_type in ['sales', 'purchases'] %}
+            <div class="summary-row">
+                <span>المبلغ الفرعي:</span>
+                <span class="amount">{{ "%.2f"|format(subtotal_amount) }} ريال</span>
+            </div>
+            <div class="summary-row">
+                <span>إجمالي الخصم:</span>
+                <span class="discount">{{ "%.2f"|format(total_discount) }} ريال</span>
+            </div>
+            {% endif %}
+            <div class="summary-row total">
+                <span>المجموع الكلي:</span>
+                <span class="amount">{{ "%.2f"|format(total_amount) }} ريال</span>
+            </div>
+            <div class="summary-row">
+                <span>عدد الفواتير:</span>
+                <span>{{ count }} فاتورة</span>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p>تم إنشاء هذا التقرير بواسطة نظام المحاسبة المتكامل</p>
+            <p><script>document.write(new Date().toLocaleDateString('ar-SA', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'}) + ' - ' + new Date().toLocaleTimeString('ar-SA'));</script></p>
+        </div>
+    </div>
+    
+    <script>
+        // طباعة تلقائية عند تحميل الصفحة
+        window.onload = function() {
+            setTimeout(function() {
+                window.print();
+            }, 500);
+        };
+        
+        // إغلاق النافذة بعد الطباعة
+        window.onafterprint = function() {
+            setTimeout(function() {
+                window.close();
+            }, 1000);
+        };
+    </script>
+</body>
+</html>

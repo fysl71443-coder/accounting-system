@@ -1,0 +1,106 @@
+<!-- Button System for Payments Screen -->
+<div class="button-toolbar mb-3" role="toolbar">
+    <div class="btn-group me-2" role="group">
+        <button type="button" 
+                id="btnSave" 
+                class="btn btn-success btn-sm"
+                onclick="paymentsHandler.SaveRecord()"
+                data-bs-toggle="tooltip" 
+                title="{{ session.get('language', 'ar') == 'ar' and 'حفظ' or 'Save' }}">
+            <i class="fas fa-save me-1"></i>
+            {{ session.get('language', 'ar') == 'ar' and 'حفظ' or 'Save' }}
+        </button>
+        <button type="button" 
+                id="btnEdit" 
+                class="btn btn-warning btn-sm"
+                onclick="paymentsHandler.EditRecord()"
+                data-bs-toggle="tooltip" 
+                title="{{ session.get('language', 'ar') == 'ar' and 'تعديل' or 'Edit' }}">
+            <i class="fas fa-edit me-1"></i>
+            {{ session.get('language', 'ar') == 'ar' and 'تعديل' or 'Edit' }}
+        </button>
+        <button type="button" 
+                id="btnDelete" 
+                class="btn btn-danger btn-sm"
+                onclick="paymentsHandler.DeleteRecord()"
+                data-bs-toggle="tooltip" 
+                title="{{ session.get('language', 'ar') == 'ar' and 'حذف' or 'Delete' }}">
+            <i class="fas fa-trash me-1"></i>
+            {{ session.get('language', 'ar') == 'ar' and 'حذف' or 'Delete' }}
+        </button>
+        <button type="button" 
+                id="btnPrint" 
+                class="btn btn-primary btn-sm"
+                onclick="paymentsHandler.PrintRecord()"
+                data-bs-toggle="tooltip" 
+                title="{{ session.get('language', 'ar') == 'ar' and 'طباعة' or 'Print' }}">
+            <i class="fas fa-print me-1"></i>
+            {{ session.get('language', 'ar') == 'ar' and 'طباعة' or 'Print' }}
+        </button>
+        <button type="button" 
+                id="btnRegisterPayment" 
+                class="btn btn-success btn-sm"
+                onclick="paymentsHandler.RegisterPayment()"
+                data-bs-toggle="tooltip" 
+                title="{{ session.get('language', 'ar') == 'ar' and 'تسجيل دفعة' or 'Register Payment' }}">
+            <i class="fas fa-credit-card me-1"></i>
+            {{ session.get('language', 'ar') == 'ar' and 'تسجيل دفعة' or 'Register Payment' }}
+        </button>
+    </div>
+</div>
+
+<!-- Special Modals -->
+
+<!-- Register Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {{ session.get('language', 'ar') == 'ar' and 'تسجيل دفعة' or 'Register Payment' }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="paymentForm">
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {{ session.get('language', 'ar') == 'ar' and 'المبلغ المدفوع' or 'Amount Paid' }}
+                        </label>
+                        <input type="number" class="form-control" id="amountPaid" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {{ session.get('language', 'ar') == 'ar' and 'طريقة الدفع' or 'Payment Method' }}
+                        </label>
+                        <select class="form-select" id="paymentMethod" required>
+                            <option value="cash">{{ session.get('language', 'ar') == 'ar' and 'نقداً' or 'Cash' }}</option>
+                            <option value="card">{{ session.get('language', 'ar') == 'ar' and 'بطاقة' or 'Card' }}</option>
+                            <option value="bank_transfer">{{ session.get('language', 'ar') == 'ar' and 'تحويل بنكي' or 'Bank Transfer' }}</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {{ session.get('language', 'ar') == 'ar' and 'تاريخ الدفع' or 'Payment Date' }}
+                        </label>
+                        <input type="date" class="form-control" id="paymentDate" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {{ session.get('language', 'ar') == 'ar' and 'ملاحظات' or 'Notes' }}
+                        </label>
+                        <textarea class="form-control" id="notes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {{ session.get('language', 'ar') == 'ar' and 'إلغاء' or 'Cancel' }}
+                </button>
+                <button type="button" class="btn btn-success" onclick="savePayment()">
+                    {{ session.get('language', 'ar') == 'ar' and 'حفظ الدفعة' or 'Save Payment' }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

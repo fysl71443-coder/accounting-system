@@ -1,0 +1,289 @@
+{% extends "base_unified.html" %}
+
+{% block page_title %}
+{% if session.get('language', 'ar') == 'ar' %}
+    إنشاء فاتورة مبيعات جديدة
+{% else %}
+    Create New Sales Invoice
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            إنشاء فاتورة مبيعات جديدة
+                        {% else %}
+                            Create New Sales Invoice
+                        {% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/sales/save" id="invoiceForm">
+                        <div class="row">
+                            <!-- معلومات الفاتورة -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        {% if session.get('language', 'ar') == 'ar' %}رقم الفاتورة{% else %}Invoice Number{% endif %}
+                                    </label>
+                                    <input type="text" class="form-control" name="invoice_number"
+                                           value="{{ invoice_number }}" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        {% if session.get('language', 'ar') == 'ar' %}تاريخ الفاتورة{% else %}Invoice Date{% endif %}
+                                    </label>
+                                    <input type="date" class="form-control" name="invoice_date"
+                                           value="{{ today_date }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- الفرع -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        {% if session.get('language', 'ar') == 'ar' %}الفرع{% else %}Branch{% endif %}
+                                    </label>
+                                    <select class="form-select" name="branch_id" required>
+                                        <option value="">
+                                            {% if session.get('language', 'ar') == 'ar' %}اختر الفرع{% else %}Select Branch{% endif %}
+                                        </option>
+                                        {% for branch in branches %}
+                                        <option value="{{ branch.id }}">{{ branch.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <!-- العميل -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        {% if session.get('language', 'ar') == 'ar' %}العميل{% else %}Customer{% endif %}
+                                    </label>
+                                    <select class="form-select" name="customer_id">
+                                        <option value="">
+                                            {% if session.get('language', 'ar') == 'ar' %}عميل نقدي{% else %}Cash Customer{% endif %}
+                                        </option>
+                                        {% for customer in customers %}
+                                        <option value="{{ customer.id }}">{{ customer.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- أصناف الفاتورة -->
+                        <div class="mb-4">
+                            <h5>
+                                {% if session.get('language', 'ar') == 'ar' %}أصناف الفاتورة{% else %}Invoice Items{% endif %}
+                            </h5>
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="itemsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>{% if session.get('language', 'ar') == 'ar' %}المنتج{% else %}Product{% endif %}</th>
+                                            <th>{% if session.get('language', 'ar') == 'ar' %}الكمية{% else %}Quantity{% endif %}</th>
+                                            <th>{% if session.get('language', 'ar') == 'ar' %}السعر{% else %}Price{% endif %}</th>
+                                            <th>{% if session.get('language', 'ar') == 'ar' %}الإجمالي{% else %}Total{% endif %}</th>
+                                            <th>{% if session.get('language', 'ar') == 'ar' %}إجراءات{% else %}Actions{% endif %}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="itemsBody">
+                                        <tr class="item-row">
+                                            <td>
+                                                <select class="form-select product-select" name="product_id[]" required>
+                                                    <option value="">
+                                                        {% if session.get('language', 'ar') == 'ar' %}اختر المنتج{% else %}Select Product{% endif %}
+                                                    </option>
+                                                    {% for product in products %}
+                                                    <option value="{{ product.id }}" data-price="{{ product.selling_price }}">
+                                                        {{ product.product_name }}
+                                                    </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input type="number" class="form-control quantity-input" 
+                                                       name="quantity[]" min="1" value="1" required>
+                                            </td>
+                                            <td>
+                                                <input type="number" class="form-control price-input" 
+                                                       name="unit_price[]" step="0.01" min="0" required>
+                                            </td>
+                                            <td>
+                                                <input type="number" class="form-control total-input" 
+                                                       name="total_price[]" step="0.01" readonly>
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-danger btn-sm remove-item">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <button type="button" class="btn btn-success btn-sm" id="addItem">
+                                <i class="fas fa-plus me-1"></i>
+                                {% if session.get('language', 'ar') == 'ar' %}إضافة صنف{% else %}Add Item{% endif %}
+                            </button>
+                        </div>
+
+                        <!-- الإجماليات -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        {% if session.get('language', 'ar') == 'ar' %}طريقة الدفع{% else %}Payment Method{% endif %}
+                                    </label>
+                                    <select class="form-select" name="payment_method" required>
+                                        <option value="نقداً">{% if session.get('language', 'ar') == 'ar' %}نقداً{% else %}Cash{% endif %}</option>
+                                        <option value="تحويل">{% if session.get('language', 'ar') == 'ar' %}تحويل بنكي{% else %}Bank Transfer{% endif %}</option>
+                                        <option value="بطاقة">{% if session.get('language', 'ar') == 'ar' %}بطاقة ائتمان{% else %}Credit Card{% endif %}</option>
+                                        <option value="آجل">{% if session.get('language', 'ar') == 'ar' %}آجل{% else %}Credit{% endif %}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <strong>{% if session.get('language', 'ar') == 'ar' %}المجموع الفرعي:{% else %}Subtotal:{% endif %}</strong>
+                                            </div>
+                                            <div class="col-6 text-end">
+                                                <span id="subtotal">0.00</span> ريال
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <strong>{% if session.get('language', 'ar') == 'ar' %}الضريبة (15%):{% else %}Tax (15%):{% endif %}</strong>
+                                            </div>
+                                            <div class="col-6 text-end">
+                                                <span id="tax">0.00</span> ريال
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <strong>{% if session.get('language', 'ar') == 'ar' %}الإجمالي النهائي:{% else %}Final Total:{% endif %}</strong>
+                                            </div>
+                                            <div class="col-6 text-end">
+                                                <strong><span id="finalTotal">0.00</span> ريال</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- أزرار الحفظ -->
+                        <div class="text-end">
+                            <a href="{{ url_for('sales') }}" class="btn btn-secondary me-2">
+                                {% if session.get('language', 'ar') == 'ar' %}إلغاء{% else %}Cancel{% endif %}
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>
+                                {% if session.get('language', 'ar') == 'ar' %}حفظ الفاتورة{% else %}Save Invoice{% endif %}
+                            </button>
+                        </div>
+
+                        <!-- حقول مخفية للإجماليات -->
+                        <input type="hidden" name="total_amount" id="totalAmountInput">
+                        <input type="hidden" name="tax_amount" id="taxAmountInput">
+                        <input type="hidden" name="final_amount" id="finalAmountInput">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// حساب الإجماليات
+function calculateTotals() {
+    let subtotal = 0;
+    
+    document.querySelectorAll('.item-row').forEach(row => {
+        const quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
+        const price = parseFloat(row.querySelector('.price-input').value) || 0;
+        const total = quantity * price;
+        
+        row.querySelector('.total-input').value = total.toFixed(2);
+        subtotal += total;
+    });
+    
+    const tax = subtotal * 0.15;
+    const finalTotal = subtotal + tax;
+    
+    document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+    document.getElementById('tax').textContent = tax.toFixed(2);
+    document.getElementById('finalTotal').textContent = finalTotal.toFixed(2);
+    
+    document.getElementById('totalAmountInput').value = subtotal.toFixed(2);
+    document.getElementById('taxAmountInput').value = tax.toFixed(2);
+    document.getElementById('finalAmountInput').value = finalTotal.toFixed(2);
+}
+
+// إضافة صنف جديد
+document.getElementById('addItem').addEventListener('click', function() {
+    const tbody = document.getElementById('itemsBody');
+    const newRow = tbody.querySelector('.item-row').cloneNode(true);
+    
+    // مسح القيم
+    newRow.querySelectorAll('input, select').forEach(input => {
+        if (input.type !== 'number' || !input.classList.contains('quantity-input')) {
+            input.value = '';
+        }
+    });
+    
+    tbody.appendChild(newRow);
+});
+
+// حذف صنف
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.remove-item')) {
+        const rows = document.querySelectorAll('.item-row');
+        if (rows.length > 1) {
+            e.target.closest('.item-row').remove();
+            calculateTotals();
+        } else {
+            alert('يجب أن تحتوي الفاتورة على صنف واحد على الأقل');
+        }
+    }
+});
+
+// تحديث السعر عند اختيار المنتج
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('product-select')) {
+        const selectedOption = e.target.selectedOptions[0];
+        const price = selectedOption.dataset.price || 0;
+        const row = e.target.closest('.item-row');
+        row.querySelector('.price-input').value = price;
+        calculateTotals();
+    }
+});
+
+// حساب الإجماليات عند تغيير الكمية أو السعر
+document.addEventListener('input', function(e) {
+    if (e.target.classList.contains('quantity-input') || e.target.classList.contains('price-input')) {
+        calculateTotals();
+    }
+});
+
+// حساب أولي
+calculateTotals();
+</script>
+{% endblock %}

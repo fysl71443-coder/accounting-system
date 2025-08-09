@@ -1,0 +1,496 @@
+{
+  "timestamp": "2025-08-05T21:14:25.484296",
+  "summary": {
+    "total_tests": 33,
+    "successful_tests": 33,
+    "failed_tests": 0,
+    "success_rate": 100.0
+  },
+  "results": [
+    {
+      "endpoint": "/api/sales/save",
+      "method": "POST",
+      "description": "Sales - Save Record Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "id": 6,
+        "message": "Sales record saved successfully",
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/sales/edit/6",
+      "method": "PUT",
+      "description": "Sales - Edit Record Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "message": "Sales record updated successfully",
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/sales/preview/6",
+      "method": "GET",
+      "description": "Sales - Preview Record Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "data": {
+          "items": [],
+          "sale": {
+            "customer_name": "Updated Test Customer",
+            "final_amount": 115.0,
+            "id": 6,
+            "invoice_date": "2025-08-05",
+            "invoice_number": "INV-1754417597",
+            "notes": "Updated by button system test",
+            "payment_method": "cash",
+            "payment_status": "pending",
+            "tax_amount": 15.0,
+            "total_amount": 150.0
+          }
+        },
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/sales/print/6",
+      "method": "GET",
+      "description": "Sales - Print Record Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "print_url": "/print/sales/6",
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/sales/register_payment",
+      "method": "POST",
+      "description": "Sales - Register Payment Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "message": "Payment registered successfully",
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/sales/delete/6",
+      "method": "DELETE",
+      "description": "Sales - Delete Record Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "message": "Sales record deleted successfully",
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/sales/select_invoice",
+      "method": "GET",
+      "description": "Sales - Select Invoice Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "invoices": [
+          {
+            "customer_name": null,
+            "final_amount": 9.2,
+            "id": 5,
+            "invoice_date": "2024-01-20",
+            "invoice_number": "CT-20250805-0001",
+            "payment_status": "pending"
+          },
+          {
+            "customer_name": null,
+            "final_amount": 16.1,
+            "id": 4,
+            "invoice_date": "2024-01-20",
+            "invoice_number": "PI-20250805-0002",
+            "payment_status": "pending"
+          },
+          {
+            "customer_name": "عميل تجريبي API",
+            "final_amount": 28.75,
+            "id": 3,
+            "invoice_date": "2025-08-05",
+            "invoice_number": "TEST-API-001",
+            "payment_status": "pending"
+          },
+          {
+            "customer_name": "عميل تجريبي",
+            "final_amount": 28.75,
+            "id": 2,
+            "invoice_date": "2025-08-05",
+            "invoice_number": "TEST-001",
+            "payment_status": "pending"
+          },
+          {
+            "customer_name": null,
+            "final_amount": 41.4,
+            "id": 1,
+            "invoice_date": "2024-01-20",
+            "invoice_number": "PI-20250805-0001",
+            "payment_status": "pending"
+          }
+        ],
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/products/save",
+      "method": "POST",
+      "description": "Products - Save Record Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "id": 9,
+        "message": "Product saved successfully",
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/products/edit/9",
+      "method": "PUT",
+      "description": "Products - Edit Record Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "message": "Product updated successfully",
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/products/print/9",
+      "method": "GET",
+      "description": "Products - Print Record Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "print_url": "/print/products/9",
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/products/delete/9",
+      "method": "DELETE",
+      "description": "Products - Delete Record Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "message": "Product deleted successfully",
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/products/search?q=Test",
+      "method": "GET",
+      "description": "Products - Search Records Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "current_page": 1,
+        "pages": 0,
+        "products": [],
+        "success": true,
+        "total": 0
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/reports/preview",
+      "method": "POST",
+      "description": "Reports - Preview Report Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "report_data": {
+          "date_range": "2024-01-01 to 2024-12-31",
+          "sales": [
+            {
+              "customer_name": null,
+              "final_amount": 41.4,
+              "invoice_date": "2024-01-20",
+              "invoice_number": "PI-20250805-0001",
+              "payment_status": "pending"
+            },
+            {
+              "customer_name": null,
+              "final_amount": 16.1,
+              "invoice_date": "2024-01-20",
+              "invoice_number": "PI-20250805-0002",
+              "payment_status": "pending"
+            },
+            {
+              "customer_name": null,
+              "final_amount": 9.2,
+              "invoice_date": "2024-01-20",
+              "invoice_number": "CT-20250805-0001",
+              "payment_status": "pending"
+            }
+          ],
+          "title": "Sales Summary Report",
+          "total_amount": 66.7,
+          "total_sales": 3
+        },
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/reports/print",
+      "method": "POST",
+      "description": "Reports - Print Report Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "print_url": "/print/reports/sales_summary",
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/reports/export",
+      "method": "POST",
+      "description": "Reports - Export Report Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "download_url": "/download/report_sales_summary_20250805_211348.excel",
+        "filename": "report_sales_summary_20250805_211348.excel",
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/purchases/save",
+      "method": "POST",
+      "description": "Purchases - Save Record Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "message": "Purchases record saved successfully",
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/purchases/edit/1",
+      "method": "PUT",
+      "description": "Purchases - Edit Record Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "message": "Purchases record updated successfully",
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/purchases/delete/1",
+      "method": "DELETE",
+      "description": "Purchases - Delete Record Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "message": "Purchases record deleted successfully",
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/employees/save",
+      "method": "POST",
+      "description": "Employees - Save Record Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "message": "Employees record saved successfully",
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/employees/edit/1",
+      "method": "PUT",
+      "description": "Employees - Edit Record Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "message": "Employees record updated successfully",
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/employees/delete/1",
+      "method": "DELETE",
+      "description": "Employees - Delete Record Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "message": "Employees record deleted successfully",
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/taxes/save",
+      "method": "POST",
+      "description": "Taxes - Save Record Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "message": "Taxes record saved successfully",
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/taxes/edit/1",
+      "method": "PUT",
+      "description": "Taxes - Edit Record Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "message": "Taxes record updated successfully",
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/taxes/delete/1",
+      "method": "DELETE",
+      "description": "Taxes - Delete Record Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "message": "Taxes record deleted successfully",
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/expenses/save",
+      "method": "POST",
+      "description": "Expenses - Save Record Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "message": "Expenses record saved successfully",
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/expenses/edit/1",
+      "method": "PUT",
+      "description": "Expenses - Edit Record Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "message": "Expenses record updated successfully",
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/expenses/delete/1",
+      "method": "DELETE",
+      "description": "Expenses - Delete Record Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "message": "Expenses record deleted successfully",
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/suppliers/save",
+      "method": "POST",
+      "description": "Suppliers - Save Record Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "message": "Suppliers record saved successfully",
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/suppliers/edit/1",
+      "method": "PUT",
+      "description": "Suppliers - Edit Record Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "message": "Suppliers record updated successfully",
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/suppliers/delete/1",
+      "method": "DELETE",
+      "description": "Suppliers - Delete Record Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "message": "Suppliers record deleted successfully",
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/customers/save",
+      "method": "POST",
+      "description": "Customers - Save Record Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "message": "Customers record saved successfully",
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/customers/edit/1",
+      "method": "PUT",
+      "description": "Customers - Edit Record Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "message": "Customers record updated successfully",
+        "success": true
+      },
+      "error": null
+    },
+    {
+      "endpoint": "/api/customers/delete/1",
+      "method": "DELETE",
+      "description": "Customers - Delete Record Button",
+      "status_code": 200,
+      "success": true,
+      "response_data": {
+        "message": "Customers record deleted successfully",
+        "success": true
+      },
+      "error": null
+    }
+  ]
+}

@@ -1,0 +1,166 @@
+{
+  "timestamp": "2025-08-06T17:33:06.363208",
+  "summary": {
+    "total": 22,
+    "passed": 19,
+    "failed": 3,
+    "warnings": 0,
+    "success_rate": 86.36363636363636
+  },
+  "results": [
+    {
+      "test": "تسجيل الدخول",
+      "status": "PASS",
+      "message": "تم تسجيل الدخول بنجاح",
+      "details": "",
+      "timestamp": "17:32:35"
+    },
+    {
+      "test": "عنوان الصفحة",
+      "status": "PASS",
+      "message": "عنوان المصروفات موجود",
+      "details": "",
+      "timestamp": "17:32:37"
+    },
+    {
+      "test": "جدول المصروفات",
+      "status": "PASS",
+      "message": "جدول المصروفات موجود",
+      "details": "",
+      "timestamp": "17:32:37"
+    },
+    {
+      "test": "زر إضافة جديد",
+      "status": "PASS",
+      "message": "زر إضافة جديد موجود",
+      "details": "",
+      "timestamp": "17:32:37"
+    },
+    {
+      "test": "زر البحث",
+      "status": "PASS",
+      "message": "زر البحث موجود",
+      "details": "",
+      "timestamp": "17:32:37"
+    },
+    {
+      "test": "زر التصدير",
+      "status": "PASS",
+      "message": "زر التصدير موجود",
+      "details": "",
+      "timestamp": "17:32:37"
+    },
+    {
+      "test": "زر التقارير",
+      "status": "PASS",
+      "message": "زر التقارير موجود",
+      "details": "",
+      "timestamp": "17:32:37"
+    },
+    {
+      "test": "أزرار الإجراءات",
+      "status": "PASS",
+      "message": "تم العثور على 4 زر من أصل 4",
+      "details": "",
+      "timestamp": "17:32:37"
+    },
+    {
+      "test": "API /api/expenses/list",
+      "status": "PASS",
+      "message": "جلب قائمة المصروفات - الكود: 200",
+      "details": "",
+      "timestamp": "17:32:39"
+    },
+    {
+      "test": "API /api/expenses/save",
+      "status": "PASS",
+      "message": "حفظ مصروف جديد - الكود: 200",
+      "details": "",
+      "timestamp": "17:32:41"
+    },
+    {
+      "test": "API /api/expenses/categories",
+      "status": "PASS",
+      "message": "جلب فئات المصروفات - الكود: 200",
+      "details": "",
+      "timestamp": "17:32:43"
+    },
+    {
+      "test": "API /expenses/new",
+      "status": "PASS",
+      "message": "صفحة إضافة مصروف جديد - الكود: 200",
+      "details": "",
+      "timestamp": "17:32:45"
+    },
+    {
+      "test": "إنشاء مصروف",
+      "status": "FAIL",
+      "message": "فشل الإنشاء: حقل expense_type مطلوب",
+      "details": "",
+      "timestamp": "17:32:47"
+    },
+    {
+      "test": "قراءة المصروفات",
+      "status": "PASS",
+      "message": "تم جلب 1 مصروف",
+      "details": "",
+      "timestamp": "17:32:50"
+    },
+    {
+      "test": "زر إضافة مصروف جديد",
+      "status": "PASS",
+      "message": "يعمل بشكل صحيح",
+      "details": "",
+      "timestamp": "17:32:52"
+    },
+    {
+      "test": "زر عرض جميع المصروفات",
+      "status": "PASS",
+      "message": "يعمل بشكل صحيح",
+      "details": "",
+      "timestamp": "17:32:54"
+    },
+    {
+      "test": "زر تصدير المصروفات",
+      "status": "FAIL",
+      "message": "الصفحة غير موجودة",
+      "details": "",
+      "timestamp": "17:32:56"
+    },
+    {
+      "test": "زر التقارير",
+      "status": "FAIL",
+      "message": "الصفحة غير موجودة",
+      "details": "",
+      "timestamp": "17:32:58"
+    },
+    {
+      "test": "التحقق - بيانات فارغة",
+      "status": "PASS",
+      "message": "تم رفض البيانات مع رسالة خطأ",
+      "details": "",
+      "timestamp": "17:33:00"
+    },
+    {
+      "test": "التحقق - وصف فارغ ومبلغ صفر",
+      "status": "PASS",
+      "message": "تم رفض البيانات مع رسالة خطأ",
+      "details": "",
+      "timestamp": "17:33:02"
+    },
+    {
+      "test": "التحقق - مبلغ سالب",
+      "status": "PASS",
+      "message": "تم رفض البيانات مع رسالة خطأ",
+      "details": "",
+      "timestamp": "17:33:04"
+    },
+    {
+      "test": "التحقق - مبلغ غير رقمي",
+      "status": "PASS",
+      "message": "تم رفض البيانات مع رسالة خطأ",
+      "details": "",
+      "timestamp": "17:33:06"
+    }
+  ]
+}

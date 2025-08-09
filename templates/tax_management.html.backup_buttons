@@ -1,0 +1,1366 @@
+{% extends "base_unified.html" %}
+
+{% block title %}
+{% if session.get('language', 'ar') == 'ar' %}
+إدارة الضرائب - نظام المحاسبة
+{% else %}
+Tax Management - Accounting System
+{% endif %}
+{% endblock %}
+
+{% block page_icon %}<i class="fas fa-percentage"></i>{% endblock %}
+
+{% block page_title %}
+{% if session.get('language', 'ar') == 'ar' %}إدارة الضرائب{% else %}Tax Management{% endif %}
+{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <button type="button" class="btn btn-primary" onclick="addNewTax()">
+        <i class="fas fa-plus me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}إضافة ضريبة جديدة{% else %}Add New Tax{% endif %}
+    </button>
+            <button type="button" class="btn btn-success" onclick="saveTaxSettings()">
+        <i class="fas fa-save me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}حفظ الإعدادات{% else %}Save Settings{% endif %}
+    </button>
+    <button type="button" class="btn btn-info" onclick="generateTaxReport()">
+        <i class="fas fa-file-alt me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تقرير الضرائب{% else %}Tax Report{% endif %}
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Tax Statistics -->
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}إجمالي الضرائب المحصلة{% else %}Total Tax Collected{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-primary" id="total-tax-collected">15,750.00 ريال</h4>
+                    </div>
+                    <div class="text-primary opacity-75">
+                        <i class="fas fa-money-bill-wave fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}ضريبة القيمة المضافة{% else %}VAT (15%){% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-success" id="vat-collected">13,500.00 ريال</h4>
+                    </div>
+                    <div class="text-success opacity-75">
+                        <i class="fas fa-percentage fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}ضرائب أخرى{% else %}Other Taxes{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-warning" id="other-taxes">2,250.00 ريال</h4>
+                    </div>
+                    <div class="text-warning opacity-75">
+                        <i class="fas fa-calculator fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}عدد الفواتير الضريبية{% else %}Tax Invoices Count{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-info" id="tax-invoices-count">1,250</h4>
+                    </div>
+                    <div class="text-info opacity-75">
+                        <i class="fas fa-file-invoice fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tax Configuration -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="mb-0">
+            <i class="fas fa-cogs me-2"></i>
+            {% if session.get('language', 'ar') == 'ar' %}إعدادات الضرائب{% else %}Tax Configuration{% endif %}
+        </h6>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0 text-success">
+                            {% if session.get('language', 'ar') == 'ar' %}ضريبة القيمة المضافة (VAT){% else %}Value Added Tax (VAT){% endif %}
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">
+                                            {% if session.get('language', 'ar') == 'ar' %}نسبة الضريبة{% else %}Tax Rate{% endif %}
+                                        </label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="vat-rate" value="15" min="0" max="100" step="0.01">
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">
+                                            {% if session.get('language', 'ar') == 'ar' %}الرقم الضريبي{% else %}Tax Number{% endif %}
+                                        </label>
+                                        <input type="text" class="form-control" id="vat-number" value="300123456789003" placeholder="3001234567890XX">
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="vat-enabled" checked>
+                                        <label class="form-check-label" for="vat-enabled">
+                                            {% if session.get('language', 'ar') == 'ar' %}تفعيل ضريبة القيمة المضافة{% else %}Enable VAT{% endif %}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0 text-warning">
+                            {% if session.get('language', 'ar') == 'ar' %}إعدادات عامة{% else %}General Settings{% endif %}
+                        </h6>
+                    </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">
+                                            {% if session.get('language', 'ar') == 'ar' %}طريقة حساب الضريبة{% else %}Tax Calculation Method{% endif %}
+                                        </label>
+                                        <select class="form-select" id="tax-calculation-method">
+                                            <option value="inclusive">
+                                                {% if session.get('language', 'ar') == 'ar' %}شاملة الضريبة{% else %}Tax Inclusive{% endif %}
+                                            </option>
+                                            <option value="exclusive" selected>
+                                                {% if session.get('language', 'ar') == 'ar' %}مضافة للسعر{% else %}Tax Exclusive{% endif %}
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">
+                                            {% if session.get('language', 'ar') == 'ar' %}تقريب الضريبة{% else %}Tax Rounding{% endif %}
+                                        </label>
+                                        <select class="form-select" id="tax-rounding">
+                                            <option value="round">
+                                                {% if session.get('language', 'ar') == 'ar' %}تقريب عادي{% else %}Normal Rounding{% endif %}
+                                            </option>
+                                            <option value="up">
+                                                {% if session.get('language', 'ar') == 'ar' %}تقريب لأعلى{% else %}Round Up{% endif %}
+                                            </option>
+                                            <option value="down">
+                                                {% if session.get('language', 'ar') == 'ar' %}تقريب لأسفل{% else %}Round Down{% endif %}
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="show-tax-breakdown" checked>
+                                        <label class="form-check-label" for="show-tax-breakdown">
+                                            {% if session.get('language', 'ar') == 'ar' %}إظهار تفاصيل الضريبة في الفاتورة{% else %}Show tax breakdown in invoice{% endif %}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- Tax Types Management -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">
+            <i class="fas fa-list me-2"></i>
+            {% if session.get('language', 'ar') == 'ar' %}أنواع الضرائب{% else %}Tax Types{% endif %}
+        </h6>
+        <button type="button" class="btn btn-primary btn-sm" onclick="addTaxType()">
+            <i class="fas fa-plus me-1"></i>
+            {% if session.get('language', 'ar') == 'ar' %}إضافة نوع ضريبة{% else %}Add Tax Type{% endif %}
+        </button>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="tax-types-table">
+                <thead>
+                    <tr>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}اسم الضريبة{% else %}Tax Name{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}النسبة{% else %}Rate{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}النوع{% else %}Type{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الحالة{% else %}Status{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}تاريخ التطبيق{% else %}Effective Date{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}إجراءات{% else %}Actions{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody id="tax-types-tbody">
+                    <!-- Sample tax types -->
+                    <tr>
+                        <td>ضريبة القيمة المضافة</td>
+                        <td>15%</td>
+                        <td><span class="badge bg-info">نسبة مئوية</span></td>
+                        <td><span class="badge bg-success">نشط</span></td>
+                        <td>2018-01-01</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="editTaxType(1)">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-warning" onclick="toggleTaxType(1)">
+                                    <i class="fas fa-toggle-on"></i>
+                                </button>
+                                <button class="btn btn-outline-danger" onclick="deleteTaxType(1)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>ضريبة الخدمة</td>
+                        <td>5%</td>
+                        <td><span class="badge bg-info">نسبة مئوية</span></td>
+                        <td><span class="badge bg-success">نشط</span></td>
+                        <td>2020-01-01</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="editTaxType(2)">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-warning" onclick="toggleTaxType(2)">
+                                    <i class="fas fa-toggle-on"></i>
+                                </button>
+                                <button class="btn btn-outline-danger" onclick="deleteTaxType(2)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>ضريبة البلدية</td>
+                        <td>2.5%</td>
+                        <td><span class="badge bg-info">نسبة مئوية</span></td>
+                        <td><span class="badge bg-secondary">غير نشط</span></td>
+                        <td>2019-01-01</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="editTaxType(3)">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-warning" onclick="toggleTaxType(3)">
+                                    <i class="fas fa-toggle-off"></i>
+                                </button>
+                                <button class="btn btn-outline-danger" onclick="deleteTaxType(3)">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- VAT Return Calculator -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="mb-0">
+            <i class="fas fa-file-invoice-dollar me-2"></i>
+            {% if session.get('language', 'ar') == 'ar' %}حاسبة الإقرار الضريبي{% else %}VAT Return Calculator{% endif %}
+        </h6>
+    </div>
+    <div class="card-body">
+                    <!-- Period Selection -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}نوع الفترة{% else %}Period Type{% endif %}
+                            </label>
+                            <select class="form-select" id="period-type" onchange="updatePeriodOptions()">
+                                <option value="current-quarter">
+                                    {% if session.get('language', 'ar') == 'ar' %}الربع الحالي{% else %}Current Quarter{% endif %}
+                                </option>
+                                <option value="specific-quarter">
+                                    {% if session.get('language', 'ar') == 'ar' %}ربع محدد{% else %}Specific Quarter{% endif %}
+                                </option>
+                                <option value="custom-range">
+                                    {% if session.get('language', 'ar') == 'ar' %}فترة مخصصة{% else %}Custom Range{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-4" id="quarter-selection" style="display: none;">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}الربع{% else %}Quarter{% endif %}
+                            </label>
+                            <select class="form-select" id="selected-quarter">
+                                <option value="Q1-2025">
+                                    {% if session.get('language', 'ar') == 'ar' %}الربع الأول 2025{% else %}Q1 2025{% endif %}
+                                </option>
+                                <option value="Q2-2025">
+                                    {% if session.get('language', 'ar') == 'ar' %}الربع الثاني 2025{% else %}Q2 2025{% endif %}
+                                </option>
+                                <option value="Q3-2025" selected>
+                                    {% if session.get('language', 'ar') == 'ar' %}الربع الثالث 2025{% else %}Q3 2025{% endif %}
+                                </option>
+                                <option value="Q4-2025">
+                                    {% if session.get('language', 'ar') == 'ar' %}الربع الرابع 2025{% else %}Q4 2025{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-4" id="custom-dates" style="display: none;">
+                            <div class="row">
+                                <div class="col-6">
+                                    <label class="form-label">
+                                        {% if session.get('language', 'ar') == 'ar' %}من{% else %}From{% endif %}
+                                    </label>
+                                    <input type="date" class="form-control" id="custom-from-date">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">
+                                        {% if session.get('language', 'ar') == 'ar' %}إلى{% else %}To{% endif %}
+                                    </label>
+                                    <input type="date" class="form-control" id="custom-to-date">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="button" class="btn btn-primary w-100" onclick="calculateVATReturn()">
+                                <i class="fas fa-calculator"></i>
+                                {% if session.get('language', 'ar') == 'ar' %}حساب الإقرار الضريبي{% else %}Calculate VAT Return{% endif %}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- VAT Return Summary -->
+                    <div class="row" id="vat-return-summary" style="display: none;">
+                        <div class="col-md-12">
+                            <div class="card bg-light">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-chart-bar me-2"></i>
+                                        {% if session.get('language', 'ar') == 'ar' %}
+                                            ملخص الإقرار الضريبي - <span id="return-period"></span>
+                                        {% else %}
+                                            VAT Return Summary - <span id="return-period"></span>
+                                        {% endif %}
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h6 class="text-success">
+                                                {% if session.get('language', 'ar') == 'ar' %}المبيعات{% else %}Sales{% endif %}
+                                            </h6>
+                                            <table class="table table-sm">
+                                                <tr>
+                                                    <td>
+                                                        {% if session.get('language', 'ar') == 'ar' %}إجمالي المبيعات قبل الضريبة{% else %}Total Sales Before VAT{% endif %}
+                                                    </td>
+                                                    <td class="text-end" id="sales-before-vat">0.00 ريال</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        {% if session.get('language', 'ar') == 'ar' %}ضريبة المبيعات (15%){% else %}Sales VAT (15%){% endif %}
+                                                    </td>
+                                                    <td class="text-end text-success" id="sales-vat">0.00 ريال</td>
+                                                </tr>
+                                                <tr class="table-success">
+                                                    <td><strong>
+                                                        {% if session.get('language', 'ar') == 'ar' %}إجمالي المبيعات{% else %}Total Sales{% endif %}
+                                                    </strong></td>
+                                                    <td class="text-end"><strong id="total-sales">0.00 ريال</strong></td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-warning">
+                                                {% if session.get('language', 'ar') == 'ar' %}المشتريات{% else %}Purchases{% endif %}
+                                            </h6>
+                                            <table class="table table-sm">
+                                                <tr>
+                                                    <td>
+                                                        {% if session.get('language', 'ar') == 'ar' %}إجمالي المشتريات قبل الضريبة{% else %}Total Purchases Before VAT{% endif %}
+                                                    </td>
+                                                    <td class="text-end" id="purchases-before-vat">0.00 ريال</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        {% if session.get('language', 'ar') == 'ar' %}ضريبة المشتريات (15%){% else %}Purchases VAT (15%){% endif %}
+                                                    </td>
+                                                    <td class="text-end text-warning" id="purchases-vat">0.00 ريال</td>
+                                                </tr>
+                                                <tr class="table-warning">
+                                                    <td><strong>
+                                                        {% if session.get('language', 'ar') == 'ar' %}إجمالي المشتريات{% else %}Total Purchases{% endif %}
+                                                    </strong></td>
+                                                    <td class="text-end"><strong id="total-purchases">0.00 ريال</strong></td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mt-3">
+                                        <div class="col-md-12">
+                                            <div class="card" id="net-vat-card">
+                                                <div class="card-body text-center">
+                                                    <h5 class="card-title">
+                                                        {% if session.get('language', 'ar') == 'ar' %}صافي الضريبة{% else %}Net VAT{% endif %}
+                                                    </h5>
+                                                    <h2 class="card-text" id="net-vat-amount">0.00 ريال</h2>
+                                                    <p class="card-text" id="net-vat-status"></p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row mt-3">
+                                        <div class="col-md-12 text-center">
+                                            <div class="btn-group" role="group">
+                                                <button type="button" class="btn btn-success" onclick="saveVATReturn()">
+                                                    <i class="fas fa-save"></i>
+                                                    {% if session.get('language', 'ar') == 'ar' %}حفظ الإقرار{% else %}Save Return{% endif %}
+                                                </button>
+                                                <button type="button" class="btn btn-info" onclick="exportVATReturnPDF()">
+                                                    <i class="fas fa-file-pdf"></i>
+                                                    {% if session.get('language', 'ar') == 'ar' %}تصدير PDF{% else %}Export PDF{% endif %}
+                                                </button>
+                                                <button type="button" class="btn btn-secondary" onclick="printVATReturn()">
+                                                    <i class="fas fa-print"></i>
+                                                    {% if session.get('language', 'ar') == 'ar' %}طباعة{% else %}Print{% endif %}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- Previous VAT Returns -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="mb-0">
+            <i class="fas fa-history me-2"></i>
+            {% if session.get('language', 'ar') == 'ar' %}الإقرارات الضريبية السابقة{% else %}Previous VAT Returns{% endif %}
+        </h6>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الفترة{% else %}Period{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}ضريبة المبيعات{% else %}Sales VAT{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}ضريبة المشتريات{% else %}Purchases VAT{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}صافي الضريبة{% else %}Net VAT{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الحالة{% else %}Status{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}تاريخ التقديم{% else %}Submission Date{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}إجراءات{% else %}Actions{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody id="previous-returns-tbody">
+                    <tr>
+                        <td><strong>Q2 2025</strong></td>
+                        <td>١٨٬٧٥٠٫٠٠ ريال</td>
+                        <td>١٢٬٠٠٠٫٠٠ ريال</td>
+                        <td><span class="text-success">٦٬٧٥٠٫٠٠ ريال</span></td>
+                        <td><span class="badge bg-success">مقدم</span></td>
+                        <td>٢٥‏/١‏/١٤٤٧ هـ</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="viewVATReturn(1)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-success" onclick="downloadVATReturn(1)">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Q1 2025</strong></td>
+                        <td>١٥٬٠٠٠٫٠٠ ريال</td>
+                        <td>٩٬٥٠٠٫٠٠ ريال</td>
+                        <td><span class="text-success">٥٬٥٠٠٫٠٠ ريال</span></td>
+                        <td><span class="badge bg-success">مقدم</span></td>
+                        <td>٢٠‏/١٠‏/١٤٤٦ هـ</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="viewVATReturn(2)">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-success" onclick="downloadVATReturn(2)">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Simple Tax Calculator -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calculator me-2"></i>
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            حاسبة الضرائب البسيطة
+                        {% else %}
+                            Simple Tax Calculator
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    {% if session.get('language', 'ar') == 'ar' %}المبلغ الأساسي{% else %}Base Amount{% endif %}
+                                </label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="calc-base-amount" step="0.01" min="0" onchange="calculateTax()">
+                                    <span class="input-group-text">ريال</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    {% if session.get('language', 'ar') == 'ar' %}نوع الضريبة{% else %}Tax Type{% endif %}
+                                </label>
+                                <select class="form-select" id="calc-tax-type" onchange="calculateTax()">
+                                    <option value="vat">
+                                        {% if session.get('language', 'ar') == 'ar' %}ضريبة القيمة المضافة (15%){% else %}VAT (15%){% endif %}
+                                    </option>
+                                    <option value="service">
+                                        {% if session.get('language', 'ar') == 'ar' %}ضريبة الخدمة (5%){% else %}Service Tax (5%){% endif %}
+                                    </option>
+                                    <option value="custom">
+                                        {% if session.get('language', 'ar') == 'ar' %}نسبة مخصصة{% else %}Custom Rate{% endif %}
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">
+                                    {% if session.get('language', 'ar') == 'ar' %}النسبة المخصصة{% else %}Custom Rate{% endif %}
+                                </label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="calc-custom-rate" step="0.01" min="0" max="100" onchange="calculateTax()" disabled>
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <div class="row text-center">
+                                        <div class="col-md-3">
+                                            <h6 class="text-muted">
+                                                {% if session.get('language', 'ar') == 'ar' %}المبلغ الأساسي{% else %}Base Amount{% endif %}
+                                            </h6>
+                                            <h4 class="text-primary" id="calc-display-base">0.00 ريال</h4>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <h6 class="text-muted">
+                                                {% if session.get('language', 'ar') == 'ar' %}مبلغ الضريبة{% else %}Tax Amount{% endif %}
+                                            </h6>
+                                            <h4 class="text-success" id="calc-display-tax">0.00 ريال</h4>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <h6 class="text-muted">
+                                                {% if session.get('language', 'ar') == 'ar' %}المبلغ الإجمالي{% else %}Total Amount{% endif %}
+                                            </h6>
+                                            <h4 class="text-warning" id="calc-display-total">0.00 ريال</h4>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <h6 class="text-muted">
+                                                {% if session.get('language', 'ar') == 'ar' %}النسبة المطبقة{% else %}Applied Rate{% endif %}
+                                            </h6>
+                                            <h4 class="text-info" id="calc-display-rate">0.00%</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Global variables
+let taxTypes = [
+    {
+        id: 1,
+        name: 'ضريبة القيمة المضافة',
+        name_en: 'Value Added Tax (VAT)',
+        rate: 15.00,
+        type: 'percentage',
+        status: 'active',
+        effective_date: '2018-01-01'
+    },
+    {
+        id: 2,
+        name: 'ضريبة الخدمة',
+        name_en: 'Service Tax',
+        rate: 5.00,
+        type: 'percentage',
+        status: 'active',
+        effective_date: '2020-01-01'
+    },
+    {
+        id: 3,
+        name: 'ضريبة البلدية',
+        name_en: 'Municipal Tax',
+        rate: 2.50,
+        type: 'percentage',
+        status: 'inactive',
+        effective_date: '2019-01-01'
+    }
+];
+
+// Initialize page
+$(document).ready(function() {
+    loadTaxTypes();
+    calculateTax();
+    loadPreviousVATReturns();
+    setCurrentQuarter();
+});
+
+// Load tax types table
+function loadTaxTypes() {
+    const tbody = document.getElementById('tax-types-tbody');
+    tbody.innerHTML = '';
+
+    taxTypes.forEach(tax => {
+        const row = document.createElement('tr');
+        const statusClass = tax.status === 'active' ? 'success' : 'secondary';
+        const statusText = tax.status === 'active' ?
+            '{% if session.get("language", "ar") == "ar" %}نشط{% else %}Active{% endif %}' :
+            '{% if session.get("language", "ar") == "ar" %}غير نشط{% else %}Inactive{% endif %}';
+
+        const displayName = '{% if session.get("language", "ar") == "ar" %}' + tax.name + '{% else %}' + tax.name_en + '{% endif %}';
+
+        row.innerHTML = `
+            <td>
+                <strong>${tax.name}</strong>
+            </td>
+            <td>
+                <span class="badge bg-primary">${tax.rate}%</span>
+            </td>
+            <td>
+                <span class="badge bg-info">
+                    {% if session.get('language', 'ar') == 'ar' %}نسبة مئوية{% else %}Percentage{% endif %}
+                </span>
+            </td>
+            <td>
+                <span class="badge bg-${statusClass}">${statusText}</span>
+            </td>
+            <td>${tax.effective_date}</td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-primary" onclick="editTaxType(${tax.id})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" onclick="deleteTaxType(${tax.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+// Calculate tax
+function calculateTax() {
+    const baseAmount = parseFloat(document.getElementById('calc-base-amount').value) || 0;
+    const taxType = document.getElementById('calc-tax-type').value;
+    const customRateInput = document.getElementById('calc-custom-rate');
+
+    let taxRate = 0;
+
+    // Enable/disable custom rate input
+    if (taxType === 'custom') {
+        customRateInput.disabled = false;
+        taxRate = parseFloat(customRateInput.value) || 0;
+    } else {
+        customRateInput.disabled = true;
+        switch (taxType) {
+            case 'vat':
+                taxRate = 15;
+                break;
+            case 'service':
+                taxRate = 5;
+                break;
+            default:
+                taxRate = 0;
+        }
+    }
+
+    // Calculate amounts
+    const taxAmount = (baseAmount * taxRate) / 100;
+    const totalAmount = baseAmount + taxAmount;
+
+    // Update display
+    document.getElementById('calc-display-base').textContent = baseAmount.toFixed(2) + ' ريال';
+    document.getElementById('calc-display-tax').textContent = taxAmount.toFixed(2) + ' ريال';
+    document.getElementById('calc-display-total').textContent = totalAmount.toFixed(2) + ' ريال';
+    document.getElementById('calc-display-rate').textContent = taxRate.toFixed(2) + '%';
+}
+
+// Add new tax
+function addNewTax() {
+    alert('{% if session.get("language", "ar") == "ar" %}سيتم إضافة نافذة إضافة ضريبة جديدة{% else %}Add new tax modal will be implemented{% endif %}');
+}
+
+// Add tax type
+function addTaxType() {
+    const name = prompt('{% if session.get("language", "ar") == "ar" %}اسم الضريبة:{% else %}Tax name:{% endif %}');
+    if (!name) return;
+
+    const rate = parseFloat(prompt('{% if session.get("language", "ar") == "ar" %}نسبة الضريبة (%):{% else %}Tax rate (%):{% endif %}'));
+    if (isNaN(rate)) return;
+
+    const newId = Math.max(...taxTypes.map(t => t.id)) + 1;
+
+    taxTypes.push({
+        id: newId,
+        name: name,
+        name_en: name,
+        rate: rate,
+        type: 'percentage',
+        status: 'active',
+        effective_date: new Date().toISOString().split('T')[0]
+    });
+
+    loadTaxTypes();
+    alert('{% if session.get("language", "ar") == "ar" %}تم إضافة الضريبة بنجاح{% else %}Tax added successfully{% endif %}');
+}
+
+// Edit tax type
+function editTaxType(id) {
+    const tax = taxTypes.find(t => t.id === id);
+    if (!tax) return;
+
+    const newName = prompt('{% if session.get("language", "ar") == "ar" %}اسم الضريبة:{% else %}Tax name:{% endif %}', tax.name);
+    if (!newName) return;
+
+    const newRate = parseFloat(prompt('{% if session.get("language", "ar") == "ar" %}نسبة الضريبة (%):{% else %}Tax rate (%):{% endif %}', tax.rate));
+    if (isNaN(newRate)) return;
+
+    tax.name = newName;
+    tax.name_en = newName;
+    tax.rate = newRate;
+
+    loadTaxTypes();
+    alert('{% if session.get("language", "ar") == "ar" %}تم تحديث الضريبة بنجاح{% else %}Tax updated successfully{% endif %}');
+}
+
+// Delete tax type
+function deleteTaxType(id) {
+    if (!confirm('{% if session.get("language", "ar") == "ar" %}هل أنت متأكد من حذف هذه الضريبة؟{% else %}Are you sure you want to delete this tax?{% endif %}')) {
+        return;
+    }
+
+    taxTypes = taxTypes.filter(t => t.id !== id);
+    loadTaxTypes();
+    alert('{% if session.get("language", "ar") == "ar" %}تم حذف الضريبة بنجاح{% else %}Tax deleted successfully{% endif %}');
+}
+
+// Save tax settings
+function saveTaxSettings() {
+    const vatRate = document.getElementById('vat-rate').value;
+    const vatNumber = document.getElementById('vat-number').value;
+    const vatEnabled = document.getElementById('vat-enabled').checked;
+    const calculationMethod = document.getElementById('tax-calculation-method').value;
+    const rounding = document.getElementById('tax-rounding').value;
+    const showBreakdown = document.getElementById('show-tax-breakdown').checked;
+
+    const settings = {
+        vat_rate: vatRate,
+        vat_number: vatNumber,
+        vat_enabled: vatEnabled,
+        calculation_method: calculationMethod,
+        rounding: rounding,
+        show_breakdown: showBreakdown
+    };
+
+    console.log('Tax settings to save:', settings);
+    alert('{% if session.get("language", "ar") == "ar" %}تم حفظ إعدادات الضرائب بنجاح{% else %}Tax settings saved successfully{% endif %}');
+}
+
+// Generate tax report
+function generateTaxReport() {
+    alert('{% if session.get("language", "ar") == "ar" %}سيتم إنشاء تقرير الضرائب{% else %}Tax report will be generated{% endif %}');
+}
+
+// Tax calculation utilities
+function calculateVAT(amount, rate = 15) {
+    return (amount * rate) / 100;
+}
+
+function calculateTotalWithVAT(amount, rate = 15) {
+    return amount + calculateVAT(amount, rate);
+}
+
+function calculateAmountFromTotal(totalAmount, rate = 15) {
+    return totalAmount / (1 + (rate / 100));
+}
+
+function roundTaxAmount(amount, method = 'round') {
+    switch (method) {
+        case 'up':
+            return Math.ceil(amount * 100) / 100;
+        case 'down':
+            return Math.floor(amount * 100) / 100;
+        default:
+            return Math.round(amount * 100) / 100;
+    }
+}
+
+// VAT Return Functions
+function setCurrentQuarter() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1; // JavaScript months are 0-based
+
+    let quarter;
+    if (month <= 3) quarter = 'Q1';
+    else if (month <= 6) quarter = 'Q2';
+    else if (month <= 9) quarter = 'Q3';
+    else quarter = 'Q4';
+
+    document.getElementById('selected-quarter').value = `${quarter}-${year}`;
+}
+
+function updatePeriodOptions() {
+    const periodType = document.getElementById('period-type').value;
+    const quarterSelection = document.getElementById('quarter-selection');
+    const customDates = document.getElementById('custom-dates');
+
+    // Hide all options first
+    quarterSelection.style.display = 'none';
+    customDates.style.display = 'none';
+
+    // Show relevant options
+    if (periodType === 'specific-quarter') {
+        quarterSelection.style.display = 'block';
+    } else if (periodType === 'custom-range') {
+        customDates.style.display = 'block';
+        // Set default dates to current quarter
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+
+        let startMonth, endMonth;
+        if (month < 3) { startMonth = 0; endMonth = 2; }
+        else if (month < 6) { startMonth = 3; endMonth = 5; }
+        else if (month < 9) { startMonth = 6; endMonth = 8; }
+        else { startMonth = 9; endMonth = 11; }
+
+        const startDate = new Date(year, startMonth, 1);
+        const endDate = new Date(year, endMonth + 1, 0);
+
+        document.getElementById('custom-from-date').value = startDate.toISOString().split('T')[0];
+        document.getElementById('custom-to-date').value = endDate.toISOString().split('T')[0];
+    }
+}
+
+function calculateVATReturn() {
+    // Get period information
+    const periodType = document.getElementById('period-type').value;
+    let periodText = '';
+    let fromDate, toDate;
+
+    if (periodType === 'current-quarter') {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+
+        let quarter, startMonth, endMonth;
+        if (month < 3) { quarter = 'Q1'; startMonth = 0; endMonth = 2; }
+        else if (month < 6) { quarter = 'Q2'; startMonth = 3; endMonth = 5; }
+        else if (month < 9) { quarter = 'Q3'; startMonth = 6; endMonth = 8; }
+        else { quarter = 'Q4'; startMonth = 9; endMonth = 11; }
+
+        periodText = `${quarter} ${year}`;
+        fromDate = new Date(year, startMonth, 1);
+        toDate = new Date(year, endMonth + 1, 0);
+
+    } else if (periodType === 'specific-quarter') {
+        const selectedQuarter = document.getElementById('selected-quarter').value;
+        periodText = selectedQuarter;
+
+        const [quarter, year] = selectedQuarter.split('-');
+        const yearNum = parseInt(year);
+        let startMonth, endMonth;
+
+        switch (quarter) {
+            case 'Q1': startMonth = 0; endMonth = 2; break;
+            case 'Q2': startMonth = 3; endMonth = 5; break;
+            case 'Q3': startMonth = 6; endMonth = 8; break;
+            case 'Q4': startMonth = 9; endMonth = 11; break;
+        }
+
+        fromDate = new Date(yearNum, startMonth, 1);
+        toDate = new Date(yearNum, endMonth + 1, 0);
+
+    } else if (periodType === 'custom-range') {
+        fromDate = new Date(document.getElementById('custom-from-date').value);
+        toDate = new Date(document.getElementById('custom-to-date').value);
+        periodText = `${fromDate.toLocaleDateString('ar-SA')} - ${toDate.toLocaleDateString('ar-SA')}`;
+    }
+
+    // Sample data calculation (in real app, this would fetch from database)
+    const salesData = calculateSalesForPeriod(fromDate, toDate);
+    const purchasesData = calculatePurchasesForPeriod(fromDate, toDate);
+
+    // Calculate VAT amounts
+    const salesBeforeVAT = salesData.total;
+    const salesVAT = salesBeforeVAT * 0.15;
+    const totalSales = salesBeforeVAT + salesVAT;
+
+    const purchasesBeforeVAT = purchasesData.total;
+    const purchasesVAT = purchasesBeforeVAT * 0.15;
+    const totalPurchases = purchasesBeforeVAT + purchasesVAT;
+
+    const netVAT = salesVAT - purchasesVAT;
+
+    // Update display
+    document.getElementById('return-period').textContent = periodText;
+    document.getElementById('sales-before-vat').textContent = formatCurrency(salesBeforeVAT);
+    document.getElementById('sales-vat').textContent = formatCurrency(salesVAT);
+    document.getElementById('total-sales').textContent = formatCurrency(totalSales);
+
+    document.getElementById('purchases-before-vat').textContent = formatCurrency(purchasesBeforeVAT);
+    document.getElementById('purchases-vat').textContent = formatCurrency(purchasesVAT);
+    document.getElementById('total-purchases').textContent = formatCurrency(totalPurchases);
+
+    document.getElementById('net-vat-amount').textContent = formatCurrency(Math.abs(netVAT));
+
+    // Update net VAT status and card color
+    const netVATCard = document.getElementById('net-vat-card');
+    const netVATStatus = document.getElementById('net-vat-status');
+
+    if (netVAT > 0) {
+        netVATCard.className = 'card border-danger';
+        netVATStatus.textContent = '{% if session.get("language", "ar") == "ar" %}مستحق للهيئة{% else %}Due to Authority{% endif %}';
+        netVATStatus.className = 'card-text text-danger';
+    } else if (netVAT < 0) {
+        netVATCard.className = 'card border-success';
+        netVATStatus.textContent = '{% if session.get("language", "ar") == "ar" %}قابل للاسترداد{% else %}Refundable{% endif %}';
+        netVATStatus.className = 'card-text text-success';
+    } else {
+        netVATCard.className = 'card border-secondary';
+        netVATStatus.textContent = '{% if session.get("language", "ar") == "ar" %}لا يوجد ضريبة{% else %}No VAT Due{% endif %}';
+        netVATStatus.className = 'card-text text-secondary';
+    }
+
+    // Show the summary
+    document.getElementById('vat-return-summary').style.display = 'block';
+
+    // Store current calculation for saving
+    window.currentVATReturn = {
+        period: periodText,
+        fromDate: fromDate.toISOString().split('T')[0],
+        toDate: toDate.toISOString().split('T')[0],
+        salesBeforeVAT: salesBeforeVAT,
+        salesVAT: salesVAT,
+        totalSales: totalSales,
+        purchasesBeforeVAT: purchasesBeforeVAT,
+        purchasesVAT: purchasesVAT,
+        totalPurchases: totalPurchases,
+        netVAT: netVAT
+    };
+}
+
+// Sample data functions (replace with actual database queries)
+function calculateSalesForPeriod(fromDate, toDate) {
+    // Sample sales data
+    return {
+        total: 150000.00, // Sales before VAT
+        count: 45
+    };
+}
+
+function calculatePurchasesForPeriod(fromDate, toDate) {
+    // Sample purchases data
+    return {
+        total: 80000.00, // Purchases before VAT
+        count: 28
+    };
+}
+
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('ar-SA', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(amount) + ' ريال';
+}
+
+// Load previous VAT returns
+function loadPreviousVATReturns() {
+    const tbody = document.getElementById('previous-returns-tbody');
+    tbody.innerHTML = '';
+
+    // Sample previous returns data
+    const previousReturns = [
+        {
+            period: 'Q2 2025',
+            salesVAT: 18750.00,
+            purchasesVAT: 12000.00,
+            netVAT: 6750.00,
+            status: 'submitted',
+            submissionDate: '2025-07-20',
+            id: 1
+        },
+        {
+            period: 'Q1 2025',
+            salesVAT: 15000.00,
+            purchasesVAT: 9500.00,
+            netVAT: 5500.00,
+            status: 'paid',
+            submissionDate: '2025-04-18',
+            id: 2
+        },
+        {
+            period: 'Q4 2024',
+            salesVAT: 22500.00,
+            purchasesVAT: 14000.00,
+            netVAT: 8500.00,
+            status: 'paid',
+            submissionDate: '2025-01-15',
+            id: 3
+        }
+    ];
+
+    previousReturns.forEach(returnData => {
+        const row = document.createElement('tr');
+
+        const statusText = getReturnStatusText(returnData.status);
+        const statusClass = getReturnStatusClass(returnData.status);
+
+        row.innerHTML = `
+            <td><strong>${returnData.period}</strong></td>
+            <td class="text-end">${formatCurrency(returnData.salesVAT)}</td>
+            <td class="text-end">${formatCurrency(returnData.purchasesVAT)}</td>
+            <td class="text-end"><strong>${formatCurrency(returnData.netVAT)}</strong></td>
+            <td><span class="badge bg-${statusClass}">${statusText}</span></td>
+            <td>${new Date(returnData.submissionDate).toLocaleDateString('ar-SA')}</td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-info" onclick="viewVATReturn(${returnData.id})" title="عرض">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="downloadVATReturn(${returnData.id})" title="تحميل">
+                        <i class="fas fa-download"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+
+        tbody.appendChild(row);
+    });
+}
+
+function getReturnStatusText(status) {
+    const statuses = {
+        'draft': '{% if session.get("language", "ar") == "ar" %}مسودة{% else %}Draft{% endif %}',
+        'submitted': '{% if session.get("language", "ar") == "ar" %}مقدم{% else %}Submitted{% endif %}',
+        'paid': '{% if session.get("language", "ar") == "ar" %}مدفوع{% else %}Paid{% endif %}',
+        'overdue': '{% if session.get("language", "ar") == "ar" %}متأخر{% else %}Overdue{% endif %}'
+    };
+    return statuses[status] || status;
+}
+
+function getReturnStatusClass(status) {
+    const classes = {
+        'draft': 'secondary',
+        'submitted': 'warning',
+        'paid': 'success',
+        'overdue': 'danger'
+    };
+    return classes[status] || 'secondary';
+}
+
+// Save VAT return
+function saveVATReturn() {
+    if (!window.currentVATReturn) {
+        alert('{% if session.get("language", "ar") == "ar" %}يرجى حساب الإقرار أولاً{% else %}Please calculate the return first{% endif %}');
+        return;
+    }
+
+    // Here you would save to database
+    const returnData = {
+        ...window.currentVATReturn,
+        status: 'draft',
+        submissionDate: new Date().toISOString().split('T')[0]
+    };
+
+    console.log('Saving VAT return:', returnData);
+
+    alert('{% if session.get("language", "ar") == "ar" %}تم حفظ الإقرار الضريبي بنجاح{% else %}VAT return saved successfully{% endif %}');
+
+    // Refresh previous returns
+    loadPreviousVATReturns();
+}
+
+// Export VAT return to PDF
+function exportVATReturnPDF() {
+    if (!window.currentVATReturn) {
+        alert('{% if session.get("language", "ar") == "ar" %}يرجى حساب الإقرار أولاً{% else %}Please calculate the return first{% endif %}');
+        return;
+    }
+
+    // Here you would generate PDF
+    alert('{% if session.get("language", "ar") == "ar" %}سيتم تصدير الإقرار إلى PDF{% else %}VAT return will be exported to PDF{% endif %}');
+}
+
+// Print VAT return
+function printVATReturn() {
+    if (!window.currentVATReturn) {
+        alert('{% if session.get("language", "ar") == "ar" %}يرجى حساب الإقرار أولاً{% else %}Please calculate the return first{% endif %}');
+        return;
+    }
+
+    // Create printable content
+    const printContent = generatePrintableVATReturn();
+
+    // Open print window
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.print();
+}
+
+// Generate printable VAT return
+function generatePrintableVATReturn() {
+    const returnData = window.currentVATReturn;
+
+    return `
+        <!DOCTYPE html>
+        <html dir="rtl" lang="ar">
+        <head>
+            <meta charset="UTF-8">
+            <title>إقرار ضريبة القيمة المضافة</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                .header { text-align: center; margin-bottom: 30px; }
+                .company-info { margin-bottom: 20px; }
+                .return-details { margin-bottom: 20px; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
+                th { background-color: #f2f2f2; }
+                .total-row { font-weight: bold; background-color: #f9f9f9; }
+                .net-vat { font-size: 18px; font-weight: bold; text-align: center; margin: 20px 0; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>إقرار ضريبة القيمة المضافة</h1>
+                <h2>VAT Return</h2>
+            </div>
+
+            <div class="company-info">
+                <p><strong>اسم المؤسسة:</strong> مطعم الأصالة</p>
+                <p><strong>الرقم الضريبي:</strong> 300123456789003</p>
+                <p><strong>الفترة:</strong> ${returnData.period}</p>
+                <p><strong>من:</strong> ${returnData.fromDate} <strong>إلى:</strong> ${returnData.toDate}</p>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>البيان</th>
+                        <th>المبلغ قبل الضريبة</th>
+                        <th>ضريبة القيمة المضافة (15%)</th>
+                        <th>الإجمالي</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>المبيعات</td>
+                        <td>${formatCurrency(returnData.salesBeforeVAT)}</td>
+                        <td>${formatCurrency(returnData.salesVAT)}</td>
+                        <td>${formatCurrency(returnData.totalSales)}</td>
+                    </tr>
+                    <tr>
+                        <td>المشتريات</td>
+                        <td>${formatCurrency(returnData.purchasesBeforeVAT)}</td>
+                        <td>${formatCurrency(returnData.purchasesVAT)}</td>
+                        <td>${formatCurrency(returnData.totalPurchases)}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="net-vat">
+                <p>صافي ضريبة القيمة المضافة: ${formatCurrency(Math.abs(returnData.netVAT))}</p>
+                <p>${returnData.netVAT > 0 ? 'مستحق للهيئة' : returnData.netVAT < 0 ? 'قابل للاسترداد' : 'لا يوجد ضريبة'}</p>
+            </div>
+
+            <div style="margin-top: 50px;">
+                <p>التوقيع: ________________</p>
+                <p>التاريخ: ${new Date().toLocaleDateString('ar-SA')}</p>
+            </div>
+        </body>
+        </html>
+    `;
+}
+
+// View VAT return
+function viewVATReturn(id) {
+    showToast(isRTL ? `عرض الإقرار رقم: ${id}` : `Viewing return ID: ${id}`, 'info');
+    // Here you would typically open a modal or navigate to a detailed view
+}
+
+// Download VAT return
+function downloadVATReturn(id) {
+    const btn = event.target.closest('button');
+    showLoading(btn, isRTL ? 'جاري التحميل...' : 'Downloading...');
+
+    // Simulate download
+    setTimeout(() => {
+        hideLoading(btn);
+        showToast(isRTL ? `تم تحميل الإقرار رقم: ${id}` : `Downloaded return ID: ${id}`, 'success');
+    }, 2000);
+}
+
+// Enhanced tax management functions
+function addNewTax() {
+    showToast(isRTL ? 'فتح نموذج إضافة ضريبة جديدة' : 'Opening new tax form', 'info');
+    // Here you would open a modal for adding new tax
+}
+
+function saveTaxSettings() {
+    const btn = event.target.closest('button');
+    showLoading(btn, isRTL ? 'جاري الحفظ...' : 'Saving...');
+
+    // Simulate save
+    setTimeout(() => {
+        hideLoading(btn);
+        showToast(isRTL ? 'تم حفظ إعدادات الضرائب بنجاح' : 'Tax settings saved successfully', 'success');
+    }, 1500);
+}
+
+function addTaxType() {
+    showToast(isRTL ? 'فتح نموذج إضافة نوع ضريبة جديد' : 'Opening new tax type form', 'info');
+    // Here you would open a modal for adding new tax type
+}
+
+function editTaxType(id) {
+    showToast(isRTL ? `تعديل نوع الضريبة رقم: ${id}` : `Editing tax type ID: ${id}`, 'info');
+    // Here you would open edit modal
+}
+
+function deleteTaxType(id) {
+    deleteItem(id, isRTL ? 'نوع الضريبة' : 'tax type', function() {
+        // Refresh tax types table
+        loadTaxTypes();
+    });
+}
+
+function toggleTaxType(id) {
+    showToast(isRTL ? `تم تغيير حالة نوع الضريبة رقم: ${id}` : `Toggled tax type ID: ${id}`, 'success');
+    // Here you would toggle the status
+}
+
+function generateTaxReport() {
+    const btn = event.target.closest('button');
+    showLoading(btn, isRTL ? 'جاري إنشاء التقرير...' : 'Generating report...');
+
+    setTimeout(() => {
+        hideLoading(btn);
+        showToast(isRTL ? 'تم إنشاء تقرير الضرائب بنجاح' : 'Tax report generated successfully', 'success');
+    }, 2000);
+}
+
+function saveVATReturn() {
+    const btn = event.target.closest('button');
+    showLoading(btn, isRTL ? 'جاري حفظ الإقرار...' : 'Saving return...');
+
+    setTimeout(() => {
+        hideLoading(btn);
+        showToast(isRTL ? 'تم حفظ الإقرار الضريبي بنجاح' : 'VAT return saved successfully', 'success');
+    }, 1500);
+}
+
+function exportVATReturnPDF() {
+    const btn = event.target.closest('button');
+    showLoading(btn, isRTL ? 'جاري تصدير PDF...' : 'Exporting PDF...');
+
+    setTimeout(() => {
+        hideLoading(btn);
+        showToast(isRTL ? 'تم تصدير الإقرار كـ PDF بنجاح' : 'VAT return exported as PDF successfully', 'success');
+    }, 2000);
+}
+
+function printVATReturn() {
+    showToast(isRTL ? 'جاري الطباعة...' : 'Printing...', 'info');
+    window.print();
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize search if needed
+    initializeSearch('searchTaxTypes', 'tax-types-table', [0, 1, 2]);
+
+    // Load initial data
+    calculateVATReturn();
+});
+</script>
+{% endblock %}

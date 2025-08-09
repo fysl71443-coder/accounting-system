@@ -1,0 +1,166 @@
+{
+  "timestamp": "2025-08-06T17:19:19.896513",
+  "summary": {
+    "total": 22,
+    "passed": 13,
+    "failed": 8,
+    "warnings": 1,
+    "success_rate": 59.09090909090909
+  },
+  "results": [
+    {
+      "test": "تسجيل الدخول",
+      "status": "PASS",
+      "message": "تم تسجيل الدخول بنجاح",
+      "details": "",
+      "timestamp": "17:18:49"
+    },
+    {
+      "test": "عنوان الصفحة",
+      "status": "PASS",
+      "message": "عنوان المصروفات موجود",
+      "details": "",
+      "timestamp": "17:18:51"
+    },
+    {
+      "test": "جدول المصروفات",
+      "status": "PASS",
+      "message": "جدول المصروفات موجود",
+      "details": "",
+      "timestamp": "17:18:51"
+    },
+    {
+      "test": "زر إضافة جديد",
+      "status": "PASS",
+      "message": "زر إضافة جديد موجود",
+      "details": "",
+      "timestamp": "17:18:51"
+    },
+    {
+      "test": "زر البحث",
+      "status": "PASS",
+      "message": "زر البحث موجود",
+      "details": "",
+      "timestamp": "17:18:51"
+    },
+    {
+      "test": "زر التصدير",
+      "status": "WARN",
+      "message": "زر التصدير غير موجود",
+      "details": "",
+      "timestamp": "17:18:51"
+    },
+    {
+      "test": "زر التقارير",
+      "status": "PASS",
+      "message": "زر التقارير موجود",
+      "details": "",
+      "timestamp": "17:18:51"
+    },
+    {
+      "test": "أزرار الإجراءات",
+      "status": "PASS",
+      "message": "تم العثور على 3 زر من أصل 4",
+      "details": "",
+      "timestamp": "17:18:51"
+    },
+    {
+      "test": "API /api/expenses/list",
+      "status": "FAIL",
+      "message": "جلب قائمة المصروفات - غير موجود (404)",
+      "details": "",
+      "timestamp": "17:18:53"
+    },
+    {
+      "test": "API /api/expenses/save",
+      "status": "PASS",
+      "message": "حفظ مصروف جديد - الكود: 200",
+      "details": "",
+      "timestamp": "17:18:55"
+    },
+    {
+      "test": "API /api/expenses/categories",
+      "status": "FAIL",
+      "message": "جلب فئات المصروفات - غير موجود (404)",
+      "details": "",
+      "timestamp": "17:18:57"
+    },
+    {
+      "test": "API /expenses/new",
+      "status": "FAIL",
+      "message": "صفحة إضافة مصروف جديد - غير موجود (404)",
+      "details": "",
+      "timestamp": "17:18:59"
+    },
+    {
+      "test": "إنشاء مصروف",
+      "status": "FAIL",
+      "message": "فشل الإنشاء: Error saving expenses: 415 Unsupported Media Type: Did not attempt to load JSON data because the request Content-Type was not 'application/json'.",
+      "details": "",
+      "timestamp": "17:19:01"
+    },
+    {
+      "test": "قراءة المصروفات",
+      "status": "FAIL",
+      "message": "فشل جلب المصروفات - الكود: 404",
+      "details": "",
+      "timestamp": "17:19:03"
+    },
+    {
+      "test": "زر إضافة مصروف جديد",
+      "status": "FAIL",
+      "message": "الصفحة غير موجودة",
+      "details": "",
+      "timestamp": "17:19:05"
+    },
+    {
+      "test": "زر عرض جميع المصروفات",
+      "status": "PASS",
+      "message": "يعمل بشكل صحيح",
+      "details": "",
+      "timestamp": "17:19:07"
+    },
+    {
+      "test": "زر تصدير المصروفات",
+      "status": "FAIL",
+      "message": "الصفحة غير موجودة",
+      "details": "",
+      "timestamp": "17:19:09"
+    },
+    {
+      "test": "زر التقارير",
+      "status": "FAIL",
+      "message": "الصفحة غير موجودة",
+      "details": "",
+      "timestamp": "17:19:11"
+    },
+    {
+      "test": "التحقق - بيانات فارغة",
+      "status": "PASS",
+      "message": "تم رفض البيانات مع رسالة خطأ",
+      "details": "",
+      "timestamp": "17:19:13"
+    },
+    {
+      "test": "التحقق - وصف فارغ ومبلغ صفر",
+      "status": "PASS",
+      "message": "تم رفض البيانات مع رسالة خطأ",
+      "details": "",
+      "timestamp": "17:19:15"
+    },
+    {
+      "test": "التحقق - مبلغ سالب",
+      "status": "PASS",
+      "message": "تم رفض البيانات مع رسالة خطأ",
+      "details": "",
+      "timestamp": "17:19:17"
+    },
+    {
+      "test": "التحقق - مبلغ غير رقمي",
+      "status": "PASS",
+      "message": "تم رفض البيانات مع رسالة خطأ",
+      "details": "",
+      "timestamp": "17:19:19"
+    }
+  ]
+}

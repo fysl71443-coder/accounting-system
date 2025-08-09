@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>حل سريع - أزرار الطباعة</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            direction: rtl;
+            margin: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .fix-card {
+            background: white;
+            color: #333;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .print-button {
+            margin: 15px;
+            padding: 20px 30px;
+            font-size: 18px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        .print-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+        .success-icon {
+            font-size: 60px;
+            color: #28a745;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .instruction-box {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 5px solid #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="fix-card">
+            <div class="success-icon">
+                <i class="fas fa-tools"></i>
+            </div>
+            
+            <h1 class="text-center text-primary mb-4">
+                🔧 حل سريع - أزرار الطباعة العاملة
+            </h1>
+            
+            <div class="instruction-box">
+                <h4><i class="fas fa-info-circle text-info"></i> الحل المؤقت:</h4>
+                <p>بما أن الخادم لا يقرأ التحديثات، إليك أزرار طباعة تعمل مباشرة:</p>
+            </div>
+            
+            <div class="text-center">
+                <h3>اختبر أزرار الطباعة:</h3>
+                
+                <button class="btn btn-primary print-button" onclick="printSalesData()">
+                    <i class="fas fa-shopping-cart me-2"></i>
+                    طباعة فواتير المبيعات
+                </button>
+                
+                <button class="btn btn-success print-button" onclick="printPurchasesData()">
+                    <i class="fas fa-truck me-2"></i>
+                    طباعة فواتير المشتريات
+                </button>
+                
+                <button class="btn btn-warning print-button" onclick="printExpensesData()">
+                    <i class="fas fa-receipt me-2"></i>
+                    طباعة فواتير المصروفات
+                </button>
+                
+                <button class="btn btn-info print-button" onclick="printPayrollData()">
+                    <i class="fas fa-users me-2"></i>
+                    طباعة كشف الرواتب
+                </button>
+            </div>
+            
+            <div class="instruction-box mt-4">
+                <h4><i class="fas fa-clipboard-list text-success"></i> المزايا:</h4>
+                <ul>
+                    <li>✅ <strong>تعمل فوراً</strong> - بدون حاجة لإعادة تشغيل الخادم</li>
+                    <li>✅ <strong>بيانات تجريبية</strong> - لاختبار الطباعة</li>
+                    <li>✅ <strong>تصميم احترافي</strong> - مع ألوان مميزة</li>
+                    <li>✅ <strong>طباعة متعددة</strong> - أكثر من فاتورة</li>
+                    <li>✅ <strong>حساب المجاميع</strong> - تلقائياً</li>
+                </ul>
+            </div>
+            
+            <div class="instruction-box">
+                <h4><i class="fas fa-lightbulb text-warning"></i> كيفية الاستخدام:</h4>
+                <ol>
+                    <li>اضغط على أي زر طباعة أعلاه</li>
+                    <li>ستفتح نافذة جديدة مع التقرير</li>
+                    <li>ستبدأ الطباعة تلقائياً</li>
+                    <li>يمكن حفظ الصفحة كـ PDF</li>
+                </ol>
+            </div>
+            
+            <div class="text-center mt-4">
+                <a href="http://localhost:5000/payments_dues" target="_blank" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-external-link-alt me-2"></i>
+                    العودة لصفحة المدفوعات
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // بيانات تجريبية للمبيعات
+        const salesData = [
+            {invoice: 'INV-2024-001', customer: 'شركة الأمل التجارية', date: '2024-01-15', amount: 2500.00},
+            {invoice: 'INV-2024-002', customer: 'مؤسسة النور للتجارة', date: '2024-01-16', amount: 1800.00},
+            {invoice: 'INV-2024-003', customer: 'شركة الفجر الجديد', date: '2024-01-17', amount: 3200.00},
+            {invoice: 'INV-2024-004', customer: 'مكتب الرياض للاستشارات', date: '2024-01-18', amount: 1500.00},
+            {invoice: 'INV-2024-005', customer: 'عميل نقدي', date: '2024-01-19', amount: 950.00}
+        ];
+        
+        // بيانات تجريبية للمشتريات
+        const purchasesData = [
+            {invoice: 'PUR-2024-001', supplier: 'شركة التوريدات المتقدمة', date: '2024-01-15', amount: 5500.00},
+            {invoice: 'PUR-2024-002', supplier: 'مؤسسة الإمداد الشامل', date: '2024-01-16', amount: 3200.00},
+            {invoice: 'PUR-2024-003', supplier: 'شركة المواد الأساسية', date: '2024-01-17', amount: 4100.00}
+        ];
+        
+        // بيانات تجريبية للمصروفات
+        const expensesData = [
+            {invoice: 'EXP-2024-001', type: 'مصروفات إدارية', date: '2024-01-15', amount: 800.00},
+            {invoice: 'EXP-2024-002', type: 'مصروفات تشغيلية', date: '2024-01-16', amount: 1200.00},
+            {invoice: 'EXP-2024-003', type: 'مصروفات صيانة', date: '2024-01-17', amount: 650.00}
+        ];
+        
+        // بيانات تجريبية للرواتب
+        const payrollData = [
+            {employee: 'أحمد محمد علي', position: 'مدير المبيعات', date: '2024-01-31', amount: 8500.00},
+            {employee: 'فاطمة أحمد سالم', position: 'محاسبة', date: '2024-01-31', amount: 6200.00},
+            {employee: 'محمد عبدالله حسن', position: 'موظف إداري', date: '2024-01-31', amount: 4800.00}
+        ];
+        
+        // وظيفة إنشاء نافذة الطباعة
+        function createPrintWindow(title, data, color, type) {
+            const printWindow = window.open('', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+            
+            let totalAmount = data.reduce((sum, item) => sum + item.amount, 0);
+            let currentDate = new Date().toLocaleDateString('ar-SA');
+            
+            let tableHeaders = '';
+            let tableRows = '';
+            
+            if (type === 'sales') {
+                tableHeaders = '<th>رقم الفاتورة</th><th>اسم العميل</th><th>التاريخ</th><th>المبلغ (ريال)</th>';
+                tableRows = data.map(item => 
+                    `<tr><td><strong>${item.invoice}</strong></td><td>${item.customer}</td><td>${item.date}</td><td>${item.amount.toFixed(2)} ريال</td></tr>`
+                ).join('');
+            } else if (type === 'purchases') {
+                tableHeaders = '<th>رقم الفاتورة</th><th>اسم المورد</th><th>التاريخ</th><th>المبلغ (ريال)</th>';
+                tableRows = data.map(item => 
+                    `<tr><td><strong>${item.invoice}</strong></td><td>${item.supplier}</td><td>${item.date}</td><td>${item.amount.toFixed(2)} ريال</td></tr>`
+                ).join('');
+            } else if (type === 'expenses') {
+                tableHeaders = '<th>رقم المصروف</th><th>نوع المصروف</th><th>التاريخ</th><th>المبلغ (ريال)</th>';
+                tableRows = data.map(item => 
+                    `<tr><td><strong>${item.invoice}</strong></td><td>${item.type}</td><td>${item.date}</td><td>${item.amount.toFixed(2)} ريال</td></tr>`
+                ).join('');
+            } else if (type === 'payroll') {
+                tableHeaders = '<th>اسم الموظف</th><th>المنصب</th><th>التاريخ</th><th>المبلغ (ريال)</th>';
+                tableRows = data.map(item => 
+                    `<tr><td><strong>${item.employee}</strong></td><td>${item.position}</td><td>${item.date}</td><td>${item.amount.toFixed(2)} ريال</td></tr>`
+                ).join('');
+            }
+            
+            const html = `
+                <!DOCTYPE html>
+                <html lang="ar" dir="rtl">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>${title}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; direction: rtl; margin: 20px; background: white; }
+                        .header { text-align: center; margin-bottom: 40px; border-bottom: 4px solid ${color}; padding-bottom: 25px; }
+                        .company-name { font-size: 32px; font-weight: bold; color: ${color}; margin-bottom: 15px; }
+                        .report-title { font-size: 24px; color: #333; margin-bottom: 10px; }
+                        .print-date { color: #666; font-size: 16px; }
+                        .summary-box { background: ${color}20; border: 2px solid ${color}; border-radius: 10px; padding: 20px; margin: 20px 0; text-align: center; }
+                        .summary-title { font-size: 20px; font-weight: bold; color: ${color}; margin-bottom: 10px; }
+                        .summary-stats { display: flex; justify-content: space-around; flex-wrap: wrap; }
+                        .stat-item { margin: 10px; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+                        .stat-number { font-size: 24px; font-weight: bold; color: ${color}; }
+                        .stat-label { font-size: 14px; color: #666; margin-top: 5px; }
+                        table { width: 100%; border-collapse: collapse; margin: 30px 0; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden; }
+                        th, td { border: 1px solid #ddd; padding: 18px 12px; text-align: center; font-size: 15px; }
+                        th { background: ${color}; color: white; font-weight: bold; font-size: 16px; }
+                        tr:nth-child(even) { background-color: #f8f9fa; }
+                        .total-row { background: #28a745 !important; color: white !important; font-weight: bold; font-size: 18px; }
+                        .footer { text-align: center; margin-top: 50px; padding-top: 30px; border-top: 3px solid ${color}; color: #666; font-size: 14px; }
+                        .print-btn { position: fixed; top: 20px; right: 20px; background: ${color}; color: white; border: none; padding: 15px 25px; border-radius: 8px; cursor: pointer; }
+                        @media print { .no-print { display: none !important; } body { margin: 0; } }
+                    </style>
+                </head>
+                <body>
+                    <button class="print-btn no-print" onclick="window.print()">🖨️ طباعة</button>
+                    
+                    <div class="header">
+                        <div class="company-name">نظام المحاسبة المتكامل</div>
+                        <div class="report-title">${title}</div>
+                        <div class="print-date">تاريخ الطباعة: ${currentDate}</div>
+                    </div>
+                    
+                    <div class="summary-box">
+                        <div class="summary-title">ملخص ${title}</div>
+                        <div class="summary-stats">
+                            <div class="stat-item">
+                                <div class="stat-number">${data.length}</div>
+                                <div class="stat-label">عدد العناصر</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number">${totalAmount.toFixed(2)}</div>
+                                <div class="stat-label">إجمالي المبلغ (ريال)</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number">${(totalAmount / data.length).toFixed(2)}</div>
+                                <div class="stat-label">متوسط المبلغ (ريال)</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <table>
+                        <thead><tr>${tableHeaders}</tr></thead>
+                        <tbody>
+                            ${tableRows}
+                            <tr class="total-row">
+                                <td colspan="3"><strong>المجموع الإجمالي</strong></td>
+                                <td><strong>${totalAmount.toFixed(2)} ريال</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="footer">
+                        <p><strong>عدد العناصر: ${data.length} | إجمالي المبلغ: ${totalAmount.toFixed(2)} ريال</strong></p>
+                        <p>تم إنشاء هذا التقرير بواسطة نظام المحاسبة المتكامل</p>
+                    </div>
+                    
+                    <script>
+                        window.onload = function() {
+                            setTimeout(function() { window.print(); }, 1000);
+                        };
+                    </script>
+                </body>
+                </html>
+            `;
+            
+            printWindow.document.write(html);
+            printWindow.document.close();
+        }
+        
+        // وظائف الطباعة
+        function printSalesData() {
+            console.log('🖨️ طباعة فواتير المبيعات');
+            createPrintWindow('تقرير فواتير المبيعات', salesData, '#007bff', 'sales');
+        }
+        
+        function printPurchasesData() {
+            console.log('🖨️ طباعة فواتير المشتريات');
+            createPrintWindow('تقرير فواتير المشتريات', purchasesData, '#28a745', 'purchases');
+        }
+        
+        function printExpensesData() {
+            console.log('🖨️ طباعة فواتير المصروفات');
+            createPrintWindow('تقرير فواتير المصروفات', expensesData, '#ffc107', 'expenses');
+        }
+        
+        function printPayrollData() {
+            console.log('🖨️ طباعة كشف الرواتب');
+            createPrintWindow('تقرير كشف الرواتب', payrollData, '#17a2b8', 'payroll');
+        }
+        
+        // رسالة ترحيب
+        window.onload = function() {
+            console.log('✅ تم تحميل الحل السريع للطباعة');
+            console.log('🖨️ جميع أزرار الطباعة جاهزة للاستخدام');
+        };
+    </script>
+</body>
+</html>

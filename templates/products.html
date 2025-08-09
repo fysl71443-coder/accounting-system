@@ -18,44 +18,47 @@ Product Management - Accounting System
 {% endif %}
 {% endblock %}
 
-{% block page_actions %}
-<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#productModal">
-    <i class="fas fa-plus me-1"></i>
-    {% if session.get('language', 'ar') == 'ar' %}إضافة منتج{% else %}Add Product{% endif %}
-</button>
-{% endblock %}
-
 {% block content %}
 <!-- Search and Filter -->
-<div class="row mb-3">
-    <div class="col-md-6">
-        <div class="input-group">
-            <span class="input-group-text"><i class="fas fa-search"></i></span>
-            <input type="text" class="form-control" id="searchInput" placeholder="{% if session.get('language', 'ar') == 'ar' %}البحث في المنتجات...{% else %}Search products...{% endif %}" value="{{ search }}">
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" id="searchInput" placeholder="{% if session.get('language', 'ar') == 'ar' %}البحث في المنتجات...{% else %}Search products...{% endif %}" value="{{ search }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="categoryFilter">
+                    <option value="">{% if session.get('language', 'ar') == 'ar' %}جميع الفئات{% else %}All Categories{% endif %}</option>
+                    <option value="إلكترونيات">{% if session.get('language', 'ar') == 'ar' %}إلكترونيات{% else %}Electronics{% endif %}</option>
+                    <option value="ملابس">{% if session.get('language', 'ar') == 'ar' %}ملابس{% else %}Clothing{% endif %}</option>
+                    <option value="أغذية">{% if session.get('language', 'ar') == 'ar' %}أغذية{% else %}Food{% endif %}</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="statusFilter">
+                    <option value="">{% if session.get('language', 'ar') == 'ar' %}جميع الحالات{% else %}All Status{% endif %}</option>
+                    <option value="active">{% if session.get('language', 'ar') == 'ar' %}نشط{% else %}Active{% endif %}</option>
+                    <option value="inactive">{% if session.get('language', 'ar') == 'ar' %}غير نشط{% else %}Inactive{% endif %}</option>
+                </select>
+            </div>
         </div>
-    </div>
-    <div class="col-md-3">
-        <select class="form-select" id="categoryFilter">
-            <option value="">{% if session.get('language', 'ar') == 'ar' %}جميع الفئات{% else %}All Categories{% endif %}</option>
-            <option value="إلكترونيات">{% if session.get('language', 'ar') == 'ar' %}إلكترونيات{% else %}Electronics{% endif %}</option>
-            <option value="ملابس">{% if session.get('language', 'ar') == 'ar' %}ملابس{% else %}Clothing{% endif %}</option>
-            <option value="أغذية">{% if session.get('language', 'ar') == 'ar' %}أغذية{% else %}Food{% endif %}</option>
-        </select>
-    </div>
-    <div class="col-md-3">
-        <select class="form-select" id="statusFilter">
-            <option value="">{% if session.get('language', 'ar') == 'ar' %}جميع الحالات{% else %}All Status{% endif %}</option>
-            <option value="active">{% if session.get('language', 'ar') == 'ar' %}نشط{% else %}Active{% endif %}</option>
-            <option value="inactive">{% if session.get('language', 'ar') == 'ar' %}غير نشط{% else %}Inactive{% endif %}</option>
-        </select>
     </div>
 </div>
 
 <!-- Products Table -->
 <div class="card">
-    <div class="card-body">
+    <div class="card-header">
+        <h6 class="mb-0">
+            <i class="fas fa-box me-2"></i>
+            {% if session.get('language', 'ar') == 'ar' %}قائمة المنتجات{% else %}Products List{% endif %}
+        </h6>
+    </div>
+    <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover" id="productsTable">
+            <table class="table table-hover mb-0" id="productsTable">
                 <thead>
                     <tr>
                         <th>{% if session.get('language', 'ar') == 'ar' %}الرمز{% else %}Code{% endif %}</th>
@@ -254,6 +257,10 @@ Product Management - Accounting System
 
 {% block extra_js %}
 <script>
+// Global variables for products screen
+let currentProductId = null;
+let selectedProductId = null;
+
 // Search and filter functionality
 document.getElementById('searchInput').addEventListener('input', filterTable);
 document.getElementById('categoryFilter').addEventListener('change', filterTable);
@@ -263,18 +270,18 @@ function filterTable() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     const categoryFilter = document.getElementById('categoryFilter').value;
     const statusFilter = document.getElementById('statusFilter').value;
-    
+
     const rows = document.querySelectorAll('#productsTable tbody tr');
-    
+
     rows.forEach(row => {
         const text = row.textContent.toLowerCase();
         const category = row.dataset.category;
         const status = row.dataset.status;
-        
+
         const matchesSearch = text.includes(searchTerm);
         const matchesCategory = !categoryFilter || category === categoryFilter;
         const matchesStatus = !statusFilter || status === statusFilter;
-        
+
         if (matchesSearch && matchesCategory && matchesStatus) {
             row.style.display = '';
         } else {
@@ -283,10 +290,162 @@ function filterTable() {
     });
 }
 
+// Override productsHandler functions to connect with existing form
+if (typeof productsHandler !== 'undefined') {
+    // Override SaveRecord to use the existing modal form
+    productsHandler.SaveRecord = function() {
+        console.log('🔵 Products - Save Record button clicked');
+
+        // Clear form and show modal for new product
+        clearProductForm();
+        currentProductId = null;
+
+        // Update modal title
+        document.querySelector('#productModal .modal-title').textContent =
+            '{% if session.get('language', 'ar') == 'ar' %}إضافة منتج جديد{% else %}Add New Product{% endif %}';
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('productModal'));
+        modal.show();
+    };
+
+    // Override EditRecord to use the existing modal form
+    productsHandler.EditRecord = function(recordId = null) {
+        const id = recordId || selectedProductId;
+        if (!id) {
+            showToast('{% if session.get('language', 'ar') == 'ar' %}يرجى اختيار منتج للتعديل{% else %}Please select a product to edit{% endif %}', 'warning');
+            return;
+        }
+
+        console.log('🔵 Products - Edit Record button clicked for ID:', id);
+
+        // Load product data and show modal
+        editProduct(id);
+    };
+
+    // Override DeleteRecord to use the existing delete function
+    productsHandler.DeleteRecord = function(recordId = null) {
+        const id = recordId || selectedProductId;
+        if (!id) {
+            showToast('{% if session.get('language', 'ar') == 'ar' %}يرجى اختيار منتج للحذف{% else %}Please select a product to delete{% endif %}', 'warning');
+            return;
+        }
+
+        console.log('🔵 Products - Delete Record button clicked for ID:', id);
+
+        // Use existing delete function
+        deleteProduct(id);
+    };
+
+    // Override SearchRecords to use the existing search
+    productsHandler.SearchRecords = function() {
+        console.log('🔵 Products - Search Records button clicked');
+
+        // Focus on search input
+        document.getElementById('searchInput').focus();
+
+        // Trigger search
+        filterTable();
+
+        showToast('{% if session.get('language', 'ar') == 'ar' %}استخدم حقل البحث أعلاه{% else %}Use the search field above{% endif %}', 'info');
+    };
+
+    // Override PrintRecord
+    productsHandler.PrintRecord = function(recordId = null) {
+        const id = recordId || selectedProductId;
+        if (!id) {
+            showToast('{% if session.get('language', 'ar') == 'ar' %}يرجى اختيار منتج للطباعة{% else %}Please select a product to print{% endif %}', 'warning');
+            return;
+        }
+
+        console.log('🔵 Products - Print Record button clicked for ID:', id);
+
+        // Call API for printing
+        fetch(`/api/products/print/${id}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('{% if session.get('language', 'ar') == 'ar' %}جاري إعداد الطباعة...{% else %}Preparing for print...{% endif %}', 'info');
+                // Open print URL if provided
+                if (data.print_url) {
+                    window.open(data.print_url, '_blank');
+                }
+            } else {
+                showToast(data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('{% if session.get('language', 'ar') == 'ar' %}خطأ في الطباعة{% else %}Print error{% endif %}', 'danger');
+        });
+    };
+
+    // Update getFormData to use the existing form fields
+    productsHandler.getFormData = function() {
+        return {
+            product_code: document.getElementById('productCode')?.value || '',
+            product_name: document.getElementById('productName')?.value || '',
+            description: document.getElementById('description')?.value || '',
+            unit_cost: parseFloat(document.getElementById('unitCost')?.value || 0),
+            selling_price: parseFloat(document.getElementById('sellingPrice')?.value || 0),
+            category: document.getElementById('category')?.value || '',
+            unit_type: document.getElementById('unitType')?.value || 'قطعة',
+            min_stock_level: parseInt(document.getElementById('minStock')?.value || 0),
+            current_stock: parseInt(document.getElementById('currentStock')?.value || 0),
+            is_active: document.getElementById('isActive')?.checked || true
+        };
+    };
+}
+
+// Helper function to clear the product form
+function clearProductForm() {
+    document.getElementById('productForm').reset();
+    document.getElementById('productCode').value = '';
+    document.getElementById('productName').value = '';
+    document.getElementById('description').value = '';
+    document.getElementById('unitCost').value = '0';
+    document.getElementById('sellingPrice').value = '';
+    document.getElementById('category').value = '';
+    document.getElementById('unitType').value = 'قطعة';
+    document.getElementById('minStock').value = '0';
+    document.getElementById('currentStock').value = '0';
+    document.getElementById('isActive').checked = true;
+}
+
+// Add row selection functionality
+function selectProductRow(productId) {
+    // Remove previous selection
+    document.querySelectorAll('#productsTable tbody tr').forEach(row => {
+        row.classList.remove('table-active');
+    });
+
+    // Add selection to clicked row
+    const row = document.querySelector(`button[onclick*="${productId}"]`).closest('tr');
+    if (row) {
+        row.classList.add('table-active');
+        selectedProductId = productId;
+        console.log('🔵 Product selected:', productId);
+    }
+}
+
 // Initialize page when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initializeSearch('searchInput', 'productsTable', [1, 2]); // Search in name and category columns
     loadProducts();
+
+    // Add click handlers to table rows for selection
+    document.querySelectorAll('#productsTable tbody tr').forEach(row => {
+        row.addEventListener('click', function(e) {
+            // Don't select if clicking on action buttons
+            if (!e.target.closest('.btn-group')) {
+                const editBtn = this.querySelector('button[onclick*="editProduct"]');
+                if (editBtn) {
+                    const productId = editBtn.getAttribute('onclick').match(/\d+/)[0];
+                    selectProductRow(parseInt(productId));
+                }
+            }
+        });
+    });
 });
 
 function loadProducts() {
@@ -295,51 +454,165 @@ function loadProducts() {
 }
 
 function editProduct(productId) {
-    // This would fetch product data and populate the modal
+    console.log('🔵 Products - Edit Product function called for ID:', productId);
+
+    currentProductId = productId;
+    selectedProductId = productId;
+
+    // Update modal title
+    document.querySelector('#productModal .modal-title').textContent =
+        '{% if session.get('language', 'ar') == 'ar' %}تعديل المنتج{% else %}Edit Product{% endif %}';
+
+    // Find product data from the table row
+    const row = document.querySelector(`button[onclick="editProduct(${productId})"]`).closest('tr');
+    if (row) {
+        const cells = row.querySelectorAll('td');
+
+        // Populate form with existing data
+        document.getElementById('productCode').value = cells[0].textContent.trim();
+        document.getElementById('productName').value = cells[1].textContent.trim();
+
+        // Extract category from badge
+        const categoryBadge = cells[2].querySelector('.badge');
+        if (categoryBadge) {
+            document.getElementById('category').value = categoryBadge.textContent.trim();
+        }
+
+        // Extract prices (remove currency)
+        const costText = cells[3].textContent.replace(/[^\d.]/g, '');
+        const priceText = cells[4].textContent.replace(/[^\d.]/g, '');
+
+        document.getElementById('unitCost').value = costText;
+        document.getElementById('sellingPrice').value = priceText;
+
+        // Extract stock
+        const stockBadge = cells[5].querySelector('.badge');
+        if (stockBadge) {
+            document.getElementById('currentStock').value = stockBadge.textContent.trim();
+        }
+
+        // Set active status
+        const statusBadge = cells[6].querySelector('.badge');
+        const isActive = statusBadge && statusBadge.classList.contains('bg-success');
+        document.getElementById('isActive').checked = isActive;
+    }
+
+    // Show modal
     const modal = new bootstrap.Modal(document.getElementById('productModal'));
     modal.show();
 }
 
 function deleteProduct(productId) {
-    const message = isRTL ? 'هل أنت متأكد من حذف هذا المنتج؟' : 'Are you sure you want to delete this product?';
+    console.log('🔵 Products - Delete Product function called for ID:', productId);
 
-    confirmAction(message, function() {
-        const deleteBtn = event.target.closest('button');
-        showLoading(deleteBtn);
+    const message = '{% if session.get('language', 'ar') == 'ar' %}هل أنت متأكد من حذف هذا المنتج؟{% else %}Are you sure you want to delete this product?{% endif %}';
 
-        // Simulate API call
-        setTimeout(() => {
-            hideLoading(deleteBtn);
-            showToast(isRTL ? 'تم حذف المنتج بنجاح' : 'Product deleted successfully', 'success');
-            // Remove row from table
-            deleteBtn.closest('tr').remove();
-        }, 1000);
-    });
+    if (confirm(message)) {
+        const deleteBtn = document.querySelector(`button[onclick="deleteProduct(${productId})"]`);
+        if (deleteBtn) {
+            showLoading(deleteBtn);
+        }
+
+        // Call API to delete product
+        fetch(`/api/products/delete/${productId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (deleteBtn) {
+                hideLoading(deleteBtn);
+            }
+
+            if (data.success) {
+                showToast(data.message || '{% if session.get('language', 'ar') == 'ar' %}تم حذف المنتج بنجاح{% else %}Product deleted successfully{% endif %}', 'success');
+
+                // Remove row from table
+                if (deleteBtn) {
+                    deleteBtn.closest('tr').remove();
+                }
+
+                // Clear selection if this was the selected product
+                if (selectedProductId === productId) {
+                    selectedProductId = null;
+                }
+            } else {
+                showToast(data.message || '{% if session.get('language', 'ar') == 'ar' %}خطأ في حذف المنتج{% else %}Error deleting product{% endif %}', 'danger');
+            }
+        })
+        .catch(error => {
+            if (deleteBtn) {
+                hideLoading(deleteBtn);
+            }
+            console.error('Error:', error);
+            showToast('{% if session.get('language', 'ar') == 'ar' %}خطأ في الاتصال بالخادم{% else %}Server connection error{% endif %}', 'danger');
+        });
+    }
 }
 
 function saveProduct() {
+    console.log('🔵 Products - Save Product function called');
+
     const form = document.getElementById('productForm');
 
     if (!validateForm(form)) {
-        showToast(isRTL ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill all required fields', 'warning');
+        showToast('{% if session.get('language', 'ar') == 'ar' %}يرجى ملء جميع الحقول المطلوبة{% else %}Please fill all required fields{% endif %}', 'warning');
         return;
     }
 
     const saveBtn = document.querySelector('#productModal .btn-primary');
     showLoading(saveBtn);
 
-    // Simulate API call
-    setTimeout(() => {
+    // Get form data
+    const formData = {
+        product_code: document.getElementById('productCode').value,
+        product_name: document.getElementById('productName').value,
+        description: document.getElementById('description').value,
+        unit_cost: parseFloat(document.getElementById('unitCost').value || 0),
+        selling_price: parseFloat(document.getElementById('sellingPrice').value || 0),
+        category: document.getElementById('category').value,
+        unit_type: document.getElementById('unitType').value,
+        min_stock_level: parseInt(document.getElementById('minStock').value || 0),
+        current_stock: parseInt(document.getElementById('currentStock').value || 0),
+        is_active: document.getElementById('isActive').checked
+    };
+
+    // Determine if this is an edit or new product
+    const isEdit = currentProductId !== null;
+    const url = isEdit ? `/api/products/edit/${currentProductId}` : '/api/products/save';
+    const method = isEdit ? 'PUT' : 'POST';
+
+    // Call API
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
         hideLoading(saveBtn);
-        showToast(isRTL ? 'تم حفظ المنتج بنجاح' : 'Product saved successfully', 'success');
 
-        // Close modal
-        const modal = bootstrap.Modal.getInstance(document.getElementById('productModal'));
-        modal.hide();
+        if (data.success) {
+            showToast(data.message || '{% if session.get('language', 'ar') == 'ar' %}تم حفظ المنتج بنجاح{% else %}Product saved successfully{% endif %}', 'success');
 
-        // Reload products
-        loadProducts();
-    }, 1000);
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('productModal'));
+            modal.hide();
+
+            // Reload page to show updated data
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            showToast(data.message || '{% if session.get('language', 'ar') == 'ar' %}خطأ في حفظ المنتج{% else %}Error saving product{% endif %}', 'danger');
+        }
+    })
+    .catch(error => {
+        hideLoading(saveBtn);
+        console.error('Error:', error);
+        showToast('{% if session.get('language', 'ar') == 'ar' %}خطأ في الاتصال بالخادم{% else %}Server connection error{% endif %}', 'danger');
+    });
 }
 
 function exportProducts() {
@@ -354,5 +627,74 @@ document.getElementById('productModal')?.addEventListener('hidden.bs.modal', fun
     clearFormValidation(form);
     document.getElementById('productId').value = '';
 });
+
+// Refresh data
+function refreshData() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري التحديث...' : 'Refreshing...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast(isRTL ? 'تم تحديث البيانات بنجاح' : 'Data refreshed successfully', 'success');
+    }, 1500);
+}
+
+// Generate report
+function generateReport() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري الإنشاء...' : 'Generating...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast(isRTL ? 'تم إنشاء تقرير المنتجات بنجاح' : 'Products report generated successfully', 'success');
+    }, 1500);
+}
+
+// Export data
+function exportData() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري التصدير...' : 'Exporting...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast(isRTL ? 'تم تصدير البيانات بنجاح' : 'Data exported successfully', 'success');
+    }, 1500);
+}
+
+// Save all data
+function saveAllData() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري الحفظ...' : 'Saving...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast(isRTL ? 'تم حفظ جميع البيانات بنجاح' : 'All data saved successfully', 'success');
+    }, 1500);
+}
+
+// Print report
+function printReport() {
+    showToast(isRTL ? 'جاري إعداد التقرير للطباعة...' : 'Preparing report for printing...', 'info');
+    setTimeout(() => {
+        window.print();
+    }, 1000);
+}
+
+// Delete selected
+function deleteSelected() {
+    showToast(isRTL ? 'يرجى اختيار منتج واحد على الأقل' : 'Please select at least one product', 'warning');
+}
 </script>
 {% endblock %}

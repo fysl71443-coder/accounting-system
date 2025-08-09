@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="{{ session.get('language', 'ar') }}" dir="{{ 'rtl' if session.get('language', 'ar') == 'ar' else 'ltr' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if session.get('language', 'ar') == 'ar' %}تسجيل الدخول - نظام المحاسبة{% else %}Login - Accounting System{% endif %}</title>
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Unified Design System -->
+    <link href="{{ url_for('static', filename='css/unified-design.css') }}" rel="stylesheet">
+</head>
+<body style="background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center;">
+    
+    <div class="card" style="width: 100%; max-width: 400px; margin: 20px;">
+        <div class="card-body" style="padding: 48px;">
+            <!-- الشعار والعنوان -->
+            <div style="text-align: center; margin-bottom: 32px;">
+                <div style="width: 80px; height: 80px; background: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                    <i class="fas fa-calculator" style="color: white; font-size: 32px;"></i>
+                </div>
+                <h1 style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--gray-900); margin-bottom: 8px;">
+                    {% if session.get('language', 'ar') == 'ar' %}نظام المحاسبة المتكامل{% else %}Integrated Accounting System{% endif %}
+                </h1>
+                <p style="color: var(--gray-600); font-size: var(--font-size-base);">
+                    {% if session.get('language', 'ar') == 'ar' %}سجل الدخول للوصول إلى حسابك{% else %}Sign in to access your account{% endif %}
+                </p>
+            </div>
+
+            <!-- نموذج تسجيل الدخول -->
+            <form method="POST" action="{{ url_for('login') }}">
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-user nav-icon"></i>
+                        {% if session.get('language', 'ar') == 'ar' %}اسم المستخدم{% else %}Username{% endif %}
+                    </label>
+                    <input type="text" name="username" class="form-control" required 
+                           placeholder="{% if session.get('language', 'ar') == 'ar' %}أدخل اسم المستخدم{% else %}Enter username{% endif %}">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-lock nav-icon"></i>
+                        {% if session.get('language', 'ar') == 'ar' %}كلمة المرور{% else %}Password{% endif %}
+                    </label>
+                    <input type="password" name="password" class="form-control" required 
+                           placeholder="{% if session.get('language', 'ar') == 'ar' %}أدخل كلمة المرور{% else %}Enter password{% endif %}">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-language nav-icon"></i>
+                        {% if session.get('language', 'ar') == 'ar' %}اللغة{% else %}Language{% endif %}
+                    </label>
+                    <select name="language" class="form-control">
+                        <option value="ar" {{ 'selected' if session.get('language', 'ar') == 'ar' else '' }}>العربية</option>
+                        <option value="en" {{ 'selected' if session.get('language', 'ar') == 'en' else '' }}>English</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-full btn-lg" style="margin-top: 24px;">
+                    <i class="fas fa-sign-in-alt nav-icon"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}تسجيل الدخول{% else %}Sign In{% endif %}
+                </button>
+            </form>
+
+            <!-- معلومات تجريبية -->
+            <div style="margin-top: 32px; padding: 16px; background: var(--gray-50); border-radius: var(--border-radius); text-align: center;">
+                <p style="color: var(--gray-600); font-size: var(--font-size-sm); margin-bottom: 8px;">
+                    {% if session.get('language', 'ar') == 'ar' %}بيانات تجريبية:{% else %}Demo credentials:{% endif %}
+                </p>
+                <p style="color: var(--gray-700); font-size: var(--font-size-sm); font-weight: 500; margin: 0;">
+                    admin / admin123
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- رسائل التنبيه -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'error' if category == 'error' else category }}" style="margin-bottom: 8px;">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <script>
+        // إخفاء التنبيهات تلقائياً
+        setTimeout(() => {
+            document.querySelectorAll('.alert').forEach(alert => {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 300);
+            });
+        }, 3000);
+    </script>
+</body>
+</html>

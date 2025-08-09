@@ -1,0 +1,377 @@
+{% extends "base_unified.html" %}
+
+{% block title %}
+{% if session.get('language', 'ar') == 'ar' %}
+الموظفين - نظام المحاسبة
+{% else %}
+Employees - Accounting System
+{% endif %}
+{% endblock %}
+
+{% block page_icon %}<i class="fas fa-users"></i>{% endblock %}
+
+{% block page_title %}
+{% if session.get('language', 'ar') == 'ar' %}إدارة الموظفين{% else %}Employees Management{% endif %}
+{% endblock %}
+
+{% block content %}
+
+<!-- Action Buttons -->
+<div class="card mb-4">
+    <div class="card-body">
+        <button type="button" class="btn btn-success btn-sm" onclick="location.href='/employees/new'" title="إضافة موظف جديد">
+            <i class="fas fa-plus me-1"></i>
+            ➕ إضافة موظف
+        </button>
+        <button type="button" class="btn btn-danger btn-sm" onclick="deleteSelectedEmployees()" title="حذف الموظفين المحددين">
+            <i class="fas fa-trash me-1"></i>
+            🗑 حذف المحدد
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="window.print()" title="طباعة قائمة الموظفين">
+            <i class="fas fa-print me-1"></i>
+            🖨 طباعة القائمة
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="location.href='/payroll'" title="الرواتب">
+            <i class="fas fa-money-bill-wave me-1"></i>
+            💵 الرواتب
+        </button>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}إجمالي الموظفين{% else %}Total Employees{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-primary" id="total-employees">{{ employees|length if employees else 0 }}</h4>
+                    </div>
+                    <div class="text-primary opacity-75">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}موظفين نشطين{% else %}Active Employees{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-success" id="active-employees">{{ employees|selectattr('is_active')|list|length if employees else 0 }}</h4>
+                    </div>
+                    <div class="text-success opacity-75">
+                        <i class="fas fa-user-check fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}إجمالي الرواتب{% else %}Total Salaries{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-warning" id="total-salaries">0.00 ريال</h4>
+                    </div>
+                    <div class="text-warning opacity-75">
+                        <i class="fas fa-chart-line fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}رواتب مستحقة{% else %}Pending Salaries{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-danger" id="pending-salaries">0.00 ريال</h4>
+                    </div>
+                    <div class="text-danger opacity-75">
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Employees Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">
+            <i class="fas fa-table me-2"></i>
+            {% if session.get('language', 'ar') == 'ar' %}قائمة الموظفين{% else %}Employees List{% endif %}
+        </h6>
+        <input type="text" class="form-control form-control-sm" style="width: 250px;" placeholder="{% if session.get('language', 'ar') == 'ar' %}البحث في الموظفين...{% else %}Search employees...{% endif %}">
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>
+                            <input type="checkbox" class="form-check-input" id="select-all" onchange="toggleSelectAll()">
+                        </th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}اسم الموظف{% else %}Employee Name{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}المنصب{% else %}Position{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الهاتف{% else %}Phone{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}البريد الإلكتروني{% else %}Email{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الراتب{% else %}Salary{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الحالة{% else %}Status{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الإجراءات{% else %}Actions{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if employees %}
+                        {% for employee in employees %}
+                        <tr>
+                            <td><input type="checkbox" class="form-check-input employee-checkbox" data-id="{{ employee.id }}"></td>
+                            <td><strong>{{ employee.name }}</strong></td>
+                            <td>{{ employee.position or '-' }}</td>
+                            <td>{{ employee.phone or '-' }}</td>
+                            <td>{{ employee.email or '-' }}</td>
+                            <td>{{ "%.2f"|format(employee.salary) }} ريال</td>
+                            <td>
+                                {% if employee.is_active %}
+                                    <span class="badge bg-success">نشط</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">غير نشط</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="alert('عرض الموظف: {{ employee.name }}')" title="عرض الموظف">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-warning btn-sm" onclick="alert('تعديل الموظف: {{ employee.name }}')" title="تعديل الموظف">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="location.href='/payroll/new?employee={{ employee.id }}'" title="إنشاء راتب">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-danger btn-sm" onclick="if(confirm('هل تريد حذف هذا الموظف؟')) alert('تم حذف الموظف: {{ employee.name }}')" title="حذف الموظف">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted">
+                                {% if session.get('language', 'ar') == 'ar' %}لا يوجد موظفين مسجلين{% else %}No employees registered{% endif %}
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal إضافة موظف جديد -->
+<div class="modal fade" id="newEmployeeModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-plus me-2"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}إضافة موظف جديد{% else %}Add New Employee{% endif %}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newEmployeeForm" class="employees-form" data-auto-save="/api/employees/create" data-method="POST">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}اسم الموظف{% else %}Employee Name{% endif %} *
+                            </label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}المنصب{% else %}Position{% endif %} *
+                            </label>
+                            <input type="text" class="form-control" name="position" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}الراتب{% else %}Salary{% endif %} *
+                            </label>
+                            <input type="number" class="form-control" name="salary" step="0.01" min="0" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}تاريخ التوظيف{% else %}Hire Date{% endif %} *
+                            </label>
+                            <input type="date" class="form-control" name="hire_date" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}رقم الهاتف{% else %}Phone Number{% endif %}
+                            </label>
+                            <input type="tel" class="form-control" name="phone">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}البريد الإلكتروني{% else %}Email{% endif %}
+                            </label>
+                            <input type="email" class="form-control" name="email">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {% if session.get('language', 'ar') == 'ar' %}إلغاء{% else %}Cancel{% endif %}
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveNewEmployee()">
+                    <i class="fas fa-save me-2"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}حفظ{% else %}Save{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// نظام الإشعارات للموظفين
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info'} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 3000);
+}
+
+// حفظ موظف جديد
+function saveNewEmployee() {
+    const form = document.getElementById('newEmployeeForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    const formData = new FormData(form);
+    const employeeData = Object.fromEntries(formData.entries());
+
+    // مؤشر التحميل
+    const submitBtn = event.target;
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'جاري الحفظ...';
+    submitBtn.disabled = true;
+
+    fetch('/api/employees/create', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(employeeData)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('تم حفظ الموظف بنجاح', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('newEmployeeModal')).hide();
+            form.reset();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification('خطأ: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('حدث خطأ أثناء حفظ الموظف', 'error');
+    })
+    .finally(() => {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+    });
+}
+
+// Toggle select all checkboxes
+function toggleSelectAll() {
+    const selectAll = document.getElementById('select-all');
+    const checkboxes = document.querySelectorAll('.employee-checkbox');
+
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+}
+
+// Delete selected employees
+function deleteSelectedEmployees() {
+    const selected = document.querySelectorAll('.employee-checkbox:checked');
+    if (selected.length === 0) {
+        showNotification('يرجى تحديد موظف واحد على الأقل للحذف', 'warning');
+        return;
+    }
+
+    // حذف مباشر بدون تأكيد
+    const employeeIds = Array.from(selected).map(cb => cb.dataset.id);
+
+    Promise.all(employeeIds.map(id =>
+        fetch(`/api/employees/delete/${id}`, { method: 'DELETE' })
+    )).then(() => {
+        showNotification(`تم حذف ${selected.length} موظف بنجاح`, 'success');
+        setTimeout(() => location.reload(), 1000);
+    }).catch(error => {
+        showNotification('حدث خطأ أثناء الحذف', 'error');
+    });
+}
+
+// إضافة زر إضافة موظف عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    const cardHeader = document.querySelector('.card-header');
+    if (cardHeader && !document.getElementById('add-employee-btn')) {
+        const addButton = document.createElement('button');
+        addButton.id = 'add-employee-btn';
+        addButton.className = 'btn btn-primary btn-sm';
+        addButton.innerHTML = '<i class="fas fa-plus me-2"></i>إضافة موظف';
+        addButton.onclick = () => {
+            const modal = new bootstrap.Modal(document.getElementById('newEmployeeModal'));
+            modal.show();
+        };
+
+        cardHeader.appendChild(addButton);
+    }
+});
+</script>
+{% endblock %}

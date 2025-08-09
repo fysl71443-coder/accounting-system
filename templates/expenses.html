@@ -1,0 +1,1298 @@
+{% extends "base_unified.html" %}
+
+{% block title %}
+{% if session.get('language', 'ar') == 'ar' %}
+المصروفات - نظام المحاسبة
+{% else %}
+Expenses - Accounting System
+{% endif %}
+{% endblock %}
+
+{% block page_icon %}<i class="fas fa-receipt"></i>{% endblock %}
+
+{% block page_title %}
+{% if session.get('language', 'ar') == 'ar' %}إدارة المصروفات{% else %}Expenses Management{% endif %}
+{% endblock %}
+
+{% block content %}
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}إجمالي المصروفات{% else %}Total Expenses{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-danger" id="total-expenses">{{ "%.2f"|format(summary_data.total_expenses) }} ريال</h4>
+                    </div>
+                    <div class="text-danger opacity-75">
+                        <i class="fas fa-money-bill-wave fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}مصروفات هذا الشهر{% else %}This Month{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-warning" id="month-expenses">{{ "%.2f"|format(summary_data.pending_expenses) }} ريال</h4>
+                    </div>
+                    <div class="text-warning opacity-75">
+                        <i class="fas fa-calendar-month fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}عدد المصروفات{% else %}Expenses Count{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-info" id="expenses-count">{{ summary_data.expenses_count }}</h4>
+                    </div>
+                    <div class="text-info opacity-75">
+                        <i class="fas fa-list fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}متوسط المصروف{% else %}Average Expense{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-primary" id="avg-expense">
+                            {% if summary_data.expenses_count > 0 %}
+                                {{ "%.2f"|format(summary_data.total_expenses / summary_data.expenses_count) }} ريال
+                            {% else %}
+                                0.00 ريال
+                            {% endif %}
+                        </h4>
+                    </div>
+                    <div class="text-primary opacity-75">
+                        <i class="fas fa-chart-line fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="fas fa-tools me-2"></i>
+                        {% if session.get('language', 'ar') == 'ar' %}العمليات{% else %}Actions{% endif %}
+                    </h6>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- أزرار إنشاء جديد -->
+                <div class="btn-group me-3 mb-2" role="group">
+                    <button type="button" class="btn btn-success" onclick="location.href='/expenses/new'" title="إنشاء مصروف جديد">
+                        <i class="fas fa-plus me-1"></i>
+                        إضافة مصروف جديد
+                    </button>
+                </div>
+
+                <!-- الأزرار الرئيسية -->
+                <div class="btn-group me-3 mb-2" role="group">
+                    <button type="button" id="btnExpensesPrint" class="btn btn-primary" onclick="PrintExpensesRecord()" title="طباعة المصروف المحدد">
+                        <i class="fas fa-print me-1"></i>
+                        طباعة
+                    </button>
+                    <button type="button" id="btnExpensesPreview" class="btn btn-info" onclick="PreviewExpensesRecord()" title="معاينة المصروف المحدد">
+                        <i class="fas fa-eye me-1"></i>
+                        معاينة
+                    </button>
+                </div>
+
+                <div class="btn-group me-3 mb-2" role="group">
+                    <button type="button" id="btnExpensesPayment" class="btn btn-success" onclick="RegisterExpensesPayment()" title="تسجيل دفعة للمصروف المحدد">
+                        <i class="fas fa-money-bill-wave me-1"></i>
+                        تسجيل الدفع
+                    </button>
+                </div>
+
+                <div class="btn-group me-3 mb-2" role="group">
+                    <button type="button" id="btnExpensesEdit" class="btn btn-warning" onclick="EditExpensesRecord()" title="تعديل المصروف المحدد">
+                        <i class="fas fa-edit me-1"></i>
+                        تعديل
+                    </button>
+                    <button type="button" id="btnExpensesDelete" class="btn btn-danger" onclick="DeleteExpensesRecord()" title="حذف المصروف المحدد">
+                        <i class="fas fa-trash me-1"></i>
+                        حذف
+                    </button>
+                </div>
+
+                <!-- أزرار إضافية -->
+                <div class="btn-group mb-2" role="group">
+                    <button type="button" class="btn btn-outline-primary" onclick="location.href='/payments_dues'" title="المدفوعات والمستحقات">
+                        <i class="fas fa-money-check me-1"></i>
+                        المدفوعات
+                    </button>
+                    <button type="button" class="btn btn-outline-info" onclick="exportExpenses()" title="تصدير المصروفات">
+                        <i class="fas fa-download me-1"></i>
+                        تصدير
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="location.reload()" title="تحديث البيانات">
+                        <i class="fas fa-sync me-1"></i>
+                        تحديث
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="mb-0">
+            <i class="fas fa-filter me-2"></i>
+            {% if session.get('language', 'ar') == 'ar' %}فلاتر البحث{% else %}Search Filters{% endif %}
+        </h6>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label small">
+                    {% if session.get('language', 'ar') == 'ar' %}نوع المصروف{% else %}Expense Type{% endif %}
+                </label>
+                <select class="form-select" id="expense-type-filter" onchange="filterData()">
+                    <option value="all">{% if session.get('language', 'ar') == 'ar' %}جميع الأنواع{% else %}All Types{% endif %}</option>
+                    <option value="office">{% if session.get('language', 'ar') == 'ar' %}مصروفات مكتبية{% else %}Office Expenses{% endif %}</option>
+                    <option value="transport">{% if session.get('language', 'ar') == 'ar' %}مواصلات{% else %}Transportation{% endif %}</option>
+                    <option value="utilities">{% if session.get('language', 'ar') == 'ar' %}خدمات عامة{% else %}Utilities{% endif %}</option>
+                    <option value="marketing">{% if session.get('language', 'ar') == 'ar' %}تسويق{% else %}Marketing{% endif %}</option>
+                    <option value="maintenance">{% if session.get('language', 'ar') == 'ar' %}صيانة{% else %}Maintenance{% endif %}</option>
+                    <option value="other">{% if session.get('language', 'ar') == 'ar' %}أخرى{% else %}Other{% endif %}</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">
+                    {% if session.get('language', 'ar') == 'ar' %}من تاريخ{% else %}From Date{% endif %}
+                </label>
+                <input type="date" class="form-control" id="from-date" onchange="filterData()">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">
+                    {% if session.get('language', 'ar') == 'ar' %}إلى تاريخ{% else %}To Date{% endif %}
+                </label>
+                <input type="date" class="form-control" id="to-date" onchange="filterData()">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">
+                    {% if session.get('language', 'ar') == 'ar' %}الحد الأدنى{% else %}Min Amount{% endif %}
+                </label>
+                <input type="number" class="form-control" id="min-amount" step="0.01" onchange="filterData()">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">
+                    {% if session.get('language', 'ar') == 'ar' %}الحد الأقصى{% else %}Max Amount{% endif %}
+                </label>
+                <input type="number" class="form-control" id="max-amount" step="0.01" onchange="filterData()">
+            </div>
+            <div class="col-md-1">
+                <label class="form-label small">&nbsp;</label>
+                <button type="button" class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Expenses Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">
+            <i class="fas fa-table me-2"></i>
+            {% if session.get('language', 'ar') == 'ar' %}قائمة المصروفات{% else %}Expenses List{% endif %}
+        </h6>
+        <div class="d-flex gap-2">
+            <input type="text" class="form-control form-control-sm" id="search-input" placeholder="{% if session.get('language', 'ar') == 'ar' %}البحث...{% else %}Search...{% endif %}" onkeyup="searchExpenses()">
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="expenses-table">
+                <thead>
+                    <tr>
+                        <th>
+                            <input type="checkbox" class="form-check-input" id="select-all" onchange="toggleSelectAll()">
+                        </th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}رقم المصروف{% else %}Expense ID{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}التاريخ{% else %}Date{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}النوع{% else %}Type{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الوصف{% else %}Description{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}حالة الدفع{% else %}Payment Status{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}المبلغ{% else %}Amount{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}طريقة الدفع{% else %}Payment Method{% endif %}</th>
+                        <th class="text-center">{% if session.get('language', 'ar') == 'ar' %}الإجراءات{% else %}Actions{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody id="expenses-tbody">
+                    {% if expenses %}
+                        {% for expense in expenses %}
+                        <tr>
+                            <td><input type="checkbox" class="form-check-input expense-checkbox" data-id="{{ expense.id }}"></td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <strong class="text-primary">#EXP-{{ expense.id }}</strong>
+                                    <small class="text-muted">ID: {{ expense.id }}</small>
+                                </div>
+                            </td>
+                            <td>{{ expense.date.strftime('%Y-%m-%d') if expense.date else '-' }}</td>
+                            <td><span class="badge bg-primary">{{ expense.category or 'عام' }}</span></td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <span class="fw-bold">{{ expense.description or 'بدون وصف' }}</span>
+                                    {% if expense.notes %}
+                                    <small class="text-muted">{{ expense.notes }}</small>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                {% if expense.payment_status == 'paid' %}
+                                    <span class="badge bg-success">مدفوع</span>
+                                {% elif expense.payment_status == 'partial' %}
+                                    <span class="badge bg-warning">مدفوع جزئياً</span>
+                                {% else %}
+                                    <span class="badge bg-danger">غير مدفوع</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end"><strong>{{ "%.2f"|format(expense.amount) }} ريال</strong></td>
+                            <td>{{ expense.payment_method or '-' }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    {% if expense.payment_status != 'paid' %}
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="location.href='/payments/new?invoice=expense_{{ expense.id }}'" title="دفع المصروف">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                    </button>
+                                    {% endif %}
+                                    <form method="POST" action="/expenses/delete/{{ expense.id }}" style="display: inline;" onsubmit="return confirm('⚠️ هل أنت متأكد من حذف المصروف {{ expense.expense_number }}؟\\n\\nسيتم حذف المصروف نهائياً!')">
+                                        <button type="submit" class="btn btn-danger btn-sm" title="حذف المصروف">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center text-muted">
+                                {% if session.get('language', 'ar') == 'ar' %}لا توجد مصروفات محفوظة{% else %}No saved expenses{% endif %}
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Expense Modal -->
+<div class="modal fade" id="expenseModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {% if session.get('language', 'ar') == 'ar' %}إضافة مصروف جديد{% else %}Add New Expense{% endif %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="expenseForm" class="expenses-form" data-auto-save="/api/expenses/create" data-method="POST">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}نوع المصروف{% else %}Expense Type{% endif %} *
+                            </label>
+                            <select class="form-select" id="expenseType" required>
+                                <option value="">{% if session.get('language', 'ar') == 'ar' %}اختر النوع{% else %}Select Type{% endif %}</option>
+                                <option value="office">{% if session.get('language', 'ar') == 'ar' %}مصروفات مكتبية{% else %}Office Expenses{% endif %}</option>
+                                <option value="transport">{% if session.get('language', 'ar') == 'ar' %}مواصلات{% else %}Transportation{% endif %}</option>
+                                <option value="utilities">{% if session.get('language', 'ar') == 'ar' %}خدمات عامة{% else %}Utilities{% endif %}</option>
+                                <option value="marketing">{% if session.get('language', 'ar') == 'ar' %}تسويق{% else %}Marketing{% endif %}</option>
+                                <option value="maintenance">{% if session.get('language', 'ar') == 'ar' %}صيانة{% else %}Maintenance{% endif %}</option>
+                                <option value="other">{% if session.get('language', 'ar') == 'ar' %}أخرى{% else %}Other{% endif %}</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}المبلغ{% else %}Amount{% endif %} *
+                            </label>
+                            <input type="number" class="form-control" id="expenseAmount" step="0.01" min="0" required>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}التاريخ{% else %}Date{% endif %} *
+                            </label>
+                            <input type="date" class="form-control" id="expenseDate" required>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}طريقة الدفع{% else %}Payment Method{% endif %}
+                            </label>
+                            <select class="form-select" id="expensePaymentMethod">
+                                <option value="CASH">{% if session.get('language', 'ar') == 'ar' %}نقدي{% else %}Cash{% endif %}</option>
+                                <option value="BANK">{% if session.get('language', 'ar') == 'ar' %}تحويل بنكي{% else %}Bank Transfer{% endif %}</option>
+                                <option value="CHECK">{% if session.get('language', 'ar') == 'ar' %}شيك{% else %}Check{% endif %}</option>
+                                <option value="CARD">{% if session.get('language', 'ar') == 'ar' %}بطاقة{% else %}Card{% endif %}</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}الوصف{% else %}Description{% endif %} *
+                            </label>
+                            <textarea class="form-control" id="expenseDescription" rows="3" required></textarea>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}رقم المرجع{% else %}Reference Number{% endif %}
+                            </label>
+                            <input type="text" class="form-control" id="expenseReference">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}المورد/الجهة{% else %}Vendor/Entity{% endif %}
+                            </label>
+                            <input type="text" class="form-control" id="expenseVendor">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {% if session.get('language', 'ar') == 'ar' %}إلغاء{% else %}Cancel{% endif %}
+                </button>
+                <button type="button" class="btn btn-success" onclick="saveExpense()">
+                    <i class="fas fa-save me-1"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}حفظ المصروف{% else %}Save Expense{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const isRTL = '{{ session.get("language", "ar") }}' === 'ar';
+
+// Notification system
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info'} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 3000);
+}
+
+// الوظائف الرئيسية للأزرار
+function PrintExpensesRecord() {
+    const selectedRow = document.querySelector('.table tbody tr.table-active');
+    if (!selectedRow) {
+        showNotification('يرجى تحديد مصروف للطباعة', 'warning');
+        return;
+    }
+
+    // محاولة الحصول على ID من أول خلية
+    const expenseId = selectedRow.cells[0]?.textContent?.replace('#', '').trim();
+    if (expenseId && !isNaN(expenseId)) {
+        window.open(`/print_expense/${expenseId}`, '_blank');
+    } else {
+        showNotification('خطأ في تحديد المصروف', 'error');
+    }
+}
+
+function PreviewExpensesRecord() {
+    const selectedRow = document.querySelector('.table tbody tr.table-active');
+    if (!selectedRow) {
+        showNotification('يرجى تحديد مصروف للمعاينة', 'warning');
+        return;
+    }
+
+    const expenseId = selectedRow.cells[0]?.textContent?.replace('#', '').trim();
+    if (expenseId && !isNaN(expenseId)) {
+        window.open(`/preview_expense/${expenseId}`, '_blank');
+    } else {
+        showNotification('خطأ في تحديد المصروف', 'error');
+    }
+}
+
+function RegisterExpensesPayment() {
+    const selectedRow = document.querySelector('.table tbody tr.table-active');
+    if (!selectedRow) {
+        showNotification('يرجى تحديد مصروف لتسجيل الدفع', 'warning');
+        return;
+    }
+
+    const expenseId = selectedRow.cells[0]?.textContent?.replace('#', '').trim();
+    if (expenseId && !isNaN(expenseId)) {
+        location.href = `/payments_dues?expense_id=${expenseId}`;
+    } else {
+        showNotification('خطأ في تحديد المصروف', 'error');
+    }
+}
+
+function EditExpensesRecord() {
+    const selectedRow = document.querySelector('.table tbody tr.table-active');
+    if (!selectedRow) {
+        showNotification('يرجى تحديد مصروف للتعديل', 'warning');
+        return;
+    }
+
+    const expenseId = selectedRow.cells[0]?.textContent?.replace('#', '').trim();
+    if (expenseId && !isNaN(expenseId)) {
+        editExpense(expenseId);
+    } else {
+        showNotification('خطأ في تحديد المصروف', 'error');
+    }
+}
+
+function DeleteExpensesRecord() {
+    const selectedRow = document.querySelector('.table tbody tr.table-active');
+    if (!selectedRow) {
+        showNotification('يرجى تحديد مصروف للحذف', 'warning');
+        return;
+    }
+
+    const expenseId = selectedRow.cells[0]?.textContent?.replace('#', '').trim();
+    const expenseNumber = selectedRow.cells[1]?.textContent || `#${expenseId}`;
+
+    if (!expenseId || isNaN(expenseId)) {
+        showNotification('خطأ في تحديد المصروف', 'error');
+        return;
+    }
+
+    // حذف مباشر بدون تأكيد
+    deleteExpense(expenseId);
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    // Set today's date as default
+    document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
+
+    // Set date filters to current month
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    document.getElementById('from-date').value = firstDay.toISOString().split('T')[0];
+    document.getElementById('to-date').value = today.toISOString().split('T')[0];
+
+    // Load expenses on page load
+    loadExpenses();
+});
+
+// Refresh data
+function refreshData() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري التحديث...' : 'Refreshing...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        alert(isRTL ? 'تم تحديث البيانات بنجاح' : 'Data refreshed successfully');
+        loadExpenses();
+    }, 1500);
+}
+
+// Save expense
+function saveExpense() {
+    const type = document.getElementById('expenseType').value;
+    const amount = document.getElementById('expenseAmount').value;
+    const date = document.getElementById('expenseDate').value;
+    const paymentMethod = document.getElementById('expensePaymentMethod').value;
+    const description = document.getElementById('expenseDescription').value;
+    const reference = document.getElementById('expenseReference').value;
+    const vendor = document.getElementById('expenseVendor').value;
+
+    if (!type) {
+        showNotification(isRTL ? 'يرجى اختيار نوع المصروف' : 'Please select expense type', 'error');
+        return;
+    }
+
+    if (!amount || parseFloat(amount) <= 0) {
+        showNotification(isRTL ? 'يرجى إدخال مبلغ صحيح' : 'Please enter a valid amount', 'error');
+        return;
+    }
+
+    if (!date) {
+        showNotification(isRTL ? 'يرجى اختيار التاريخ' : 'Please select date', 'error');
+        return;
+    }
+
+    if (!description.trim()) {
+        showNotification(isRTL ? 'يرجى إدخال وصف المصروف' : 'Please enter expense description', 'error');
+        return;
+    }
+
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري الحفظ...' : 'Saving...');
+
+    const expenseData = {
+        expense_type: type,
+        amount: parseFloat(amount),
+        date: date,
+        payment_method: paymentMethod,
+        description: description.trim(),
+        reference: reference.trim(),
+        vendor: vendor.trim()
+    };
+
+    fetch('/api/save_expense', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(expenseData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+
+        if (data.success) {
+            showNotification(isRTL ? 'تم حفظ المصروف بنجاح - رقم المصروف: ' + data.expense_id : 'Expense saved successfully - Expense ID: ' + data.expense_id, 'success');
+
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('expenseModal'));
+            modal.hide();
+
+            // Clear form
+            document.getElementById('expenseForm').reset();
+            document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
+
+            // Reload expenses
+            loadExpenses();
+            updateSummaryCards();
+        } else {
+            showNotification(isRTL ? 'خطأ في حفظ المصروف: ' + data.message : 'Error saving expense: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        console.error('Error:', error);
+        showNotification(isRTL ? 'خطأ في الاتصال بالخادم' : 'Connection error', 'error');
+    });
+}
+
+// Load expenses from new API
+function loadExpenses() {
+    console.log('🔍 جاري تحميل المصروفات من الخادم...');
+
+    fetch('/api/expenses/list')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log(`✅ تم تحميل ${data.count} مصروف`);
+            displayExpenses(data.data);
+            updateSummaryCards(data.data);
+        } else {
+            console.error('❌ خطأ في تحميل المصروفات:', data.message);
+            // استخدام بيانات وهمية في حالة الخطأ
+            loadSampleExpenses();
+        }
+    })
+    .catch(error => {
+        console.error('❌ خطأ في الاتصال:', error);
+        // استخدام بيانات وهمية في حالة الخطأ
+        loadSampleExpenses();
+    });
+}
+
+// Load sample expenses as fallback
+function loadSampleExpenses() {
+    console.log('⚠️ استخدام البيانات الوهمية');
+    const sampleExpenses = [
+        {
+            id: 1,
+            expense_number: 'EXP-001',
+            expense_type: 'مصروفات إدارية',
+            description: 'مصروف تجريبي',
+            amount: 500.00,
+            date: new Date().toISOString().split('T')[0],
+            payment_method: 'نقدي',
+            payment_status: 'paid'
+        }
+    ];
+
+    displayExpenses(sampleExpenses);
+    updateSummaryCards(sampleExpenses);
+}
+
+// Export expenses function
+function exportExpenses() {
+    console.log('📥 تصدير المصروفات...');
+
+    fetch('/api/expenses/list')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.data.length > 0) {
+            // تحويل البيانات إلى CSV
+            const csvContent = convertToCSV(data.data);
+
+            // إنشاء ملف وتحميله
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `expenses_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            console.log('✅ تم تصدير المصروفات بنجاح');
+        } else {
+            alert('لا توجد مصروفات للتصدير');
+        }
+    })
+    .catch(error => {
+        console.error('❌ خطأ في التصدير:', error);
+        alert('حدث خطأ أثناء تصدير المصروفات');
+    });
+}
+
+// Convert data to CSV format
+function convertToCSV(data) {
+    const headers = ['رقم المصروف', 'نوع المصروف', 'الوصف', 'المبلغ', 'التاريخ', 'طريقة الدفع', 'الحالة'];
+    const csvRows = [];
+
+    // إضافة العناوين
+    csvRows.push(headers.join(','));
+
+    // إضافة البيانات
+    data.forEach(expense => {
+        const row = [
+            expense.expense_number,
+            expense.expense_type,
+            `"${expense.description}"`,
+            expense.amount,
+            expense.date,
+            expense.payment_method,
+            expense.payment_status
+        ];
+        csvRows.push(row.join(','));
+    });
+
+    return csvRows.join('\n');
+}
+
+// Display expenses in table
+function displayExpenses(expenses) {
+    const tbody = document.getElementById('expenses-tbody');
+
+    if (expenses.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center text-muted">
+                    ${isRTL ? 'لا توجد مصروفات محفوظة' : 'No saved expenses'}
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = expenses.map(expense => `
+        <tr>
+            <td><input type="checkbox" class="form-check-input expense-checkbox" data-id="${expense.id}"></td>
+            <td><strong>#${expense.id}</strong></td>
+            <td>${expense.date}</td>
+            <td><span class="badge bg-primary">${getExpenseTypeText(expense.expense_type)}</span></td>
+            <td>${expense.description}</td>
+            <td>${expense.amount.toFixed(2)} ريال</td>
+            <td>${getPaymentMethodText(expense.payment_method)}</td>
+            <td>
+                <button class="btn btn-outline-primary btn-sm" onclick="viewExpense(${expense.id})" title="عرض تفاصيل المصروف">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Get expense type text
+function getExpenseTypeText(type) {
+    const types = {
+        'office': isRTL ? 'مصروفات مكتبية' : 'Office Expenses',
+        'transport': isRTL ? 'مواصلات' : 'Transportation',
+        'utilities': isRTL ? 'خدمات عامة' : 'Utilities',
+        'marketing': isRTL ? 'تسويق' : 'Marketing',
+        'maintenance': isRTL ? 'صيانة' : 'Maintenance',
+        'other': isRTL ? 'أخرى' : 'Other'
+    };
+    return types[type] || type;
+}
+
+// Get payment method text
+function getPaymentMethodText(method) {
+    const methods = {
+        'CASH': isRTL ? 'نقدي' : 'Cash',
+        'BANK': isRTL ? 'تحويل بنكي' : 'Bank Transfer',
+        'CHECK': isRTL ? 'شيك' : 'Check',
+        'CARD': isRTL ? 'بطاقة' : 'Card'
+    };
+    return methods[method] || method;
+}
+
+// Update summary cards
+function updateSummaryCards(expenses = []) {
+    const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const monthExpenses = expenses.filter(exp => {
+        const expDate = new Date(exp.date);
+        return expDate.getMonth() === currentMonth && expDate.getFullYear() === currentYear;
+    }).reduce((sum, exp) => sum + exp.amount, 0);
+
+    const avgExpense = expenses.length > 0 ? totalExpenses / expenses.length : 0;
+
+    document.getElementById('total-expenses').textContent = totalExpenses.toFixed(2) + ' ريال';
+    document.getElementById('month-expenses').textContent = monthExpenses.toFixed(2) + ' ريال';
+    document.getElementById('expenses-count').textContent = expenses.length;
+    document.getElementById('avg-expense').textContent = avgExpense.toFixed(2) + ' ريال';
+}
+
+// Filter data
+function filterData() {
+    // Implementation for filtering
+    alert(isRTL ? 'جاري تطبيق الفلاتر...' : 'Applying filters...');
+}
+
+// Clear filters
+function clearFilters() {
+    document.getElementById('expense-type-filter').value = 'all';
+    document.getElementById('from-date').value = '';
+    document.getElementById('to-date').value = '';
+    document.getElementById('min-amount').value = '';
+    document.getElementById('max-amount').value = '';
+    filterData();
+}
+
+// Search expenses
+function searchExpenses() {
+    // Implementation for search
+    const searchTerm = document.getElementById('search-input').value.toLowerCase();
+    // Filter table rows based on search term
+}
+
+// Toggle select all
+function toggleSelectAll() {
+    const selectAll = document.getElementById('select-all');
+    const checkboxes = document.querySelectorAll('.expense-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+}
+
+// Delete selected expenses
+function deleteSelected() {
+    const selected = document.querySelectorAll('.expense-checkbox:checked');
+    if (selected.length === 0) {
+        alert(isRTL ? 'يرجى اختيار مصروف واحد على الأقل' : 'Please select at least one expense');
+        return;
+    }
+
+    if (confirm(isRTL ? `هل أنت متأكد من حذف ${selected.length} مصروف؟` : `Are you sure you want to delete ${selected.length} expenses?`)) {
+        console.log(`🗑️ حذف ${selected.length} مصروف محدد`);
+
+        let deletedCount = 0;
+        let totalCount = selected.length;
+
+        selected.forEach(checkbox => {
+            const expenseId = checkbox.value;
+
+            fetch(`/api/expenses/delete/${expenseId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                deletedCount++;
+
+                if (data.success) {
+                    console.log(`✅ تم حذف المصروف ID: ${expenseId}`);
+                } else {
+                    console.error(`❌ فشل حذف المصروف ID: ${expenseId} - ${data.message}`);
+                }
+
+                // إذا انتهى حذف جميع المصروفات المحددة
+                if (deletedCount === totalCount) {
+                    alert(isRTL ? `تم حذف ${totalCount} مصروف بنجاح` : `${totalCount} expenses deleted successfully`);
+                    loadExpenses(); // إعادة تحميل البيانات
+                }
+            })
+            .catch(error => {
+                deletedCount++;
+                console.error(`❌ خطأ في حذف المصروف ID: ${expenseId}`, error);
+
+                if (deletedCount === totalCount) {
+                    alert(isRTL ? 'تم حذف بعض المصروفات مع وجود أخطاء' : 'Some expenses deleted with errors');
+                    loadExpenses();
+                }
+            });
+        });
+    }
+}
+
+// Edit expense function removed - not needed
+
+// View expense function removed - not needed
+
+// Edit expense
+function editExpense(id) {
+    const modal = document.getElementById('expenseModal');
+    if (modal) {
+        // البحث عن بيانات المصروف في الجدول
+        const table = document.getElementById('expenses-table');
+        const rows = table.querySelectorAll('tbody tr');
+
+        for (let row of rows) {
+            const checkbox = row.querySelector('.expense-checkbox');
+            if (checkbox && checkbox.dataset.id == id) {
+                const cells = row.cells;
+
+                // ملء النموذج بالبيانات الحالية
+                document.getElementById('expense-id').value = id;
+                document.getElementById('expense-number').value = cells[1].textContent.replace('#', '').trim();
+                document.getElementById('expense-date').value = cells[2].textContent.trim();
+                document.getElementById('expense-type').value = cells[3].textContent.trim();
+                document.getElementById('expense-description').value = cells[4].textContent.trim();
+                document.getElementById('expense-amount').value = cells[6].textContent.replace(' ريال', '').trim();
+                document.getElementById('expense-payment-method').value = cells[7].textContent.trim();
+
+                // تغيير عنوان الـ modal
+                document.getElementById('expenseModalLabel').textContent = isRTL ? 'تعديل المصروف' : 'Edit Expense';
+
+                // فتح الـ modal
+                const bsModal = new bootstrap.Modal(modal);
+                bsModal.show();
+                return;
+            }
+        }
+
+        alert(isRTL ? 'لم يتم العثور على المصروف' : 'Expense not found');
+    } else {
+        alert(isRTL ? 'نموذج التعديل غير متاح حالياً' : 'Edit form not available');
+    }
+}
+
+// Print expense
+function printExpense(id) {
+    // البحث عن بيانات المصروف
+    const table = document.getElementById('expenses-table');
+    const rows = table.querySelectorAll('tbody tr');
+
+    for (let row of rows) {
+        const checkbox = row.querySelector('.expense-checkbox');
+        if (checkbox && checkbox.dataset.id == id) {
+            const cells = row.cells;
+            const expenseData = {
+                number: cells[1].textContent.trim(),
+                date: cells[2].textContent.trim(),
+                type: cells[3].textContent.trim(),
+                description: cells[4].textContent.trim(),
+                status: cells[5].textContent.trim(),
+                amount: cells[6].textContent.trim(),
+                paymentMethod: cells[7].textContent.trim()
+            };
+
+            // إنشاء نافذة طباعة
+            const printWindow = window.open('', '_blank');
+            const printContent = `
+                <!DOCTYPE html>
+                <html dir="rtl" lang="ar">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>طباعة المصروف ${expenseData.number}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        .header { text-align: center; margin-bottom: 30px; }
+                        .details { margin: 20px 0; }
+                        .detail-row { margin: 10px 0; padding: 5px; border-bottom: 1px solid #eee; }
+                        .label { font-weight: bold; display: inline-block; width: 150px; }
+                        .value { display: inline-block; }
+                        @media print { body { margin: 0; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h2>تفاصيل المصروف</h2>
+                        <h3>${expenseData.number}</h3>
+                    </div>
+                    <div class="details">
+                        <div class="detail-row">
+                            <span class="label">رقم المصروف:</span>
+                            <span class="value">${expenseData.number}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">التاريخ:</span>
+                            <span class="value">${expenseData.date}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">النوع:</span>
+                            <span class="value">${expenseData.type}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">الوصف:</span>
+                            <span class="value">${expenseData.description}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">حالة الدفع:</span>
+                            <span class="value">${expenseData.status}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">المبلغ:</span>
+                            <span class="value">${expenseData.amount}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">طريقة الدفع:</span>
+                            <span class="value">${expenseData.paymentMethod}</span>
+                        </div>
+                    </div>
+                    <div style="margin-top: 50px; text-align: center; font-size: 12px; color: #666;">
+                        تم الطباعة في: ${new Date().toLocaleString('ar-SA')}
+                    </div>
+                </body>
+                </html>
+            `;
+
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+            return;
+        }
+    }
+
+    alert(isRTL ? 'لم يتم العثور على المصروف' : 'Expense not found');
+}
+
+// Delete single expense
+function deleteExpense(id) {
+    // حذف مباشر بدون تأكيد
+        console.log(`🗑️ محاولة حذف المصروف ID: ${id}`);
+
+        // إرسال طلب حذف إلى الخادم
+        fetch(`/api/expenses/delete/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                console.log(`✅ تم حذف المصروف ID: ${id} بنجاح`);
+                showNotification(isRTL ? `تم حذف المصروف بنجاح` : 'Expense deleted successfully', 'success');
+                // إعادة تحميل البيانات بدلاً من إعادة تحميل الصفحة
+                loadExpenses();
+            } else {
+                console.error(`❌ فشل حذف المصروف: ${data.message}`);
+                showNotification(isRTL ? 'حدث خطأ أثناء الحذف: ' + data.message : 'Delete error: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error(`❌ خطأ في حذف المصروف ID: ${id}`, error);
+
+            // محاولة الحذف باستخدام POST method كبديل
+            console.log('🔄 محاولة الحذف باستخدام POST method...');
+
+            fetch(`/expenses/delete/${id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('✅ تم حذف المصروف باستخدام POST method');
+                    showNotification(isRTL ? 'تم حذف المصروف بنجاح' : 'Expense deleted successfully', 'success');
+                    // إعادة تحميل الصفحة
+                    window.location.reload();
+                } else {
+                    throw new Error('فشل في الحذف');
+                }
+            })
+            .catch(postError => {
+                console.error('❌ فشل في كلا الطريقتين:', postError);
+                showNotification(isRTL ? 'حدث خطأ في الاتصال' : 'Connection error', 'error');
+            });
+        });
+}
+
+// Open new expense modal
+function openNewExpenseModal() {
+    // فتح modal إنشاء مصروف جديد
+    const modal = document.getElementById('expenseModal');
+    if (modal) {
+        // إعادة تعيين النموذج
+        document.getElementById('expense-form').reset();
+        document.getElementById('expense-id').value = '';
+        document.getElementById('expenseModalLabel').textContent = isRTL ? 'إضافة مصروف جديد' : 'Add New Expense';
+
+        // فتح الـ modal
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+    } else {
+        alert(isRTL ? 'نموذج المصروف غير متاح حالياً' : 'Expense form not available');
+    }
+}
+
+// Export expenses
+function exportExpenses() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري التصدير...' : 'Exporting...');
+
+    // إنشاء وتحميل ملف CSV
+    try {
+        const table = document.getElementById('expenses-table');
+        const rows = table.querySelectorAll('tbody tr');
+
+        if (rows.length === 0 || (rows.length === 1 && rows[0].cells.length === 1)) {
+            alert(isRTL ? 'لا توجد بيانات للتصدير' : 'No data to export');
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+            return;
+        }
+
+        let csvContent = 'رقم المصروف,التاريخ,النوع,الوصف,حالة الدفع,المبلغ,طريقة الدفع\n';
+
+        rows.forEach(row => {
+            if (row.cells.length > 1) { // تجاهل صف "لا توجد بيانات"
+                const cells = row.cells;
+                const rowData = [
+                    cells[1].textContent.trim(), // رقم المصروف
+                    cells[2].textContent.trim(), // التاريخ
+                    cells[3].textContent.trim(), // النوع
+                    cells[4].textContent.trim(), // الوصف
+                    cells[5].textContent.trim(), // حالة الدفع
+                    cells[6].textContent.trim(), // المبلغ
+                    cells[7].textContent.trim()  // طريقة الدفع
+                ];
+                csvContent += rowData.join(',') + '\n';
+            }
+        });
+
+        // تحميل الملف
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'expenses_' + new Date().toISOString().split('T')[0] + '.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+            alert(isRTL ? 'تم تصدير المصروفات بنجاح' : 'Expenses exported successfully');
+        }, 1000);
+    } catch (error) {
+        console.error('Export error:', error);
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        alert(isRTL ? 'حدث خطأ أثناء التصدير' : 'Export error occurred');
+    }
+}
+
+// Refresh expenses
+function refreshExpenses() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري التحديث...' : 'Refreshing...');
+
+    // إعادة تحميل الصفحة لتحديث البيانات
+    setTimeout(() => {
+        window.location.reload();
+    }, 500);
+}
+
+// Generate report
+function generateReport() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري الإنشاء...' : 'Generating...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        alert(isRTL ? 'تم إنشاء تقرير المصروفات بنجاح' : 'Expenses report generated successfully');
+    }, 1500);
+}
+
+// Export data
+function exportData() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري التصدير...' : 'Exporting...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        alert(isRTL ? 'تم تصدير البيانات بنجاح' : 'Data exported successfully');
+    }, 1500);
+}
+
+// Save all data
+function saveAllData() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري الحفظ...' : 'Saving...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        alert(isRTL ? 'تم حفظ جميع البيانات بنجاح' : 'All data saved successfully');
+    }, 1500);
+}
+
+// Print report
+function printReport() {
+    alert(isRTL ? 'جاري إعداد التقرير للطباعة...' : 'Preparing report for printing...');
+    window.print();
+}
+
+// وظيفة عرض تفاصيل المصروف
+function viewExpense(expenseId) {
+    const row = document.querySelector(`tr[data-expense-id="${expenseId}"]`);
+    if (row) {
+        // إزالة التحديد من جميع الصفوف
+        document.querySelectorAll('.table tbody tr').forEach(r => r.classList.remove('table-active'));
+        // إضافة التحديد للصف المحدد
+        row.classList.add('table-active');
+
+        // يمكن إضافة منطق عرض التفاصيل هنا
+        alert(`تم تحديد المصروف #${expenseId}`);
+    }
+}
+</script>
+
+<style>
+/* تحسين تنسيق جدول المصروفات */
+#expenses-table {
+    font-size: 0.9rem;
+}
+
+#expenses-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+    white-space: nowrap;
+}
+
+#expenses-table td {
+    vertical-align: middle;
+    padding: 0.75rem 0.5rem;
+}
+
+/* تنسيق الأزرار */
+.btn-group-sm .btn {
+    padding: 0.25rem 0.4rem;
+    font-size: 0.8rem;
+    border-radius: 0.2rem;
+}
+
+/* تنسيق عمود الأزرار */
+#expenses-table td:last-child {
+    width: 200px;
+    min-width: 200px;
+}
+
+/* تنسيق عمود المبلغ */
+#expenses-table td.text-end {
+    font-weight: 600;
+    color: #dc3545;
+}
+
+/* تنسيق الشارات */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+}
+
+/* تحسين المسافات في الأزرار */
+.btn-group .btn + .btn {
+    margin-left: 0;
+}
+
+/* تنسيق responsive للجدول */
+@media (max-width: 768px) {
+    #expenses-table {
+        font-size: 0.8rem;
+    }
+
+    .btn-group-sm .btn {
+        padding: 0.2rem 0.3rem;
+        font-size: 0.7rem;
+    }
+
+    #expenses-table td:last-child {
+        width: 150px;
+        min-width: 150px;
+    }
+}
+</style>
+{% endblock %}

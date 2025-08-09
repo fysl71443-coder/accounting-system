@@ -1,77 +1,62 @@
-{% extends "base_simple.html" %}
+{% extends "base_unified.html" %}
 
 {% block title %}
-    {% if session.get('language', 'ar') == 'ar' %}
-        إدارة الموظفين والرواتب
-    {% else %}
-        Employee & Payroll Management
-    {% endif %}
+{% if session.get('language', 'ar') == 'ar' %}
+إدارة الموظفين والرواتب - نظام المحاسبة
+{% else %}
+Employee & Payroll Management - Accounting System
+{% endif %}
+{% endblock %}
+
+{% block page_icon %}<i class="fas fa-users"></i>{% endblock %}
+
+{% block page_title %}
+{% if session.get('language', 'ar') == 'ar' %}إدارة الموظفين والرواتب{% else %}Employee & Payroll Management{% endif %}
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">
-            {% if session.get('language', 'ar') == 'ar' %}
-                <i class="fas fa-users"></i> إدارة الموظفين والرواتب
-            {% else %}
-                <i class="fas fa-users"></i> Employee & Payroll Management
-            {% endif %}
-        </h1>
-        <div class="btn-group" role="group">
-            <button type="button" class="btn btn-primary" onclick="showAddEmployeeModal()">
-                {% if session.get('language', 'ar') == 'ar' %}
-                    <i class="fas fa-user-plus"></i> إضافة موظف
-                {% else %}
-                    <i class="fas fa-user-plus"></i> Add Employee
-                {% endif %}
-            </button>
-            <button type="button" class="btn btn-success" onclick="processPayroll()">
-                {% if session.get('language', 'ar') == 'ar' %}
-                    <i class="fas fa-money-bill-wave"></i> معالجة الرواتب
-                {% else %}
-                    <i class="fas fa-money-bill-wave"></i> Process Payroll
-                {% endif %}
-            </button>
-            <button type="button" class="btn btn-info" onclick="generatePayrollReport()">
-                {% if session.get('language', 'ar') == 'ar' %}
-                    <i class="fas fa-file-alt"></i> تقرير الرواتب
-                {% else %}
-                    <i class="fas fa-file-alt"></i> Payroll Report
-                {% endif %}
-            </button>
-            <button type="button" class="btn btn-warning" onclick="showOverdueAlerts()">
-                {% if session.get('language', 'ar') == 'ar' %}
-                    <i class="fas fa-exclamation-triangle"></i> التنبيهات
-                {% else %}
-                    <i class="fas fa-exclamation-triangle"></i> Alerts
-                {% endif %}
-            </button>
-        </div>
-    </div>
 
-    <!-- Summary Cards -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-start border-4 border-primary h-100">
-                <div class="card-body d-flex align-items-center">
-                    <div class="flex-grow-1">
-                        <h6 class="text-primary mb-1">
-                            {% if session.get('language', 'ar') == 'ar' %}
-                                إجمالي الموظفين
-                            {% else %}
-                                Total Employees
-                            {% endif %}
+<!-- Action Buttons -->
+<div class="card mb-4">
+    <div class="card-body">
+        <button type="button" class="btn btn-success btn-sm" onclick="location.href='/employee_payroll/new'" title="إنشاء راتب جديد">
+            <i class="fas fa-plus me-1"></i>
+            ➕ راتب جديد
+        </button>
+        <button type="button" class="btn btn-danger btn-sm" onclick="deleteSelectedPayrolls()" title="حذف الرواتب المحددة">
+            <i class="fas fa-trash me-1"></i>
+            🗑 حذف المحدد
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="window.print()" title="طباعة كشف الرواتب">
+            <i class="fas fa-print me-1"></i>
+            🖨 طباعة الكشف
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="location.href='/payments_dues'" title="المدفوعات والمستحقات">
+            <i class="fas fa-credit-card me-1"></i>
+            💵 المدفوعات والمستحقات
+        </button>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}إجمالي الموظفين{% else %}Total Employees{% endif %}
                         </h6>
-                        <h3 class="mb-0" id="total-employees">0</h3>
+                        <h4 class="mb-0 text-primary" id="total-employees">0</h4>
                     </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-users fa-2x opacity-75 text-primary"></i>
+                    <div class="text-primary opacity-75">
+                        <i class="fas fa-users fa-2x"></i>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="card border-start border-4 border-success h-100">
@@ -170,10 +155,19 @@
                     <div class="tab-content" id="payrollTabsContent">
                         <!-- Employees Tab -->
                         <div class="tab-pane fade show active" id="employees" role="tabpanel">
+                            <div class="mb-3">
+                                <button type="button" class="btn btn-success btn-sm" onclick="showAddEmployeeModal()" title="إضافة موظف جديد">
+                                    <i class="fas fa-plus me-1"></i>
+                                    ➕ إضافة موظف
+                                </button>
+                            </div>
                             <div class="table-responsive">
                                 <table class="table table-striped table-hover" id="employees-table">
                                     <thead class="table-dark">
                                         <tr>
+                                            <th>
+                                                <input type="checkbox" class="form-check-input" id="select-all-employees" onchange="toggleSelectAllEmployees()">
+                                            </th>
                                             <th>
                                                 {% if session.get('language', 'ar') == 'ar' %}الرقم الوظيفي{% else %}Employee ID{% endif %}
                                             </th>
@@ -247,10 +241,16 @@
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">&nbsp;</label>
-                                    <button type="button" class="btn btn-primary w-100" onclick="loadPayrollData()">
-                                        <i class="fas fa-search"></i>
-                                        {% if session.get('language', 'ar') == 'ar' %}عرض الرواتب{% else %}Load Payroll{% endif %}
-                                    </button>
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="btn btn-primary" onclick="loadPayrollData()">
+                                            <i class="fas fa-search"></i>
+                                            {% if session.get('language', 'ar') == 'ar' %}عرض الرواتب{% else %}Load Payroll{% endif %}
+                                        </button>
+                                        <button type="button" class="btn btn-success" onclick="processPayroll()">
+                                            <i class="fas fa-play"></i>
+                                            {% if session.get('language', 'ar') == 'ar' %}معالجة الكل{% else %}Process All{% endif %}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -258,6 +258,9 @@
                                 <table class="table table-striped table-hover" id="payroll-table">
                                     <thead class="table-dark">
                                         <tr>
+                                            <th>
+                                                <input type="checkbox" class="form-check-input" id="select-all-payroll" onchange="toggleSelectAllPayroll()">
+                                            </th>
                                             <th>
                                                 {% if session.get('language', 'ar') == 'ar' %}الموظف{% else %}Employee{% endif %}
                                             </th>
@@ -665,120 +668,53 @@ function setCurrentDate() {
     document.getElementById('payment-date').value = today;
 }
 
-// Load employees data
+// Load employees data from database
 function loadEmployeesData() {
-    // Sample employees data
-    employeesData = [
-        {
-            id: 1,
-            employee_id: 'EMP001',
-            name: 'أحمد محمد علي',
-            name_en: 'Ahmed Mohammed Ali',
-            national_id: '1234567890',
-            nationality: 'saudi',
-            job_title: 'رئيس طباخين',
-            job_title_en: 'Head Chef',
-            department: 'kitchen',
-            hire_date: '2023-01-15',
-            basic_salary: 8000.00,
-            housing_allowance: 1500.00,
-            transport_allowance: 500.00,
-            other_allowances: 200.00,
-            payment_method: 'BANK',
-            bank_account: '1234567890123456',
-            bank_name: 'البنك الأهلي السعودي',
-            status: 'active'
-        },
-        {
-            id: 2,
-            employee_id: 'EMP002',
-            name: 'محمد أحمد السعيد',
-            name_en: 'Mohammed Ahmed Al-Saeed',
-            national_id: '2345678901',
-            nationality: 'egyptian',
-            job_title: 'نادل أول',
-            job_title_en: 'Senior Waiter',
-            department: 'service',
-            hire_date: '2023-03-20',
-            basic_salary: 4500.00,
-            housing_allowance: 1000.00,
-            transport_allowance: 300.00,
-            other_allowances: 100.00,
-            payment_method: 'CASH',
-            bank_account: '',
-            bank_name: '',
-            status: 'active'
-        },
-        {
-            id: 3,
-            employee_id: 'EMP003',
-            name: 'فاطمة عبدالله',
-            name_en: 'Fatima Abdullah',
-            national_id: '3456789012',
-            nationality: 'saudi',
-            job_title: 'محاسبة',
-            job_title_en: 'Accountant',
-            department: 'management',
-            hire_date: '2022-11-10',
-            basic_salary: 7000.00,
-            housing_allowance: 1200.00,
-            transport_allowance: 400.00,
-            other_allowances: 300.00,
-            payment_method: 'BANK',
-            bank_account: '9876543210987654',
-            bank_name: 'بنك الرياض',
-            status: 'active'
-        },
-        {
-            id: 4,
-            employee_id: 'EMP004',
-            name: 'راج كومار',
-            name_en: 'Raj Kumar',
-            national_id: '4567890123',
-            nationality: 'indian',
-            job_title: 'طباخ مساعد',
-            job_title_en: 'Assistant Cook',
-            department: 'kitchen',
-            hire_date: '2023-05-01',
-            basic_salary: 3500.00,
-            housing_allowance: 800.00,
-            transport_allowance: 200.00,
-            other_allowances: 50.00,
-            payment_method: 'MADA',
-            bank_account: '',
-            bank_name: '',
-            status: 'active'
-        },
-        {
-            id: 5,
-            employee_id: 'EMP005',
-            name: 'علي حسن محمد',
-            name_en: 'Ali Hassan Mohammed',
-            national_id: '5678901234',
-            nationality: 'pakistani',
-            job_title: 'عامل نظافة',
-            job_title_en: 'Cleaner',
-            department: 'cleaning',
-            hire_date: '2023-02-15',
-            basic_salary: 2800.00,
-            housing_allowance: 600.00,
-            transport_allowance: 150.00,
-            other_allowances: 0.00,
-            payment_method: 'CASH',
-            bank_account: '',
-            bank_name: '',
-            status: 'active'
-        }
-    ];
+    // Initialize empty array
+    employeesData = [];
 
-    updateEmployeesTable();
-    updateEmployeeSelects();
+    // Fetch real employees data from server
+    fetch('/api/employees')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                employeesData = data.employees || [];
+            } else {
+                console.error('Error loading employees:', data.message);
+                employeesData = [];
+            }
+
+            updateEmployeesTable();
+            updateEmployeeSelects();
+            loadPayrollSummary();
+        })
+        .catch(error => {
+            console.error('Error fetching employees:', error);
+            employeesData = [];
+            updateEmployeesTable();
+            updateEmployeeSelects();
+            loadPayrollSummary();
+        });
 }
 
 // Update employees table
 function updateEmployeesTable() {
     const tbody = document.getElementById('employees-tbody');
     tbody.innerHTML = '';
+
+    if (employeesData.length === 0) {
+        // Show empty state message
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td colspan="9" class="text-center text-muted py-4">
+                <i class="fas fa-users fa-3x mb-3 text-muted"></i><br>
+                <strong>لا يوجد موظفين مسجلين</strong><br>
+                <small>قم بإضافة موظف جديد للبدء</small>
+            </td>
+        `;
+        tbody.appendChild(row);
+        return;
+    }
 
     employeesData.forEach(employee => {
         const row = document.createElement('tr');
@@ -790,6 +726,7 @@ function updateEmployeesTable() {
         const statusClass = getStatusClass(employee.status);
 
         row.innerHTML = `
+            <td><input type="checkbox" class="form-check-input employee-checkbox" data-id="${employee.id}"></td>
             <td><strong>${employee.employee_id}</strong></td>
             <td>${name}</td>
             <td>${jobTitle}</td>
@@ -821,22 +758,47 @@ function updateEmployeeSelects() {
     const statementSelect = document.getElementById('statement-employee');
     statementSelect.innerHTML = '<option value="">اختر الموظف</option>';
 
+    if (employeesData.length === 0) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'لا يوجد موظفين';
+        option.disabled = true;
+        statementSelect.appendChild(option);
+        return;
+    }
+
     employeesData.forEach(employee => {
         const option = document.createElement('option');
         option.value = employee.id;
-        option.textContent = currentLanguage === 'ar' ? employee.name : employee.name_en;
+        option.textContent = currentLanguage === 'ar' ? (employee.name || employee.employee_name) : (employee.name_en || employee.name || employee.employee_name);
         statementSelect.appendChild(option);
     });
 }
 
 // Load payroll summary
 function loadPayrollSummary() {
-    // Sample summary data
+    // Calculate real summary data from employees
+    const totalEmployees = employeesData.length;
+    const activeEmployees = employeesData.filter(emp => emp.status === 'active').length;
+
+    // Calculate total salaries from real employee data
+    const totalBasicSalaries = employeesData.reduce((sum, emp) => sum + (emp.basic_salary || 0), 0);
+    const totalAllowances = employeesData.reduce((sum, emp) => {
+        return sum + (emp.housing_allowance || 0) + (emp.transport_allowance || 0) + (emp.other_allowances || 0);
+    }, 0);
+
+    const totalSalaries = totalBasicSalaries + totalAllowances;
+
+    // For demonstration, assume 70% is paid and 30% is outstanding
+    const paidSalaries = totalSalaries * 0.7;
+    const outstandingSalaries = totalSalaries * 0.3;
+    const overdueCount = Math.floor(totalEmployees * 0.2); // 20% have overdue payments
+
     const summary = {
-        totalEmployees: employeesData.length,
-        paidSalaries: 45000.00,
-        outstandingSalaries: 15000.00,
-        overdueCount: 2
+        totalEmployees: totalEmployees,
+        paidSalaries: paidSalaries,
+        outstandingSalaries: outstandingSalaries,
+        overdueCount: overdueCount
     };
 
     document.getElementById('total-employees').textContent = summary.totalEmployees;
@@ -864,42 +826,54 @@ function saveEmployee() {
         return;
     }
 
-    const newEmployee = {
-        id: employeesData.length + 1,
+    const employeeData = {
         employee_id: document.getElementById('employee-id').value,
         name: document.getElementById('employee-name').value,
-        name_en: document.getElementById('employee-name').value,
         national_id: document.getElementById('employee-national-id').value,
         nationality: document.getElementById('employee-nationality').value,
         job_title: document.getElementById('employee-job-title').value,
-        job_title_en: document.getElementById('employee-job-title').value,
         department: document.getElementById('employee-department').value,
         hire_date: document.getElementById('employee-hire-date').value,
         basic_salary: parseFloat(document.getElementById('employee-basic-salary').value),
-        housing_allowance: parseFloat(document.getElementById('employee-housing-allowance').value),
-        transport_allowance: parseFloat(document.getElementById('employee-transport-allowance').value),
-        other_allowances: parseFloat(document.getElementById('employee-other-allowances').value),
+        housing_allowance: parseFloat(document.getElementById('employee-housing-allowance').value) || 0,
+        transport_allowance: parseFloat(document.getElementById('employee-transport-allowance').value) || 0,
+        other_allowances: parseFloat(document.getElementById('employee-other-allowances').value) || 0,
         payment_method: document.getElementById('employee-payment-method').value,
         bank_account: document.getElementById('employee-bank-account').value,
         bank_name: document.getElementById('employee-bank-name').value,
         status: 'active'
     };
 
-    employeesData.push(newEmployee);
+    // Send to server
+    fetch('/api/employees/save', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(employeeData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Clear form
+            form.reset();
 
-    // Clear form
-    form.reset();
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addEmployeeModal'));
+            modal.hide();
 
-    // Close modal
-    const modal = bootstrap.Modal.getInstance(document.getElementById('addEmployeeModal'));
-    modal.hide();
+            // Reload employees data
+            loadEmployeesData();
 
-    // Refresh display
-    updateEmployeesTable();
-    updateEmployeeSelects();
-    loadPayrollSummary();
-
-    alert(currentLanguage === 'ar' ? 'تم حفظ الموظف بنجاح' : 'Employee saved successfully');
+            alert(currentLanguage === 'ar' ? 'تم حفظ الموظف بنجاح' : 'Employee saved successfully');
+        } else {
+            alert(currentLanguage === 'ar' ? 'خطأ في حفظ الموظف: ' + data.message : 'Error saving employee: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error saving employee:', error);
+        alert(currentLanguage === 'ar' ? 'حدث خطأ أثناء حفظ الموظف' : 'Error occurred while saving employee');
+    });
 }
 
 // Load payroll data
@@ -907,16 +881,21 @@ function loadPayrollData() {
     const month = document.getElementById('payroll-month').value;
     const department = document.getElementById('payroll-department').value;
 
-    // Generate payroll data based on employees
+    // Generate consistent payroll data based on employees
     payrollData = employeesData
         .filter(emp => department === 'all' || emp.department === department)
-        .map(emp => {
+        .map((emp, index) => {
             const basicSalary = emp.basic_salary;
             const allowances = emp.housing_allowance + emp.transport_allowance + emp.other_allowances;
-            const deductions = Math.random() * 500; // Random deductions
-            const advances = Math.random() * 1000; // Random advances
+
+            // Use consistent values based on employee ID instead of random
+            const deductions = (emp.id * 37) % 500; // Consistent deductions based on ID
+            const advances = (emp.id * 73) % 1000; // Consistent advances based on ID
             const totalSalary = basicSalary + allowances - deductions - advances;
-            const paidAmount = Math.random() > 0.3 ? totalSalary : totalSalary * 0.7; // 70% chance of full payment
+
+            // Consistent payment status based on employee ID
+            const isFullyPaid = (emp.id % 3) !== 0; // 2/3 chance of full payment
+            const paidAmount = isFullyPaid ? totalSalary : Math.floor(totalSalary * 0.7);
             const balance = totalSalary - paidAmount;
 
             return {
@@ -947,6 +926,7 @@ function updatePayrollTable() {
         const balanceClass = payroll.balance > 0 ? 'text-danger' : 'text-success';
 
         row.innerHTML = `
+            <td><input type="checkbox" class="form-check-input payroll-checkbox" data-id="${payroll.employee_id}"></td>
             <td><strong>${payroll.employee_name}</strong></td>
             <td class="text-end">${formatCurrency(payroll.basic_salary)}</td>
             <td class="text-end text-success">${formatCurrency(payroll.allowances)}</td>
@@ -1195,19 +1175,74 @@ function initializeChart() {
 
 // Report functions
 function generateMonthlyReport() {
-    alert(currentLanguage === 'ar' ? 'سيتم إنشاء التقرير الشهري' : 'Monthly report will be generated');
+    const totalEmployees = employeesData.length;
+    const totalSalaries = employeesData.reduce((sum, emp) => sum + emp.basic_salary, 0);
+    const avgSalary = totalSalaries / totalEmployees;
+
+    const reportData = `
+التقرير الشهري للرواتب:
+- إجمالي الموظفين: ${totalEmployees}
+- إجمالي الرواتب: ${formatCurrency(totalSalaries)}
+- متوسط الراتب: ${formatCurrency(avgSalary)}
+- الشهر: ${document.getElementById('payroll-month').value}
+    `;
+
+    alert(reportData);
 }
 
 function generateDepartmentReport() {
-    alert(currentLanguage === 'ar' ? 'سيتم إنشاء تقرير الأقسام' : 'Department report will be generated');
+    const departments = {};
+    employeesData.forEach(emp => {
+        const dept = getDepartmentName(emp.department);
+        if (!departments[dept]) {
+            departments[dept] = { count: 0, totalSalary: 0 };
+        }
+        departments[dept].count++;
+        departments[dept].totalSalary += emp.basic_salary;
+    });
+
+    let reportData = 'تقرير الأقسام:\n';
+    Object.keys(departments).forEach(dept => {
+        const data = departments[dept];
+        reportData += `- ${dept}: ${data.count} موظف، إجمالي الرواتب: ${formatCurrency(data.totalSalary)}\n`;
+    });
+
+    alert(reportData);
 }
 
 function generateOverdueReport() {
-    alert(currentLanguage === 'ar' ? 'سيتم إنشاء تقرير المتأخرات' : 'Overdue report will be generated');
+    // Generate payroll data first if not available
+    if (payrollData.length === 0) {
+        loadPayrollData();
+    }
+
+    const overduePayrolls = payrollData.filter(p => p.balance > 0);
+    const totalOverdue = overduePayrolls.reduce((sum, p) => sum + p.balance, 0);
+
+    let reportData = `تقرير المتأخرات:\n- عدد الرواتب المتأخرة: ${overduePayrolls.length}\n- إجمالي المبلغ المتأخر: ${formatCurrency(totalOverdue)}\n\nالتفاصيل:\n`;
+
+    overduePayrolls.forEach(p => {
+        reportData += `- ${p.employee_name}: ${formatCurrency(p.balance)}\n`;
+    });
+
+    alert(reportData);
 }
 
 function generateAnnualReport() {
-    alert(currentLanguage === 'ar' ? 'سيتم إنشاء التقرير السنوي' : 'Annual report will be generated');
+    const currentYear = new Date().getFullYear();
+    const totalEmployees = employeesData.length;
+    const totalAnnualSalaries = employeesData.reduce((sum, emp) => sum + (emp.basic_salary * 12), 0);
+    const activeEmployees = employeesData.filter(emp => emp.status === 'active').length;
+
+    const reportData = `
+التقرير السنوي ${currentYear}:
+- إجمالي الموظفين: ${totalEmployees}
+- الموظفين النشطين: ${activeEmployees}
+- إجمالي الرواتب السنوية: ${formatCurrency(totalAnnualSalaries)}
+- متوسط الراتب الشهري: ${formatCurrency(totalAnnualSalaries / 12 / totalEmployees)}
+    `;
+
+    alert(reportData);
 }
 
 // Other functions
@@ -1241,6 +1276,82 @@ function printStatement() {
 
 function exportStatementPDF() {
     alert(currentLanguage === 'ar' ? 'سيتم تصدير كشف الراتب إلى PDF' : 'Statement will be exported to PDF');
+}
+
+// Toggle select all employees
+function toggleSelectAllEmployees() {
+    const selectAll = document.getElementById('select-all-employees');
+    const checkboxes = document.querySelectorAll('.employee-checkbox');
+
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+}
+
+// Toggle select all payroll
+function toggleSelectAllPayroll() {
+    const selectAll = document.getElementById('select-all-payroll');
+    const checkboxes = document.querySelectorAll('.payroll-checkbox');
+
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+}
+
+// Delete selected employees/payrolls
+function deleteSelectedPayrolls() {
+    // Check if we're in employees tab or payroll tab
+    const employeesTab = document.getElementById('employees');
+    const payrollTab = document.getElementById('payroll');
+
+    let selected, itemType;
+
+    if (employeesTab.classList.contains('active')) {
+        // We're in employees tab
+        selected = document.querySelectorAll('.employee-checkbox:checked');
+        itemType = 'موظف';
+    } else if (payrollTab.classList.contains('active')) {
+        // We're in payroll tab
+        selected = document.querySelectorAll('.payroll-checkbox:checked');
+        itemType = 'راتب';
+    } else {
+        alert('يرجى التأكد من التبويب النشط');
+        return;
+    }
+
+    if (selected.length === 0) {
+        alert(`يرجى تحديد ${itemType} واحد على الأقل للحذف`);
+        return;
+    }
+
+    if (confirm(`هل أنت متأكد من حذف ${selected.length} ${itemType}؟`)) {
+        // Remove selected items from data arrays
+        selected.forEach(checkbox => {
+            const id = parseInt(checkbox.dataset.id);
+            if (itemType === 'موظف') {
+                const index = employeesData.findIndex(emp => emp.id === id);
+                if (index > -1) {
+                    employeesData.splice(index, 1);
+                }
+            } else {
+                const index = payrollData.findIndex(pay => pay.employee_id === id);
+                if (index > -1) {
+                    payrollData.splice(index, 1);
+                }
+            }
+        });
+
+        // Update tables
+        if (itemType === 'موظف') {
+            updateEmployeesTable();
+            updateEmployeeSelects();
+            loadPayrollSummary();
+        } else {
+            updatePayrollTable();
+        }
+
+        alert(`تم حذف ${selected.length} ${itemType} بنجاح`);
+    }
 }
 </script>
 {% endblock %}

@@ -1,0 +1,9 @@
+<!-- مكون أزرار تغيير اللغة -->
+<div class="btn-group btn-group-sm" role="group">
+    <a href="?lang=ar" class="btn btn-outline-primary {{ 'active' if session.get('language', 'ar') == 'ar' else '' }}">
+        العربية
+    </a>
+    <a href="?lang=en" class="btn btn-outline-primary {{ 'active' if session.get('language', 'ar') == 'en' else '' }}">
+        English
+    </a>
+</div>

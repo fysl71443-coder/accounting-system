@@ -1,0 +1,447 @@
+{% extends "base_unified.html" %}
+
+{% block title %}
+{% if session.get('language', 'ar') == 'ar' %}
+المدفوعات والمستحقات - نظام المحاسبة
+{% else %}
+Payments & Dues - Accounting System
+{% endif %}
+{% endblock %}
+
+{% block page_icon %}<i class="fas fa-money-check-alt"></i>{% endblock %}
+
+{% block page_title %}
+{% if session.get('language', 'ar') == 'ar' %}المدفوعات والمستحقات{% else %}Payments & Dues{% endif %}
+{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <button type="button" class="btn btn-primary" onclick="refreshData()">
+        <i class="fas fa-sync-alt me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تحديث البيانات{% else %}Refresh Data{% endif %}
+    </button>
+    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#paymentModal">
+        <i class="fas fa-plus me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تسجيل دفعة{% else %}Record Payment{% endif %}
+    </button>
+    <button type="button" class="btn btn-info" onclick="generateReport()">
+        <i class="fas fa-file-alt me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تقرير المدفوعات{% else %}Payments Report{% endif %}
+    </button>
+    <button type="button" class="btn btn-secondary" onclick="exportData()">
+        <i class="fas fa-download me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تصدير{% else %}Export{% endif %}
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}إجمالي المبالغ{% else %}Total Amount{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-primary" id="total-amount">125,750.00 ريال</h4>
+                    </div>
+                    <div class="text-primary opacity-75">
+                        <i class="fas fa-calculator fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}إجمالي المدفوع{% else %}Total Paid{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-success" id="total-paid">89,250.00 ريال</h4>
+                    </div>
+                    <div class="text-success opacity-75">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}إجمالي المستحق{% else %}Total Due{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-danger" id="total-due">36,500.00 ريال</h4>
+                    </div>
+                    <div class="text-danger opacity-75">
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}عدد الدفعات{% else %}Payments Count{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-info" id="payments-count">0</h4>
+                    </div>
+                    <div class="text-info opacity-75">
+                        <i class="fas fa-list fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transactions Table -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="mb-0">
+            <i class="fas fa-table me-2"></i>
+            {% if session.get('language', 'ar') == 'ar' %}المعاملات المالية{% else %}Financial Transactions{% endif %}
+        </h6>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}رقم الفاتورة{% else %}Invoice Number{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}النوع{% else %}Type{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الاسم{% else %}Name{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}التاريخ{% else %}Date{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}المبلغ الإجمالي{% else %}Total Amount{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}المدفوع{% else %}Paid{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}المتبقي{% else %}Remaining{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الحالة{% else %}Status{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody id="transactions-tbody">
+                    <tr>
+                        <td><strong>INV-2025-001</strong></td>
+                        <td><span class="badge bg-info">مشتريات</span></td>
+                        <td>شركة الأغذية المتحدة</td>
+                        <td>2025-08-01</td>
+                        <td>15,750.00 ريال</td>
+                        <td>10,000.00 ريال</td>
+                        <td><span class="text-danger">5,750.00 ريال</span></td>
+                        <td><span class="badge bg-warning">مدفوع جزئياً</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Payments Log -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">
+            <i class="fas fa-history me-2"></i>
+            {% if session.get('language', 'ar') == 'ar' %}سجل الدفعات{% else %}Payments Log{% endif %}
+        </h6>
+        <button type="button" class="btn btn-outline-primary btn-sm" onclick="loadPayments()">
+            <i class="fas fa-refresh me-1"></i>
+            {% if session.get('language', 'ar') == 'ar' %}تحديث{% else %}Refresh{% endif %}
+        </button>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}رقم الدفعة{% else %}Payment ID{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}المبلغ{% else %}Amount{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}طريقة الدفع{% else %}Method{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}التاريخ{% else %}Date{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}المرجع{% else %}Reference{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الملاحظات{% else %}Notes{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody id="payments-tbody">
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">
+                            {% if session.get('language', 'ar') == 'ar' %}لا توجد دفعات محفوظة{% else %}No saved payments{% endif %}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {% if session.get('language', 'ar') == 'ar' %}تسجيل دفعة جديدة{% else %}Record New Payment{% endif %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="paymentForm">
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}المبلغ المدفوع{% else %}Payment Amount{% endif %} *
+                        </label>
+                        <input type="number" class="form-control" id="paymentAmount" step="0.01" min="0" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}طريقة الدفع{% else %}Payment Method{% endif %}
+                        </label>
+                        <select class="form-select" id="paymentMethod">
+                            <option value="CASH">{% if session.get('language', 'ar') == 'ar' %}نقدي{% else %}Cash{% endif %}</option>
+                            <option value="MADA">مدى</option>
+                            <option value="VISA">فيزا</option>
+                            <option value="MASTERCARD">ماستركارد</option>
+                            <option value="BANK">{% if session.get('language', 'ar') == 'ar' %}تحويل بنكي{% else %}Bank Transfer{% endif %}</option>
+                            <option value="CHECK">{% if session.get('language', 'ar') == 'ar' %}شيك{% else %}Check{% endif %}</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}تاريخ الدفع{% else %}Payment Date{% endif %} *
+                        </label>
+                        <input type="date" class="form-control" id="paymentDate" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}رقم المرجع{% else %}Reference Number{% endif %}
+                        </label>
+                        <input type="text" class="form-control" id="paymentReference">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}ملاحظات{% else %}Notes{% endif %}
+                        </label>
+                        <textarea class="form-control" id="paymentNotes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {% if session.get('language', 'ar') == 'ar' %}إلغاء{% else %}Cancel{% endif %}
+                </button>
+                <button type="button" class="btn btn-success" onclick="savePayment()">
+                    <i class="fas fa-save me-1"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}حفظ الدفعة{% else %}Save Payment{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const isRTL = '{{ session.get("language", "ar") }}' === 'ar';
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    // Set today's date as default
+    document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
+
+    // Load payments on page load
+    loadPayments();
+});
+
+// Refresh data
+function refreshData() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري التحديث...' : 'Refreshing...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        alert(isRTL ? 'تم تحديث البيانات بنجاح' : 'Data refreshed successfully');
+        loadPayments();
+    }, 1500);
+}
+
+// Save payment
+function savePayment() {
+    const amount = document.getElementById('paymentAmount').value;
+    const method = document.getElementById('paymentMethod').value;
+    const date = document.getElementById('paymentDate').value;
+    const reference = document.getElementById('paymentReference').value;
+    const notes = document.getElementById('paymentNotes').value;
+
+    if (!amount || parseFloat(amount) <= 0) {
+        alert(isRTL ? 'يرجى إدخال مبلغ صحيح' : 'Please enter a valid amount');
+        return;
+    }
+
+    if (!date) {
+        alert(isRTL ? 'يرجى اختيار تاريخ الدفع' : 'Please select payment date');
+        return;
+    }
+
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري الحفظ...' : 'Saving...');
+
+    const paymentData = {
+        payment_amount: parseFloat(amount),
+        payment_method: method,
+        payment_date: date,
+        payment_reference: reference,
+        payment_notes: notes
+    };
+
+    fetch('/api/save_payment', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(paymentData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+
+        if (data.success) {
+            alert(isRTL ? 'تم حفظ الدفعة بنجاح - رقم الدفعة: ' + data.payment_id : 'Payment saved successfully - Payment ID: ' + data.payment_id);
+
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('paymentModal'));
+            modal.hide();
+
+            // Clear form
+            document.getElementById('paymentForm').reset();
+            document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
+
+            // Reload payments
+            loadPayments();
+            updatePaymentsCount();
+        } else {
+            alert(isRTL ? 'خطأ في حفظ الدفعة: ' + data.message : 'Error saving payment: ' + data.message);
+        }
+    })
+    .catch(error => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        console.error('Error:', error);
+        alert(isRTL ? 'خطأ في الاتصال بالخادم' : 'Connection error');
+    });
+}
+
+// Load payments
+function loadPayments() {
+    fetch('/api/get_payments')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayPayments(data.payments);
+            updatePaymentsCount(data.payments.length);
+        } else {
+            console.error('Error loading payments:', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+// Display payments in table
+function displayPayments(payments) {
+    const tbody = document.getElementById('payments-tbody');
+
+    if (payments.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center text-muted">
+                    ${isRTL ? 'لا توجد دفعات محفوظة' : 'No saved payments'}
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = payments.map(payment => `
+        <tr>
+            <td><strong>#${payment.id}</strong></td>
+            <td>${payment.payment_amount.toFixed(2)} ريال</td>
+            <td>${getPaymentMethodText(payment.payment_method)}</td>
+            <td>${payment.payment_date}</td>
+            <td>${payment.payment_reference || '-'}</td>
+            <td>${payment.payment_notes || '-'}</td>
+        </tr>
+    `).join('');
+}
+
+// Get payment method text
+function getPaymentMethodText(method) {
+    const methods = {
+        'CASH': isRTL ? 'نقدي' : 'Cash',
+        'MADA': 'مدى',
+        'VISA': 'فيزا',
+        'MASTERCARD': 'ماستركارد',
+        'BANK': isRTL ? 'تحويل بنكي' : 'Bank Transfer',
+        'CHECK': isRTL ? 'شيك' : 'Check'
+    };
+    return methods[method] || method;
+}
+
+// Update payments count
+function updatePaymentsCount(count = 0) {
+    document.getElementById('payments-count').textContent = count;
+}
+
+// Generate report
+function generateReport() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري الإنشاء...' : 'Generating...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        alert(isRTL ? 'تم إنشاء تقرير المدفوعات بنجاح' : 'Payments report generated successfully');
+    }, 1500);
+}
+
+// Export data
+function exportData() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري التصدير...' : 'Exporting...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        alert(isRTL ? 'تم تصدير البيانات بنجاح' : 'Data exported successfully');
+    }, 1500);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,463 @@
+{% extends "base_unified.html" %}
+
+{% block title %}
+{% if session.get('language', 'ar') == 'ar' %}
+إدارة المنتجات - نظام المحاسبة
+{% else %}
+Product Management - Accounting System
+{% endif %}
+{% endblock %}
+
+{% block page_icon %}<i class="fas fa-box"></i>{% endblock %}
+
+{% block page_title %}
+{% if session.get('language', 'ar') == 'ar' %}
+    إدارة المنتجات
+{% else %}
+    Product Management
+{% endif %}
+{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <button type="button" class="btn btn-primary" onclick="refreshData()">
+        <i class="fas fa-sync-alt me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تحديث البيانات{% else %}Refresh Data{% endif %}
+    </button>
+    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#productModal">
+        <i class="fas fa-plus me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}إضافة منتج{% else %}Add Product{% endif %}
+    </button>
+    <button type="button" class="btn btn-info" onclick="generateReport()">
+        <i class="fas fa-file-alt me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تقرير المنتجات{% else %}Products Report{% endif %}
+    </button>
+    <button type="button" class="btn btn-secondary" onclick="exportData()">
+        <i class="fas fa-download me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تصدير{% else %}Export{% endif %}
+    </button>
+    <button type="button" class="btn btn-warning" onclick="saveAllData()">
+        <i class="fas fa-save me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}حفظ البيانات{% else %}Save Data{% endif %}
+    </button>
+    <button type="button" class="btn btn-dark" onclick="printReport()">
+        <i class="fas fa-print me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}طباعة{% else %}Print{% endif %}
+    </button>
+    <button type="button" class="btn btn-outline-danger" onclick="deleteSelected()">
+        <i class="fas fa-trash me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}حذف المحدد{% else %}Delete Selected{% endif %}
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Search and Filter -->
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" id="searchInput" placeholder="{% if session.get('language', 'ar') == 'ar' %}البحث في المنتجات...{% else %}Search products...{% endif %}" value="{{ search }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="categoryFilter">
+                    <option value="">{% if session.get('language', 'ar') == 'ar' %}جميع الفئات{% else %}All Categories{% endif %}</option>
+                    <option value="إلكترونيات">{% if session.get('language', 'ar') == 'ar' %}إلكترونيات{% else %}Electronics{% endif %}</option>
+                    <option value="ملابس">{% if session.get('language', 'ar') == 'ar' %}ملابس{% else %}Clothing{% endif %}</option>
+                    <option value="أغذية">{% if session.get('language', 'ar') == 'ar' %}أغذية{% else %}Food{% endif %}</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="statusFilter">
+                    <option value="">{% if session.get('language', 'ar') == 'ar' %}جميع الحالات{% else %}All Status{% endif %}</option>
+                    <option value="active">{% if session.get('language', 'ar') == 'ar' %}نشط{% else %}Active{% endif %}</option>
+                    <option value="inactive">{% if session.get('language', 'ar') == 'ar' %}غير نشط{% else %}Inactive{% endif %}</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Products Table -->
+<div class="card">
+    <div class="card-header">
+        <h6 class="mb-0">
+            <i class="fas fa-box me-2"></i>
+            {% if session.get('language', 'ar') == 'ar' %}قائمة المنتجات{% else %}Products List{% endif %}
+        </h6>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="productsTable">
+                <thead>
+                    <tr>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الرمز{% else %}Code{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}اسم المنتج{% else %}Product Name{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الفئة{% else %}Category{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}التكلفة{% else %}Cost{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}سعر البيع{% else %}Selling Price{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}المخزون{% else %}Stock{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الحالة{% else %}Status{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}إجراءات{% else %}Actions{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr data-category="{{ product.category or '' }}" data-status="{{ 'active' if product.is_active else 'inactive' }}">
+                        <td><strong>{{ product.product_code }}</strong></td>
+                        <td>{{ product.product_name }}</td>
+                        <td>
+                            {% if product.category %}
+                            <span class="badge bg-secondary">{{ product.category }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ "%.2f"|format(product.unit_cost) }} ريال</td>
+                        <td><strong>{{ "%.2f"|format(product.selling_price) }} ريال</strong></td>
+                        <td>
+                            <span class="badge {{ 'bg-danger' if product.current_stock <= product.min_stock_level else 'bg-success' }}">
+                                {{ product.current_stock }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge {{ 'bg-success' if product.is_active else 'bg-secondary' }}">
+                                {% if product.is_active %}
+                                    {% if session.get('language', 'ar') == 'ar' %}نشط{% else %}Active{% endif %}
+                                {% else %}
+                                    {% if session.get('language', 'ar') == 'ar' %}غير نشط{% else %}Inactive{% endif %}
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('product_cost', product_id=product.id) }}" class="btn btn-outline-success" title="{% if session.get('language', 'ar') == 'ar' %}حساب التكلفة{% else %}Calculate Cost{% endif %}">
+                                    <i class="fas fa-calculator"></i>
+                                </a>
+                                <button type="button" class="btn btn-outline-primary" onclick="editProduct({{ product.id }})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-danger" onclick="deleteProduct({{ product.id }})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Product Modal -->
+<div class="modal fade" id="productModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {% if session.get('language', 'ar') == 'ar' %}
+                        إضافة منتج جديد
+                    {% else %}
+                        Add New Product
+                    {% endif %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="productForm">
+                    <input type="hidden" id="productId">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="productCode" class="form-label">
+                                    {% if session.get('language', 'ar') == 'ar' %}رمز المنتج{% else %}Product Code{% endif %} *
+                                </label>
+                                <input type="text" class="form-control" id="productCode" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="productName" class="form-label">
+                                    {% if session.get('language', 'ar') == 'ar' %}اسم المنتج{% else %}Product Name{% endif %} *
+                                </label>
+                                <input type="text" class="form-control" id="productName" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="category" class="form-label">
+                                    {% if session.get('language', 'ar') == 'ar' %}الفئة{% else %}Category{% endif %}
+                                </label>
+                                <select class="form-select" id="category">
+                                    <option value="">{% if session.get('language', 'ar') == 'ar' %}اختر فئة{% else %}Select Category{% endif %}</option>
+                                    <option value="إلكترونيات">{% if session.get('language', 'ar') == 'ar' %}إلكترونيات{% else %}Electronics{% endif %}</option>
+                                    <option value="ملابس">{% if session.get('language', 'ar') == 'ar' %}ملابس{% else %}Clothing{% endif %}</option>
+                                    <option value="أغذية">{% if session.get('language', 'ar') == 'ar' %}أغذية{% else %}Food{% endif %}</option>
+                                    <option value="مستحضرات تجميل">{% if session.get('language', 'ar') == 'ar' %}مستحضرات تجميل{% else %}Cosmetics{% endif %}</option>
+                                    <option value="أخرى">{% if session.get('language', 'ar') == 'ar' %}أخرى{% else %}Other{% endif %}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="unitType" class="form-label">
+                                    {% if session.get('language', 'ar') == 'ar' %}وحدة القياس{% else %}Unit Type{% endif %}
+                                </label>
+                                <select class="form-select" id="unitType">
+                                    <option value="قطعة">{% if session.get('language', 'ar') == 'ar' %}قطعة{% else %}Piece{% endif %}</option>
+                                    <option value="كيلو">{% if session.get('language', 'ar') == 'ar' %}كيلو{% else %}Kg{% endif %}</option>
+                                    <option value="لتر">{% if session.get('language', 'ar') == 'ar' %}لتر{% else %}Liter{% endif %}</option>
+                                    <option value="متر">{% if session.get('language', 'ar') == 'ar' %}متر{% else %}Meter{% endif %}</option>
+                                    <option value="علبة">{% if session.get('language', 'ar') == 'ar' %}علبة{% else %}Box{% endif %}</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="unitCost" class="form-label">
+                                    {% if session.get('language', 'ar') == 'ar' %}تكلفة الوحدة{% else %}Unit Cost{% endif %}
+                                </label>
+                                <input type="number" class="form-control" id="unitCost" step="0.01" value="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="sellingPrice" class="form-label">
+                                    {% if session.get('language', 'ar') == 'ar' %}سعر البيع{% else %}Selling Price{% endif %} *
+                                </label>
+                                <input type="number" class="form-control" id="sellingPrice" step="0.01" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="minStock" class="form-label">
+                                    {% if session.get('language', 'ar') == 'ar' %}الحد الأدنى للمخزون{% else %}Minimum Stock{% endif %}
+                                </label>
+                                <input type="number" class="form-control" id="minStock" value="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="currentStock" class="form-label">
+                                    {% if session.get('language', 'ar') == 'ar' %}المخزون الحالي{% else %}Current Stock{% endif %}
+                                </label>
+                                <input type="number" class="form-control" id="currentStock" value="0">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}الوصف{% else %}Description{% endif %}
+                        </label>
+                        <textarea class="form-control" id="description" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="isActive" checked>
+                            <label class="form-check-label" for="isActive">
+                                {% if session.get('language', 'ar') == 'ar' %}منتج نشط{% else %}Active Product{% endif %}
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {% if session.get('language', 'ar') == 'ar' %}إلغاء{% else %}Cancel{% endif %}
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveProduct()">
+                    {% if session.get('language', 'ar') == 'ar' %}حفظ{% else %}Save{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Search and filter functionality
+document.getElementById('searchInput').addEventListener('input', filterTable);
+document.getElementById('categoryFilter').addEventListener('change', filterTable);
+document.getElementById('statusFilter').addEventListener('change', filterTable);
+
+function filterTable() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const categoryFilter = document.getElementById('categoryFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value;
+    
+    const rows = document.querySelectorAll('#productsTable tbody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        const category = row.dataset.category;
+        const status = row.dataset.status;
+        
+        const matchesSearch = text.includes(searchTerm);
+        const matchesCategory = !categoryFilter || category === categoryFilter;
+        const matchesStatus = !statusFilter || status === statusFilter;
+        
+        if (matchesSearch && matchesCategory && matchesStatus) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// Initialize page when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initializeSearch('searchInput', 'productsTable', [1, 2]); // Search in name and category columns
+    loadProducts();
+});
+
+function loadProducts() {
+    // This would normally load from server
+    console.log('Loading products...');
+}
+
+function editProduct(productId) {
+    // This would fetch product data and populate the modal
+    const modal = new bootstrap.Modal(document.getElementById('productModal'));
+    modal.show();
+}
+
+function deleteProduct(productId) {
+    const message = isRTL ? 'هل أنت متأكد من حذف هذا المنتج؟' : 'Are you sure you want to delete this product?';
+
+    confirmAction(message, function() {
+        const deleteBtn = event.target.closest('button');
+        showLoading(deleteBtn);
+
+        // Simulate API call
+        setTimeout(() => {
+            hideLoading(deleteBtn);
+            showToast(isRTL ? 'تم حذف المنتج بنجاح' : 'Product deleted successfully', 'success');
+            // Remove row from table
+            deleteBtn.closest('tr').remove();
+        }, 1000);
+    });
+}
+
+function saveProduct() {
+    const form = document.getElementById('productForm');
+
+    if (!validateForm(form)) {
+        showToast(isRTL ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill all required fields', 'warning');
+        return;
+    }
+
+    const saveBtn = document.querySelector('#productModal .btn-primary');
+    showLoading(saveBtn);
+
+    // Simulate API call
+    setTimeout(() => {
+        hideLoading(saveBtn);
+        showToast(isRTL ? 'تم حفظ المنتج بنجاح' : 'Product saved successfully', 'success');
+
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('productModal'));
+        modal.hide();
+
+        // Reload products
+        loadProducts();
+    }, 1000);
+}
+
+function exportProducts() {
+    showToast(isRTL ? 'جاري تصدير المنتجات...' : 'Exporting products...', 'info');
+    // Implement export functionality
+}
+
+// Reset modal when closed
+document.getElementById('productModal')?.addEventListener('hidden.bs.modal', function () {
+    const form = document.getElementById('productForm');
+    form.reset();
+    clearFormValidation(form);
+    document.getElementById('productId').value = '';
+});
+
+// Refresh data
+function refreshData() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري التحديث...' : 'Refreshing...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast(isRTL ? 'تم تحديث البيانات بنجاح' : 'Data refreshed successfully', 'success');
+    }, 1500);
+}
+
+// Generate report
+function generateReport() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري الإنشاء...' : 'Generating...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast(isRTL ? 'تم إنشاء تقرير المنتجات بنجاح' : 'Products report generated successfully', 'success');
+    }, 1500);
+}
+
+// Export data
+function exportData() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري التصدير...' : 'Exporting...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast(isRTL ? 'تم تصدير البيانات بنجاح' : 'Data exported successfully', 'success');
+    }, 1500);
+}
+
+// Save all data
+function saveAllData() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري الحفظ...' : 'Saving...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast(isRTL ? 'تم حفظ جميع البيانات بنجاح' : 'All data saved successfully', 'success');
+    }, 1500);
+}
+
+// Print report
+function printReport() {
+    showToast(isRTL ? 'جاري إعداد التقرير للطباعة...' : 'Preparing report for printing...', 'info');
+    setTimeout(() => {
+        window.print();
+    }, 1000);
+}
+
+// Delete selected
+function deleteSelected() {
+    showToast(isRTL ? 'يرجى اختيار منتج واحد على الأقل' : 'Please select at least one product', 'warning');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فاتورة مبيعات - {{ sale.invoice_number }}</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            font-size: 14px;
+            direction: rtl;
+            background: white;
+        }
+        
+        .invoice-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border: 1px solid #ddd;
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #2c3e50;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .company-logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .company-info {
+            color: #666;
+            line-height: 1.8;
+            font-size: 12px;
+        }
+        
+        .invoice-title {
+            background: #3498db;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        .invoice-details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        
+        .invoice-info, .customer-info {
+            flex: 1;
+            padding: 15px;
+            background: #f8f9fa;
+            margin: 0 5px;
+            border-radius: 5px;
+        }
+        
+        .invoice-info h4, .customer-info h4 {
+            margin-top: 0;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+        }
+        
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            border: 2px solid #2c3e50;
+        }
+        
+        .items-table th {
+            background: #2c3e50;
+            color: white;
+            padding: 12px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .items-table td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .items-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        .totals-section {
+            float: left;
+            width: 350px;
+            margin-top: 20px;
+        }
+        
+        .totals-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 2px solid #2c3e50;
+        }
+        
+        .totals-table td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .totals-table .label {
+            background: #ecf0f1;
+            font-weight: bold;
+            text-align: right;
+        }
+        
+        .totals-table .amount {
+            text-align: left;
+            font-weight: bold;
+        }
+        
+        .final-total {
+            background: #3498db !important;
+            color: white !important;
+            font-size: 16px;
+        }
+        
+        .footer {
+            clear: both;
+            margin-top: 50px;
+            text-align: center;
+            padding-top: 20px;
+            border-top: 2px solid #2c3e50;
+            color: #666;
+        }
+        
+        .signature-section {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+        }
+        
+        .signature-box {
+            width: 200px;
+            text-align: center;
+        }
+        
+        .signature-line {
+            border-bottom: 2px solid #2c3e50;
+            margin-bottom: 10px;
+            height: 50px;
+        }
+        
+        @media print {
+            body { margin: 0; }
+            .no-print { display: none; }
+        }
+        
+        .print-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .print-button:hover {
+            background: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <button class="print-button no-print" onclick="window.print()">
+        🖨️ طباعة
+    </button>
+    
+    <div class="invoice-container">
+        <!-- رأس الفاتورة -->
+        <div class="header">
+            <div class="company-logo">شركة المحاسبة المتقدمة</div>
+            <div class="company-info">
+                الرياض، المملكة العربية السعودية<br>
+                هاتف: +966 11 123 4567 | فاكس: +966 11 123 4568<br>
+                بريد إلكتروني: info@accounting.com | موقع: www.accounting.com<br>
+                الرقم الضريبي: 123456789012345
+            </div>
+        </div>
+        
+        <!-- عنوان الفاتورة -->
+        <div class="invoice-title">
+            فاتورة مبيعات
+        </div>
+        
+        <!-- تفاصيل الفاتورة -->
+        <div class="invoice-details">
+            <div class="invoice-info">
+                <h4>معلومات الفاتورة</h4>
+                <p><strong>رقم الفاتورة:</strong> {{ sale.invoice_number }}</p>
+                <p><strong>تاريخ الفاتورة:</strong> {{ sale.invoice_date.strftime('%Y-%m-%d') }}</p>
+                <p><strong>تاريخ الإنشاء:</strong> {{ sale.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                <p><strong>الفرع:</strong> {{ sale.branch.name if sale.branch else 'غير محدد' }}</p>
+                <p><strong>طريقة الدفع:</strong> {{ sale.payment_method }}</p>
+            </div>
+            
+            <div class="customer-info">
+                <h4>معلومات العميل</h4>
+                {% if sale.customer %}
+                <p><strong>اسم العميل:</strong> {{ sale.customer.name }}</p>
+                <p><strong>الهاتف:</strong> {{ sale.customer.phone or 'غير محدد' }}</p>
+                <p><strong>العنوان:</strong> {{ sale.customer.address or 'غير محدد' }}</p>
+                <p><strong>البريد الإلكتروني:</strong> {{ sale.customer.email or 'غير محدد' }}</p>
+                {% else %}
+                <p><strong>نوع العميل:</strong> عميل نقدي</p>
+                <p><strong>الوصف:</strong> عملية بيع نقدية مباشرة</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- جدول الأصناف -->
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th width="10%">#</th>
+                    <th width="40%">اسم المنتج</th>
+                    <th width="15%">الكمية</th>
+                    <th width="15%">سعر الوحدة</th>
+                    <th width="20%">الإجمالي</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in sale_items %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ item.product.name if item.product else 'منتج محذوف' }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ "%.2f"|format(item.unit_price) }} ريال</td>
+                    <td>{{ "%.2f"|format(item.total_price) }} ريال</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- الإجماليات -->
+        <div class="totals-section">
+            <table class="totals-table">
+                <tr>
+                    <td class="label">المجموع الفرعي:</td>
+                    <td class="amount">{{ "%.2f"|format(sale.total_amount) }} ريال</td>
+                </tr>
+                <tr>
+                    <td class="label">الضريبة المضافة (15%):</td>
+                    <td class="amount">{{ "%.2f"|format(sale.tax_amount) }} ريال</td>
+                </tr>
+                <tr class="final-total">
+                    <td class="label">الإجمالي النهائي:</td>
+                    <td class="amount">{{ "%.2f"|format(sale.final_amount) }} ريال</td>
+                </tr>
+                {% if sale.paid_amount and sale.paid_amount > 0 %}
+                <tr>
+                    <td class="label">المبلغ المدفوع:</td>
+                    <td class="amount">{{ "%.2f"|format(sale.paid_amount) }} ريال</td>
+                </tr>
+                <tr>
+                    <td class="label">المبلغ المتبقي:</td>
+                    <td class="amount">{{ "%.2f"|format(sale.final_amount - sale.paid_amount) }} ريال</td>
+                </tr>
+                {% endif %}
+            </table>
+        </div>
+        
+        <!-- التوقيعات -->
+        <div class="signature-section">
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <strong>توقيع العميل</strong>
+            </div>
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <strong>توقيع المندوب</strong>
+            </div>
+        </div>
+        
+        <!-- تذييل الفاتورة -->
+        <div class="footer">
+            <p><strong>شكراً لتعاملكم معنا</strong></p>
+            <p>هذه فاتورة مُنشأة إلكترونياً ولا تحتاج إلى توقيع أو ختم</p>
+            <p>في حالة وجود أي استفسار، يرجى التواصل معنا على الأرقام المذكورة أعلاه</p>
+            <p style="font-size: 10px; color: #999;">
+                تم إنشاء هذه الفاتورة بواسطة نظام المحاسبة المتقدم - {{ sale.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        // طباعة تلقائية عند فتح الصفحة
+        window.onload = function() {
+            // تأخير قصير للتأكد من تحميل الصفحة كاملة
+            setTimeout(function() {
+                window.print();
+            }, 500);
+        };
+        
+        // إغلاق النافذة بعد الطباعة
+        window.onafterprint = function() {
+            window.close();
+        };
+    </script>
+</body>
+</html>

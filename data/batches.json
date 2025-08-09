@@ -1,0 +1,47 @@
+[
+  {
+    "id": "batch_1754426901083_pjld4fmnl",
+    "actions": [
+      {
+        "id": "action_1754426909892_gt9atc",
+        "action": "button_click",
+        "data": {
+          "buttonId": "new_invoice",
+          "buttonText": "فاتورة جديدة"
+        },
+        "timestamp": "2025-08-05T20:48:29.892Z",
+        "screen": "sales",
+        "user": "current_user"
+      },
+      {
+        "id": "action_1754426914507_htouq3",
+        "action": "button_click",
+        "data": {
+          "buttonId": "print_report",
+          "buttonText": "طباعة التقرير",
+          "shortcut": "Ctrl+P"
+        },
+        "timestamp": "2025-08-05T20:48:34.507Z",
+        "screen": "sales",
+        "user": "current_user"
+      },
+      {
+        "id": "action_1754426933611_0dgj2z",
+        "action": "button_click",
+        "data": {
+          "buttonId": "stop_batch",
+          "buttonText": "إيقاف التسجيل"
+        },
+        "timestamp": "2025-08-05T20:48:53.611Z",
+        "screen": "sales",
+        "user": "current_user"
+      }
+    ],
+    "startTime": "2025-08-05T20:48:29.892Z",
+    "endTime": "2025-08-05T20:48:53.612Z",
+    "totalActions": 3,
+    "user_id": 1,
+    "username": "admin",
+    "saved_at": "2025-08-05T23:48:53.943501"
+  }
+]

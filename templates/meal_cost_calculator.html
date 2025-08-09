@@ -1,4 +1,4 @@
-{% extends "base_simple.html" %}
+{% extends "base_unified.html" %}
 
 {% block title %}
     {% if session.get('language', 'ar') == 'ar' %}
@@ -6,6 +6,16 @@
     {% else %}
         Meal Cost Calculator
     {% endif %}
+{% endblock %}
+
+{% block page_icon %}<i class="fas fa-utensils"></i>{% endblock %}
+
+{% block page_title %}
+{% if session.get('language', 'ar') == 'ar' %}
+    حاسبة تكلفة الوجبات
+{% else %}
+    Meal Cost Calculator
+{% endif %}
 {% endblock %}
 
 {% block content %}

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>معاينة طباعة الفواتير - {{ month }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .print-header {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .invoice-card {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status-badge {
+            font-size: 0.8em;
+            padding: 4px 8px;
+            border-radius: 12px;
+        }
+        .status-paid { background-color: #d4edda; color: #155724; }
+        .status-partial { background-color: #fff3cd; color: #856404; }
+        .status-pending { background-color: #f8d7da; color: #721c24; }
+        .summary-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn-print {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        @media print {
+            .btn-print, .no-print { display: none !important; }
+            body { background: white !important; }
+            .invoice-card { box-shadow: none; border: 1px solid #ccc; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="print-header text-center">
+            <h2><i class="fas fa-file-invoice me-2"></i>تقرير الفواتير</h2>
+            <div class="row mt-3">
+                <div class="col-md-3">
+                    <strong>النوع:</strong>
+                    {% if invoice_type == 'sales' %}فواتير المبيعات
+                    {% elif invoice_type == 'purchases' %}فواتير المشتريات
+                    {% elif invoice_type == 'expenses' %}فواتير المصروفات
+                    {% endif %}
+                </div>
+                <div class="col-md-3">
+                    <strong>الشهر:</strong> {{ month_num }}/{{ year }}
+                </div>
+                <div class="col-md-3">
+                    <strong>الحالة:</strong>
+                    {% if status == 'all' %}جميع الحالات
+                    {% elif status == 'paid' %}مدفوع
+                    {% elif status == 'partial' %}مدفوع جزئياً
+                    {% elif status == 'pending' %}غير مدفوع
+                    {% endif %}
+                </div>
+                <div class="col-md-3">
+                    <strong>التاريخ:</strong> {{ current_date }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="summary-card">
+            <h5><i class="fas fa-chart-bar me-2"></i>ملخص الفواتير</h5>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h4 class="text-primary">{{ invoices|length }}</h4>
+                        <small class="text-muted">إجمالي الفواتير</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h4 class="text-success">
+                            {% set total_amount = invoices|sum(attribute='final_amount' if invoice_type != 'expenses' else 'amount') %}
+                            {{ "%.2f"|format(total_amount) }}
+                        </h4>
+                        <small class="text-muted">إجمالي المبلغ (ريال)</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h4 class="text-info">
+                            {% set paid_invoices = invoices|selectattr('payment_status', 'equalto', 'paid')|list %}
+                            {{ paid_invoices|length }}
+                        </h4>
+                        <small class="text-muted">فواتير مدفوعة</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <h4 class="text-warning">
+                            {% set pending_invoices = invoices|selectattr('payment_status', 'equalto', 'pending')|list %}
+                            {{ pending_invoices|length }}
+                        </h4>
+                        <small class="text-muted">فواتير معلقة</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoices List -->
+        <div class="row">
+            {% for invoice in invoices %}
+            <div class="col-md-6 col-lg-4">
+                <div class="invoice-card">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="mb-0">
+                            {% if invoice_type == 'sales' %}{{ invoice.invoice_number }}
+                            {% elif invoice_type == 'purchases' %}{{ invoice.invoice_number }}
+                            {% elif invoice_type == 'expenses' %}{{ invoice.expense_number }}
+                            {% endif %}
+                        </h6>
+                        <span class="status-badge status-{{ invoice.payment_status }}">
+                            {% if invoice.payment_status == 'paid' %}مدفوع
+                            {% elif invoice.payment_status == 'partial' %}جزئي
+                            {% else %}معلق
+                            {% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="row small">
+                        <div class="col-6">
+                            <strong>التاريخ:</strong><br>
+                            {% if invoice_type == 'expenses' %}
+                                {{ invoice.expense_date.strftime('%Y-%m-%d') }}
+                            {% else %}
+                                {{ invoice.invoice_date.strftime('%Y-%m-%d') }}
+                            {% endif %}
+                        </div>
+                        <div class="col-6">
+                            <strong>المبلغ:</strong><br>
+                            {% if invoice_type == 'expenses' %}
+                                {{ "%.2f"|format(invoice.amount) }} ريال
+                            {% else %}
+                                {{ "%.2f"|format(invoice.final_amount) }} ريال
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row small mt-2">
+                        <div class="col-6">
+                            <strong>
+                                {% if invoice_type == 'sales' %}العميل:
+                                {% elif invoice_type == 'purchases' %}المورد:
+                                {% elif invoice_type == 'expenses' %}النوع:
+                                {% endif %}
+                            </strong><br>
+                            {% if invoice_type == 'sales' %}
+                                {{ invoice.customer_name or 'عميل نقدي' }}
+                            {% elif invoice_type == 'purchases' %}
+                                {{ invoice.supplier_name or 'مورد' }}
+                            {% elif invoice_type == 'expenses' %}
+                                {{ invoice.expense_type }}
+                            {% endif %}
+                        </div>
+                        <div class="col-6">
+                            <strong>طريقة الدفع:</strong><br>
+                            {% if invoice_type == 'expenses' %}
+                                {{ invoice.payment_method }}
+                            {% else %}
+                                {{ invoice.payment_method or 'غير محدد' }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if include_details and invoice.payment_status != 'pending' %}
+                    <hr class="my-2">
+                    <div class="small">
+                        <strong>تفاصيل الدفع:</strong><br>
+                        <div class="text-success">
+                            مدفوع: {{ "%.2f"|format(invoice.get_total_paid()) }} ريال
+                        </div>
+                        {% if invoice.get_remaining_amount() > 0 %}
+                        <div class="text-danger">
+                            متبقي: {{ "%.2f"|format(invoice.get_remaining_amount()) }} ريال
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+            
+            {% if not invoices %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">لا توجد فواتير في هذا الشهر</h5>
+                    <p class="text-muted">لم يتم العثور على فواتير تطابق المعايير المحددة</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-4 small text-muted no-print">
+            <p>تم إنشاء هذا التقرير في {{ current_datetime }}</p>
+            <p>نظام المحاسبة - إدارة الفواتير والمدفوعات</p>
+        </div>
+    </div>
+
+    <!-- Print Buttons -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1000;">
+        <div class="btn-group-vertical">
+            <button class="btn btn-success btn-lg" onclick="window.print()">
+                <i class="fas fa-print me-2"></i>طباعة
+            </button>
+            <button class="btn btn-primary btn-lg mt-2" onclick="downloadPDF()">
+                <i class="fas fa-file-pdf me-2"></i>تحميل PDF
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- مكتبة jsPDF لإنتاج ملفات PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        // Auto-focus for better UX
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('تم تحميل معاينة الطباعة بنجاح');
+            console.log('عدد الفواتير:', {{ invoices|length }});
+        });
+        
+        // Print function
+        function printReport() {
+            window.print();
+        }
+        
+        // Keyboard shortcut for print
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                window.print();
+            }
+        });
+
+        // وظيفة تحميل PDF
+        async function downloadPDF() {
+            try {
+                console.log('📄 بدء إنشاء ملف PDF...');
+
+                // إخفاء أزرار الطباعة مؤقتاً
+                const printButtons = document.querySelector('.position-fixed');
+                if (printButtons) printButtons.style.display = 'none';
+
+                // إنشاء PDF باستخدام html2canvas و jsPDF
+                const element = document.body;
+                const canvas = await html2canvas(element, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff'
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF.jsPDF('p', 'mm', 'a4');
+
+                const imgWidth = 210; // A4 width in mm
+                const pageHeight = 295; // A4 height in mm
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                let heightLeft = imgHeight;
+
+                let position = 0;
+
+                // إضافة الصفحة الأولى
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+
+                // إضافة صفحات إضافية إذا لزم الأمر
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+
+                // تحديد اسم الملف
+                const invoiceType = '{{ invoice_type }}';
+                const month = '{{ month }}';
+                const status = '{{ status }}';
+
+                const typeNames = {
+                    'sales': 'مبيعات',
+                    'purchases': 'مشتريات',
+                    'expenses': 'مصروفات',
+                    'payroll': 'رواتب'
+                };
+
+                const fileName = `تقرير_${typeNames[invoiceType] || invoiceType}_${month}_${status}.pdf`;
+
+                // حفظ الملف
+                pdf.save(fileName);
+
+                console.log('✅ تم إنشاء ملف PDF بنجاح:', fileName);
+
+                // إظهار أزرار الطباعة مرة أخرى
+                if (printButtons) printButtons.style.display = 'block';
+
+            } catch (error) {
+                console.error('❌ خطأ في إنشاء PDF:', error);
+                alert('حدث خطأ في إنشاء ملف PDF: ' + error.message);
+
+                // إظهار أزرار الطباعة مرة أخرى
+                const printButtons = document.querySelector('.position-fixed');
+                if (printButtons) printButtons.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,15 +1,5 @@
 {% extends "base_unified.html" %}
 
-{% block title %}
-{% if session.get('language', 'ar') == 'ar' %}
-المبيعات - نظام المحاسبة
-{% else %}
-Sales - Accounting System
-{% endif %}
-{% endblock %}
-
-{% block page_icon %}<i class="fas fa-shopping-cart"></i>{% endblock %}
-
 {% block page_title %}
 {% if session.get('language', 'ar') == 'ar' %}
     فواتير المبيعات
@@ -18,123 +8,98 @@ Sales - Accounting System
 {% endif %}
 {% endblock %}
 
-{% block page_actions %}
-<a href="{{ url_for('new_sale') }}" class="btn btn-primary">
-    <i class="fas fa-plus me-1"></i>
-    {% if session.get('language', 'ar') == 'ar' %}فاتورة جديدة{% else %}New Invoice{% endif %}
-</a>
+{% block extra_css %}
+<style>
+    .stats-card {
+        transition: transform 0.2s;
+    }
+    .stats-card:hover {
+        transform: translateY(-2px);
+    }
+    .table-responsive {
+        border-radius: 0.375rem;
+    }
+    .btn-group .btn {
+        border-radius: 0.25rem !important;
+        margin: 0 1px;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
 
 <!-- Filters -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <label for="branchFilter" class="form-label">
-            {% if session.get('language', 'ar') == 'ar' %}الفرع{% else %}Branch{% endif %}
-        </label>
-        <select class="form-select" id="branchFilter" onchange="filterByBranch()">
-            <option value="">{% if session.get('language', 'ar') == 'ar' %}جميع الفروع{% else %}All Branches{% endif %}</option>
-            {% for branch in branches %}
-            <option value="{{ branch.id }}" {{ 'selected' if selected_branch == branch.id|string else '' }}>
-                {{ branch.branch_name }}
-            </option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="col-md-3">
-        <label for="dateFrom" class="form-label">
-            {% if session.get('language', 'ar') == 'ar' %}من تاريخ{% else %}From Date{% endif %}
-        </label>
-        <input type="date" class="form-control" id="dateFrom">
-    </div>
-    <div class="col-md-3">
-        <label for="dateTo" class="form-label">
-            {% if session.get('language', 'ar') == 'ar' %}إلى تاريخ{% else %}To Date{% endif %}
-        </label>
-        <input type="date" class="form-control" id="dateTo">
-    </div>
-    <div class="col-md-3">
-        <label for="searchInvoice" class="form-label">
-            {% if session.get('language', 'ar') == 'ar' %}البحث{% else %}Search{% endif %}
-        </label>
-        <input type="text" class="form-control" id="searchInvoice" placeholder="{% if session.get('language', 'ar') == 'ar' %}رقم الفاتورة أو العميل{% else %}Invoice # or Customer{% endif %}">
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">{% if session.get('language', 'ar') == 'ar' %}الفرع{% else %}Branch{% endif %}</label>
+                <select class="form-select" id="branchFilter" onchange="filterByBranch()">
+                    <option value="">{% if session.get('language', 'ar') == 'ar' %}جميع الفروع{% else %}All Branches{% endif %}</option>
+                    {% for branch in branches %}
+                    <option value="{{ branch.id }}" {% if branch.id == selected_branch %}selected{% endif %}>{{ branch.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">{% if session.get('language', 'ar') == 'ar' %}من تاريخ{% else %}From Date{% endif %}</label>
+                <input type="date" class="form-control" id="dateFrom">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">{% if session.get('language', 'ar') == 'ar' %}إلى تاريخ{% else %}To Date{% endif %}</label>
+                <input type="date" class="form-control" id="dateTo">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">{% if session.get('language', 'ar') == 'ar' %}البحث{% else %}Search{% endif %}</label>
+                <input type="text" class="form-control" id="searchInvoice" placeholder="{% if session.get('language', 'ar') == 'ar' %}رقم الفاتورة أو العميل{% else %}Invoice # or Customer{% endif %}">
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- Summary Cards -->
+<!-- Statistics -->
 <div class="row mb-4">
     <div class="col-md-3">
-        <div class="card bg-primary text-white">
+        <div class="card stats-card text-center">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="card-title">
-                            {% if session.get('language', 'ar') == 'ar' %}إجمالي الفواتير{% else %}Total Invoices{% endif %}
-                        </h6>
-                        <h3 class="mb-0">{{ sales|length }}</h3>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-receipt fa-2x opacity-75"></i>
-                    </div>
-                </div>
+                <h5 class="card-title text-primary">{{ sales|length }}</h5>
+                <p class="card-text">{% if session.get('language', 'ar') == 'ar' %}إجمالي الفواتير{% else %}Total Invoices{% endif %}</p>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card bg-success text-white">
+        <div class="card stats-card text-center">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="card-title">
-                            {% if session.get('language', 'ar') == 'ar' %}إجمالي المبيعات{% else %}Total Sales{% endif %}
-                        </h6>
-                        <h3 class="mb-0">{{ "%.2f"|format(sales|sum(attribute='final_amount')) }} ريال</h3>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
-                    </div>
-                </div>
+                <h5 class="card-title text-success">
+                    {% set total_sales = sales|sum(attribute='total') %}
+                    {{ "%.2f"|format(total_sales) }} ريال
+                </h5>
+                <p class="card-text">{% if session.get('language', 'ar') == 'ar' %}إجمالي المبيعات{% else %}Total Sales{% endif %}</p>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card bg-info text-white">
+        <div class="card stats-card text-center">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="card-title">
-                            {% if session.get('language', 'ar') == 'ar' %}إجمالي الضرائب{% else %}Total Tax{% endif %}
-                        </h6>
-                        <h3 class="mb-0">{{ "%.2f"|format(sales|sum(attribute='tax_amount')) }} ريال</h3>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-percentage fa-2x opacity-75"></i>
-                    </div>
-                </div>
+                <h5 class="card-title text-warning">
+                    {% set total_tax = sales|sum(attribute='discount') %}
+                    {{ "%.2f"|format(total_tax) }} ريال
+                </h5>
+                <p class="card-text">{% if session.get('language', 'ar') == 'ar' %}إجمالي الخصومات{% else %}Total Discounts{% endif %}</p>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card bg-warning text-white">
+        <div class="card stats-card text-center">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <h6 class="card-title">
-                            {% if session.get('language', 'ar') == 'ar' %}متوسط الفاتورة{% else %}Average Invoice{% endif %}
-                        </h6>
-                        <h3 class="mb-0">
-                            {% if sales|length > 0 %}
-                                {{ "%.2f"|format((sales|sum(attribute='final_amount')) / (sales|length)) }} ريال
-                            {% else %}
-                                0.00 ريال
-                            {% endif %}
-                        </h3>
-                    </div>
-                    <div class="align-self-center">
-                        <i class="fas fa-chart-line fa-2x opacity-75"></i>
-                    </div>
-                </div>
+                <h5 class="card-title text-info">
+                    {% if sales|length > 0 %}
+                        {{ "%.2f"|format(total_sales / sales|length) }} ريال
+                    {% else %}
+                        0.00 ريال
+                    {% endif %}
+                </h5>
+                <p class="card-text">{% if session.get('language', 'ar') == 'ar' %}متوسط الفاتورة{% else %}Average Invoice{% endif %}</p>
             </div>
         </div>
     </div>
@@ -143,20 +108,83 @@ Sales - Accounting System
 <!-- Sales Table -->
 <div class="card">
     <div class="card-header">
-        <h5 class="card-title mb-0">
-            {% if session.get('language', 'ar') == 'ar' %}
-                قائمة فواتير المبيعات
-            {% else %}
-                Sales Invoices List
-            {% endif %}
-        </h5>
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                {% if session.get('language', 'ar') == 'ar' %}
+                    قائمة فواتير المبيعات
+                {% else %}
+                    Sales Invoices List
+                {% endif %}
+            </h5>
+            <!-- Sales Screen Buttons Toolbar -->
+            <div class="btn-group" role="group" aria-label="Sales Actions">
+                <button type="button"
+                        id="btnSalesSave"
+                        class="btn btn-success btn-sm"
+                        onclick="SaveSalesRecord()"
+                        title="حفظ فاتورة جديدة">
+                    <i class="fas fa-save me-1"></i>
+                    حفظ
+                </button>
+                <!-- الأزرار الرئيسية -->
+                <div class="btn-group me-2" role="group">
+                    <button type="button"
+                            id="btnSalesPrint"
+                            class="btn btn-primary"
+                            onclick="PrintSalesRecord()"
+                            title="طباعة الفاتورة المحددة">
+                        <i class="fas fa-print me-1"></i>
+                        طباعة
+                    </button>
+                    <button type="button"
+                            id="btnSalesPreview"
+                            class="btn btn-info"
+                            onclick="PreviewSalesRecord()"
+                            title="معاينة الفاتورة المحددة">
+                        <i class="fas fa-eye me-1"></i>
+                        معاينة
+                    </button>
+                </div>
+
+                <div class="btn-group me-2" role="group">
+                    <button type="button"
+                            id="btnSalesPayment"
+                            class="btn btn-success"
+                            onclick="RegisterPayment()"
+                            title="تسجيل دفعة للفاتورة المحددة">
+                        <i class="fas fa-money-bill-wave me-1"></i>
+                        تسجيل الدفع
+                    </button>
+                </div>
+
+                <div class="btn-group" role="group">
+                    <button type="button"
+                            id="btnSalesEdit"
+                            class="btn btn-warning"
+                            onclick="EditSalesRecord()"
+                            title="تعديل الفاتورة المحددة">
+                        <i class="fas fa-edit me-1"></i>
+                        تعديل
+                    </button>
+                    <button type="button"
+                            id="btnSalesDelete"
+                            class="btn btn-danger"
+                            onclick="DeleteSalesRecord()"
+                            title="حذف الفاتورة المحددة">
+                        <i class="fas fa-trash me-1"></i>
+                        حذف
+                    </button>
+                </div>
+
+            </div>
+        </div>
     </div>
     <div class="card-body">
-        {% if sales %}
         <div class="table-responsive">
             <table class="table table-hover" id="salesTable">
                 <thead>
                     <tr>
+                        <th width="50">تحديد</th>
                         <th>{% if session.get('language', 'ar') == 'ar' %}رقم الفاتورة{% else %}Invoice #{% endif %}</th>
                         <th>{% if session.get('language', 'ar') == 'ar' %}التاريخ{% else %}Date{% endif %}</th>
                         <th>{% if session.get('language', 'ar') == 'ar' %}العميل{% else %}Customer{% endif %}</th>
@@ -164,49 +192,52 @@ Sales - Accounting System
                         <th>{% if session.get('language', 'ar') == 'ar' %}المبلغ{% else %}Amount{% endif %}</th>
                         <th>{% if session.get('language', 'ar') == 'ar' %}الضريبة{% else %}Tax{% endif %}</th>
                         <th>{% if session.get('language', 'ar') == 'ar' %}الإجمالي{% else %}Total{% endif %}</th>
-                        <th>{% if session.get('language', 'ar') == 'ar' %}طريقة الدفع{% else %}Payment{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}المدفوع{% else %}Paid{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}المتبقي{% else %}Remaining{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}حالة الدفع{% else %}Payment Status{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}طريقة الدفع{% else %}Payment Method{% endif %}</th>
                         <th>{% if session.get('language', 'ar') == 'ar' %}إجراءات{% else %}Actions{% endif %}</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for sale in sales %}
-                    <tr data-branch="{{ sale.branch_id }}" data-date="{{ sale.invoice_date }}" data-customer="{{ sale.customer_name or '' }}" data-invoice="{{ sale.invoice_number }}">
+                    <tr class="invoice-row" data-branch="{{ sale.branch_id }}" data-date="{{ sale.invoice_date }}" data-customer="{{ sale.customer_name or '' }}" data-invoice="{{ sale.invoice_number }}" data-invoice-id="{{ sale.id }}">
                         <td>
-                            <strong>{{ sale.invoice_number }}</strong>
-                            <br>
-                            <small class="text-muted">{{ sale.created_at.strftime('%H:%M') }}</small>
-                        </td>
-                        <td>{{ sale.invoice_date.strftime('%Y-%m-%d') }}</td>
-                        <td>
-                            {% if sale.customer_name %}
-                                {{ sale.customer_name }}
-                            {% else %}
-                                <span class="text-muted">
-                                    {% if session.get('language', 'ar') == 'ar' %}عميل نقدي{% else %}Cash Customer{% endif %}
-                                </span>
-                            {% endif %}
+                            <input type="radio" name="selected_invoice" value="{{ sale.id }}" data-invoice-number="{{ sale.invoice_number }}">
                         </td>
                         <td>
-                            <span class="badge bg-primary">
-                                {{ sale.branch.branch_name if sale.branch else 'غير محدد' }}
+                            <strong>{{ sale.invoice_number }}</strong><br>
+                            <small class="text-muted">{{ sale.date.strftime('%H:%M') if sale.date else '-' }}</small>
+                        </td>
+                        <td>{{ sale.date.strftime('%Y-%m-%d') if sale.date else '-' }}</td>
+                        <td>{{ sale.customer.name if sale.customer else 'عميل نقدي' }}</td>
+                        <td>غير محدد</td>
+                        <td><strong>{{ "%.2f"|format(sale.total) }} ريال</strong></td>
+                        <td class="paid-amount">{{ "%.2f"|format(sale.paid_amount or 0) }} ريال</td>
+                        <td class="remaining-amount">{{ "%.2f"|format((sale.total or 0) - (sale.paid_amount or 0)) }} ريال</td>
+                        <td>
+                            <span class="badge payment-status bg-{{ 'success' if (sale.payment_status == 'paid') else ('warning' if sale.payment_status == 'partial' else 'danger') }}">
+                                {% if sale.payment_status == 'paid' %}مدفوع
+                                {% elif sale.payment_status == 'partial' %}جزئي
+                                {% else %}غير مدفوع{% endif %}
                             </span>
                         </td>
-                        <td>{{ "%.2f"|format(sale.total_amount) }} ريال</td>
-                        <td>{{ "%.2f"|format(sale.tax_amount) }} ريال</td>
-                        <td><strong>{{ "%.2f"|format(sale.final_amount) }} ريال</strong></td>
                         <td>
-                            <span class="badge bg-secondary">{{ sale.payment_method }}</span>
+                            <span class="badge bg-info">{{ sale.payment_method or 'غير محدد' }}</span>
                         </td>
                         <td>
                             <div class="btn-group btn-group-sm">
-                                <button type="button" class="btn btn-outline-primary" onclick="viewInvoice({{ sale.id }})">
-                                    <i class="fas fa-eye"></i>
+                                <button type="button" class="btn btn-success btn-sm" onclick="location.href='/sales/new'" title="إنشاء فاتورة جديدة">
+                                    <i class="fas fa-plus"></i>
                                 </button>
-                                <button type="button" class="btn btn-outline-success" onclick="printInvoice({{ sale.id }})">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="printInvoice({{ sale.id }})" title="طباعة الفاتورة">
                                     <i class="fas fa-print"></i>
                                 </button>
-                                <button type="button" class="btn btn-outline-info" onclick="duplicateInvoice({{ sale.id }})">
-                                    <i class="fas fa-copy"></i>
+                                <button type="button" class="btn btn-danger btn-sm" onclick="deleteInvoice({{ sale.id }})" title="حذف الفاتورة">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                <button type="button" class="btn btn-primary btn-sm" onclick="location.href='/payments_dues'" title="المدفوعات والمستحقات">
+                                    <i class="fas fa-money-bill-wave"></i>
                                 </button>
                             </div>
                         </td>
@@ -215,207 +246,594 @@ Sales - Accounting System
                 </tbody>
             </table>
         </div>
-        {% else %}
-        <div class="text-center py-5">
-            <i class="fas fa-receipt fa-4x text-muted mb-3"></i>
-            <h4 class="text-muted">
-                {% if session.get('language', 'ar') == 'ar' %}
-                    لا توجد فواتير مبيعات
-                {% else %}
-                    No sales invoices found
-                {% endif %}
-            </h4>
-            <p class="text-muted">
-                {% if session.get('language', 'ar') == 'ar' %}
-                    ابدأ بإنشاء فاتورة مبيعات جديدة
-                {% else %}
-                    Start by creating a new sales invoice
-                {% endif %}
-            </p>
-            <a href="{{ url_for('new_sale') }}" class="btn btn-primary">
-                <i class="fas fa-plus me-2"></i>
-                {% if session.get('language', 'ar') == 'ar' %}إنشاء فاتورة جديدة{% else %}Create New Invoice{% endif %}
-            </a>
-        </div>
-        {% endif %}
     </div>
 </div>
 
-<!-- Invoice Details Modal -->
-<div class="modal fade" id="invoiceModal" tabindex="-1">
+<!-- New Sale Modal -->
+<div class="modal fade" id="newSaleModal" tabindex="-1" aria-labelledby="newSaleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">
-                    {% if session.get('language', 'ar') == 'ar' %}
-                        تفاصيل الفاتورة
-                    {% else %}
-                        Invoice Details
-                    {% endif %}
+                <h5 class="modal-title" id="newSaleModalLabel">
+                    <i class="fas fa-plus-circle me-2"></i>إضافة مبيعة جديدة
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body" id="invoiceDetails">
-                <!-- Invoice details will be loaded here -->
+            <div class="modal-body">
+                <form id="newSaleForm" class="sales-form" data-auto-save="/api/sales/create" data-method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="saleCustomer" class="form-label">العميل</label>
+                                <select class="form-select" id="saleCustomer" name="customer_id">
+                                    <option value="">عميل نقدي</option>
+                                    {% for customer in customers %}
+                                    <option value="{{ customer.id }}">{{ customer.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="saleDate" class="form-label">تاريخ المبيعة</label>
+                                <input type="date" class="form-control" id="saleDate" name="date" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="saleSubtotal" class="form-label">المبلغ الفرعي</label>
+                                <input type="number" class="form-control" id="saleSubtotal" name="subtotal" step="0.01" required onchange="calculateTotal()">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="saleDiscount" class="form-label">
+                                    <i class="fas fa-percentage me-1"></i>الخصم
+                                </label>
+                                <input type="number" class="form-control" id="saleDiscount" name="discount" step="0.01" value="0" onchange="calculateTotal()">
+                                <small class="text-muted">أدخل مبلغ الخصم بالريال</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="saleTotal" class="form-label">المجموع النهائي</label>
+                                <input type="number" class="form-control" id="saleTotal" name="total" step="0.01" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="saleNotes" class="form-label">ملاحظات (اختياري)</label>
+                        <textarea class="form-control" id="saleNotes" name="notes" rows="3" placeholder="أي ملاحظات إضافية..."></textarea>
+                    </div>
+
+                    <!-- عرض ملخص الخصم -->
+                    <div class="alert alert-info" id="discountSummary" style="display: none;">
+                        <h6><i class="fas fa-calculator me-2"></i>ملخص الحساب:</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <strong>المبلغ الفرعي:</strong> <span id="summarySubtotal">0.00</span> ريال
+                            </div>
+                            <div class="col-md-4">
+                                <strong class="text-danger">الخصم:</strong> <span id="summaryDiscount">0.00</span> ريال
+                            </div>
+                            <div class="col-md-4">
+                                <strong class="text-success">المجموع النهائي:</strong> <span id="summaryTotal">0.00</span> ريال
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                نسبة الخصم: <span id="discountPercentage">0%</span>
+                            </small>
+                        </div>
+                    </div>
+                </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    {% if session.get('language', 'ar') == 'ar' %}إغلاق{% else %}Close{% endif %}
-                </button>
-                <button type="button" class="btn btn-primary" onclick="printCurrentInvoice()">
-                    <i class="fas fa-print me-2"></i>
-                    {% if session.get('language', 'ar') == 'ar' %}طباعة{% else %}Print{% endif %}
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="saveNewSale()">
+                    <i class="fas fa-save me-2"></i>حفظ المبيعة
                 </button>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Payment Registration Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="paymentModalLabel">تسجيل دفعة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="paymentForm">
+                    <input type="hidden" id="paymentInvoiceId" name="invoice_id">
+                    <div class="mb-3">
+                        <label for="paymentAmount" class="form-label">المبلغ المدفوع</label>
+                        <input type="number" class="form-control" id="paymentAmount" name="amount" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="paymentMethod" class="form-label">طريقة الدفع</label>
+                        <select class="form-select" id="paymentMethod" name="payment_method" required>
+                            <option value="">اختر طريقة الدفع</option>
+                            <option value="Cash">نقدي</option>
+                            <option value="Card">بطاقة</option>
+                            <option value="Bank Transfer">تحويل بنكي</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="paymentDate" class="form-label">تاريخ الدفع</label>
+                        <input type="date" class="form-control" id="paymentDate" name="payment_date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="paymentNotes" class="form-label">ملاحظات (اختياري)</label>
+                        <textarea class="form-control" id="paymentNotes" name="notes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-success" onclick="savePayment()">حفظ الدفعة</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
-let currentInvoiceId = null;
+// ============================================================================
+// SALES SCREEN BUTTON FUNCTIONS - Fixed Implementation
+// ============================================================================
 
-// Filter functions
-function filterByBranch() {
-    const branchId = document.getElementById('branchFilter').value;
-    const url = new URL(window.location);
-    
-    if (branchId) {
-        url.searchParams.set('branch_id', branchId);
-    } else {
-        url.searchParams.delete('branch_id');
-    }
-    
-    window.location.href = url.toString();
+// Global variables
+let selectedInvoiceId = null;
+let selectedInvoiceData = null;
+
+// Utility functions
+function getSelectedInvoiceId() {
+    const selected = document.querySelector('input[name="selected_invoice"]:checked');
+    return selected ? parseInt(selected.value) : null;
 }
 
-// Search functionality
-document.getElementById('searchInvoice').addEventListener('input', function() {
-    const searchTerm = this.value.toLowerCase();
-    const rows = document.querySelectorAll('#salesTable tbody tr');
-    
-    rows.forEach(row => {
-        const invoice = row.dataset.invoice.toLowerCase();
-        const customer = row.dataset.customer.toLowerCase();
-        
-        if (invoice.includes(searchTerm) || customer.includes(searchTerm)) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
-    });
-});
-
-// Date filtering
-document.getElementById('dateFrom').addEventListener('change', filterByDate);
-document.getElementById('dateTo').addEventListener('change', filterByDate);
-
-function filterByDate() {
-    const dateFrom = document.getElementById('dateFrom').value;
-    const dateTo = document.getElementById('dateTo').value;
-    const rows = document.querySelectorAll('#salesTable tbody tr');
-    
-    rows.forEach(row => {
-        const rowDate = row.dataset.date;
-        let show = true;
-        
-        if (dateFrom && rowDate < dateFrom) {
-            show = false;
-        }
-        if (dateTo && rowDate > dateTo) {
-            show = false;
-        }
-        
-        row.style.display = show ? '' : 'none';
-    });
+function getSelectedInvoiceNumber() {
+    const selected = document.querySelector('input[name="selected_invoice"]:checked');
+    return selected ? selected.dataset.invoiceNumber : null;
 }
 
-function viewInvoice(invoiceId) {
-    currentInvoiceId = invoiceId;
-    
-    // Show loading
-    document.getElementById('invoiceDetails').innerHTML = `
-        <div class="text-center py-4">
-            <i class="fas fa-spinner fa-spin fa-2x"></i>
-            <p class="mt-2">{% if session.get('language', 'ar') == 'ar' %}جاري التحميل...{% else %}Loading...{% endif %}</p>
-        </div>
+function updateButtonStates() {
+    const hasSelection = getSelectedInvoiceId() !== null;
+
+    // Enable/disable buttons based on selection
+    document.getElementById('btnSalesEdit').disabled = !hasSelection;
+    document.getElementById('btnSalesDelete').disabled = !hasSelection;
+    document.getElementById('btnSalesPreview').disabled = !hasSelection;
+    document.getElementById('btnSalesPrint').disabled = !hasSelection;
+    document.getElementById('btnSalesRegisterPayment').disabled = !hasSelection;
+}
+
+// ============================================================================
+// NOTIFICATION SYSTEM
+// ============================================================================
+
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'error' ? 'danger' : type === 'success' ? 'success' : 'info'} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
-    
-    const modal = new bootstrap.Modal(document.getElementById('invoiceModal'));
-    modal.show();
-    
-    // Simulate loading invoice details
+
+    // Add to page
+    document.body.appendChild(notification);
+
+    // Auto remove after 3 seconds
     setTimeout(() => {
-        document.getElementById('invoiceDetails').innerHTML = `
-            <div class="row">
-                <div class="col-md-6">
-                    <h6>{% if session.get('language', 'ar') == 'ar' %}معلومات الفاتورة{% else %}Invoice Information{% endif %}</h6>
-                    <p><strong>{% if session.get('language', 'ar') == 'ar' %}رقم الفاتورة:{% else %}Invoice #:{% endif %}</strong> INV-001</p>
-                    <p><strong>{% if session.get('language', 'ar') == 'ar' %}التاريخ:{% else %}Date:{% endif %}</strong> 2024-01-15</p>
-                    <p><strong>{% if session.get('language', 'ar') == 'ar' %}الفرع:{% else %}Branch:{% endif %}</strong> PLACE INDIA</p>
-                </div>
-                <div class="col-md-6">
-                    <h6>{% if session.get('language', 'ar') == 'ar' %}معلومات العميل{% else %}Customer Information{% endif %}</h6>
-                    <p><strong>{% if session.get('language', 'ar') == 'ar' %}العميل:{% else %}Customer:{% endif %}</strong> عميل نقدي</p>
-                    <p><strong>{% if session.get('language', 'ar') == 'ar' %}طريقة الدفع:{% else %}Payment:{% endif %}</strong> نقدي</p>
-                </div>
-            </div>
-            <hr>
-            <h6>{% if session.get('language', 'ar') == 'ar' %}عناصر الفاتورة{% else %}Invoice Items{% endif %}</h6>
-            <div class="table-responsive">
-                <table class="table table-sm">
-                    <thead>
-                        <tr>
-                            <th>{% if session.get('language', 'ar') == 'ar' %}المنتج{% else %}Product{% endif %}</th>
-                            <th>{% if session.get('language', 'ar') == 'ar' %}الكمية{% else %}Qty{% endif %}</th>
-                            <th>{% if session.get('language', 'ar') == 'ar' %}السعر{% else %}Price{% endif %}</th>
-                            <th>{% if session.get('language', 'ar') == 'ar' %}المجموع{% else %}Total{% endif %}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>منتج تجريبي</td>
-                            <td>2</td>
-                            <td>100.00 ريال</td>
-                            <td>200.00 ريال</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div class="text-end">
-                <p><strong>{% if session.get('language', 'ar') == 'ar' %}المجموع الفرعي:{% else %}Subtotal:{% endif %}</strong> 200.00 ريال</p>
-                <p><strong>{% if session.get('language', 'ar') == 'ar' %}الضريبة (15%):{% else %}Tax (15%):{% endif %}</strong> 30.00 ريال</p>
-                <p class="h5"><strong>{% if session.get('language', 'ar') == 'ar' %}المجموع النهائي:{% else %}Final Total:{% endif %}</strong> 230.00 ريال</p>
-            </div>
-        `;
-    }, 1000);
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 3000);
+}
+
+// ============================================================================
+// REQUIRED BUTTON FUNCTIONS
+// ============================================================================
+
+// Save Sales Record
+function SaveSalesRecord() {
+    console.log("Sales Save button clicked");
+
+    // Open new sale modal instead of redirecting
+    const modal = new bootstrap.Modal(document.getElementById('newSaleModal'));
+
+    // Set today's date as default
+    document.getElementById('saleDate').value = new Date().toISOString().split('T')[0];
+
+    modal.show();
+}
+
+// Calculate total with discount
+function calculateTotal() {
+    const subtotal = parseFloat(document.getElementById('saleSubtotal').value) || 0;
+    const discount = parseFloat(document.getElementById('saleDiscount').value) || 0;
+    const total = subtotal - discount;
+
+    // Update total field
+    document.getElementById('saleTotal').value = total.toFixed(2);
+
+    // Update summary
+    document.getElementById('summarySubtotal').textContent = subtotal.toFixed(2);
+    document.getElementById('summaryDiscount').textContent = discount.toFixed(2);
+    document.getElementById('summaryTotal').textContent = total.toFixed(2);
+
+    // Calculate discount percentage
+    const discountPercentage = subtotal > 0 ? ((discount / subtotal) * 100).toFixed(1) : 0;
+    document.getElementById('discountPercentage').textContent = discountPercentage + '%';
+
+    // Show/hide summary
+    const summaryDiv = document.getElementById('discountSummary');
+    if (subtotal > 0) {
+        summaryDiv.style.display = 'block';
+    } else {
+        summaryDiv.style.display = 'none';
+    }
+}
+
+// Save new sale
+function saveNewSale() {
+    const form = document.getElementById('newSaleForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    const formData = new FormData(form);
+    const saleData = Object.fromEntries(formData.entries());
+
+    // Validate that total is not negative
+    if (parseFloat(saleData.total) < 0) {
+        showNotification('خطأ: الخصم لا يمكن أن يكون أكبر من المبلغ الفرعي', 'error');
+        return;
+    }
+
+    // Show loading indicator
+    const submitBtn = document.querySelector('#newSaleModal .btn-primary');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'جاري الحفظ...';
+    submitBtn.disabled = true;
+
+    fetch('/api/sales/create', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(saleData)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('تم حفظ المبيعة بنجاح', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('newSaleModal')).hide();
+            // Reset form
+            form.reset();
+            // Reload page after short delay
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification('خطأ: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('حدث خطأ أثناء حفظ المبيعة', 'error');
+    })
+    .finally(() => {
+        // Reset button
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+    });
+}
+
+// Edit Sales Record
+function EditSalesRecord() {
+    console.log("Sales Edit button clicked");
+
+    const selectedRow = document.querySelector('.table tbody tr.table-active');
+    if (!selectedRow) {
+        showNotification("يرجى تحديد فاتورة للتعديل", "warning");
+        return;
+    }
+
+    const invoiceId = selectedRow.dataset.invoiceId || selectedRow.cells[0]?.textContent?.replace('#', '');
+    if (invoiceId) {
+        window.location.href = `/sales/edit/${invoiceId}`;
+    } else {
+        showNotification("خطأ في تحديد الفاتورة", "error");
+    }
+}
+
+// Delete Sales Record
+function DeleteSalesRecord() {
+    console.log("Sales Delete button clicked");
+
+    const selectedRow = document.querySelector('.table tbody tr.table-active');
+    if (!selectedRow) {
+        showNotification("يرجى تحديد فاتورة للحذف", "warning");
+        return;
+    }
+
+    const invoiceId = selectedRow.dataset.invoiceId || selectedRow.cells[0]?.textContent?.replace('#', '');
+    const invoiceNumber = selectedRow.cells[1]?.textContent || `#${invoiceId}`;
+
+    if (!invoiceId) {
+        showNotification("خطأ في تحديد الفاتورة", "error");
+        return;
+    }
+
+    // حذف مباشر بدون تأكيد
+    fetch(`/api/sales/delete/${invoiceId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('تم حذف الفاتورة بنجاح', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification('خطأ: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('حدث خطأ أثناء حذف الفاتورة', 'error');
+    });
+}
+
+// Preview Sales Record
+function PreviewSalesRecord() {
+    console.log("Sales Preview button clicked");
+
+    const selectedRow = document.querySelector('.table tbody tr.table-active');
+    if (!selectedRow) {
+        showNotification("يرجى تحديد فاتورة للمعاينة", "warning");
+        return;
+    }
+
+    const invoiceId = selectedRow.dataset.invoiceId || selectedRow.cells[0]?.textContent?.replace('#', '');
+    if (invoiceId) {
+        window.open(`/sales/preview/${invoiceId}`, '_blank');
+    } else {
+        showNotification("خطأ في تحديد الفاتورة", "error");
+    }
+}
+
+// Register Payment
+function RegisterPayment() {
+    console.log("Sales Register Payment button clicked");
+
+    const selectedRow = document.querySelector('.table tbody tr.table-active');
+    if (!selectedRow) {
+        showNotification("يرجى تحديد فاتورة لتسجيل الدفع", "warning");
+        return;
+    }
+
+    const invoiceId = selectedRow.dataset.invoiceId || selectedRow.cells[0]?.textContent?.replace('#', '');
+    const invoiceNumber = selectedRow.cells[1]?.textContent || `#${invoiceId}`;
+
+    if (invoiceId) {
+        // يمكن فتح modal أو توجيه لصفحة المدفوعات
+        location.href = `/payments_dues?sale_id=${invoiceId}`;
+    } else {
+        showNotification("خطأ في تحديد الفاتورة", "error");
+    }
+}
+
+// Print Sales Record
+function PrintSalesRecord() {
+    console.log("Sales Print button clicked");
+
+    const selectedRow = document.querySelector('.table tbody tr.table-active');
+    if (!selectedRow) {
+        showNotification("يرجى تحديد فاتورة للطباعة", "warning");
+        return;
+    }
+
+    const invoiceId = selectedRow.dataset.invoiceId || selectedRow.cells[0]?.textContent?.replace('#', '');
+    if (invoiceId) {
+        window.open(`/sales/print/${invoiceId}`, '_blank');
+    } else {
+        showNotification("خطأ في تحديد الفاتورة", "error");
+    }
+}
+
+// Select Sales Invoice
+function SelectSalesInvoice() {
+    console.log("Sales Select Invoice button clicked");
+
+    // This function can be used to open an invoice selection dialog
+    // For now, we'll just show current selection info
+    const invoiceId = getSelectedInvoiceId();
+    const invoiceNumber = getSelectedInvoiceNumber();
+
+    if (invoiceId) {
+        alert(`الفاتورة المحددة: ${invoiceNumber} (ID: ${invoiceId})`);
+    } else {
+        alert("لم يتم تحديد أي فاتورة");
+    }
+}
+
+// Register Sales Payment
+function RegisterSalesPayment() {
+    console.log("Sales Register Payment button clicked");
+
+    const invoiceId = getSelectedInvoiceId();
+    const invoiceNumber = getSelectedInvoiceNumber();
+
+    if (!invoiceId) {
+        alert("يرجى تحديد فاتورة لتسجيل الدفعة");
+        return;
+    }
+
+    // Set invoice data in modal
+    document.getElementById('paymentInvoiceId').value = invoiceId;
+    document.getElementById('paymentDate').value = new Date().toISOString().split('T')[0];
+
+    // Update modal title
+    document.getElementById('paymentModalLabel').textContent = `تسجيل دفعة للفاتورة ${invoiceNumber}`;
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
+    modal.show();
+}
+
+// Save Payment (called from modal)
+function savePayment() {
+    console.log("Save Payment button clicked");
+
+    const form = document.getElementById('paymentForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    const formData = new FormData(form);
+    const paymentData = Object.fromEntries(formData.entries());
+
+    // Show loading indicator
+    const submitBtn = document.querySelector('#paymentModal .btn-primary');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'جاري الحفظ...';
+    submitBtn.disabled = true;
+
+    fetch('/api/sales/register_payment', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(paymentData)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('تم تسجيل الدفعة بنجاح', 'success');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('paymentModal'));
+            modal.hide();
+            // Reset form
+            form.reset();
+            // Reload page after short delay
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification('خطأ: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('حدث خطأ أثناء تسجيل الدفعة', 'error');
+    })
+    .finally(() => {
+        // Reset button
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+    });
+}
+
+// ============================================================================
+// LEGACY FUNCTIONS (kept for compatibility with table buttons)
+// ============================================================================
+
+function deleteInvoice(invoiceId) {
+    if (confirm('هل أنت متأكد من حذف هذه الفاتورة؟')) {
+        fetch(`/sales/delete/${invoiceId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            alert(data.message);
+            if (data.success) {
+                location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء حذف الفاتورة');
+        });
+    }
 }
 
 function printInvoice(invoiceId) {
-    alert('{% if session.get('language', 'ar') == 'ar' %}سيتم تطوير وظيفة الطباعة قريباً{% else %}Print functionality coming soon{% endif %}');
+    window.open(`/sales/print/${invoiceId}`, '_blank');
 }
 
-function printCurrentInvoice() {
-    if (currentInvoiceId) {
-        printInvoice(currentInvoiceId);
-    }
-}
+// ============================================================================
+// EVENT LISTENERS AND INITIALIZATION
+// ============================================================================
 
-function duplicateInvoice(invoiceId) {
-    if (confirm('{% if session.get('language', 'ar') == 'ar' %}هل تريد إنشاء فاتورة جديدة بنفس البيانات؟{% else %}Create a new invoice with the same data?{% endif %}')) {
-        // Redirect to new sale page with invoice data
-        window.location.href = `{{ url_for('new_sale') }}?duplicate=${invoiceId}`;
-    }
-}
-
-// Set default date range (last 30 days)
 document.addEventListener('DOMContentLoaded', function() {
-    const today = new Date();
-    const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
-    
-    document.getElementById('dateTo').value = today.toISOString().split('T')[0];
-    document.getElementById('dateFrom').value = thirtyDaysAgo.toISOString().split('T')[0];
+    console.log('🎯 Sales Screen - Initializing button system...');
+
+    // Add event listeners for radio button selection
+    document.addEventListener('change', function(e) {
+        if (e.target.name === 'selected_invoice') {
+            selectedInvoiceId = parseInt(e.target.value);
+            updateButtonStates();
+            console.log(`Selected invoice: ${selectedInvoiceId}`);
+        }
+    });
+
+    // Initial button state update
+    updateButtonStates();
+
+    console.log('✅ Sales Screen - Button system initialized successfully!');
+    console.log('🔧 Available functions:');
+    console.log('   - SaveSalesRecord()');
+    console.log('   - EditSalesRecord()');
+    console.log('   - DeleteSalesRecord()');
+    console.log('   - PreviewSalesRecord()');
+    console.log('   - PrintSalesRecord()');
+    console.log('   - SelectSalesInvoice()');
+    console.log('   - RegisterSalesPayment()');
+
+    // إضافة وظيفة تحديد الصفوف
+    const tableRows = document.querySelectorAll('.table tbody tr');
+    tableRows.forEach(row => {
+        row.addEventListener('click', function() {
+            // إزالة التحديد من جميع الصفوف
+            tableRows.forEach(r => r.classList.remove('table-active'));
+            // إضافة التحديد للصف المحدد
+            this.classList.add('table-active');
+        });
+    });
 });
+
+// Export functions to global scope for onclick handlers
+
+
+// Export functions to global scope
+window.SaveSalesRecord = SaveSalesRecord;
+window.EditSalesRecord = EditSalesRecord;
+window.DeleteSalesRecord = DeleteSalesRecord;
+window.PreviewSalesRecord = PreviewSalesRecord;
+window.PrintSalesRecord = PrintSalesRecord;
+window.SelectSalesInvoice = SelectSalesInvoice;
+window.RegisterSalesPayment = RegisterSalesPayment;
+window.RegisterPayment = RegisterPayment;
+window.savePayment = savePayment;
+window.deleteInvoice = deleteInvoice;
+window.printInvoice = printInvoice;
+
 </script>
 {% endblock %}

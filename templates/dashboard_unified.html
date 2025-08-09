@@ -1,0 +1,226 @@
+{% extends "base_unified.html" %}
+
+{% block title %}
+{% if session.get('language', 'ar') == 'ar' %}
+لوحة التحكم - نظام المحاسبة المتكامل
+{% else %}
+Dashboard - Integrated Accounting System
+{% endif %}
+{% endblock %}
+
+{% block page_title %}
+{% if session.get('language', 'ar') == 'ar' %}
+    لوحة التحكم الرئيسية
+{% else %}
+    Main Dashboard
+{% endif %}
+{% endblock %}
+
+{% block page_subtitle %}
+{% if session.get('language', 'ar') == 'ar' %}
+    نظرة شاملة على أداء النظام والإحصائيات المهمة
+{% else %}
+    Comprehensive overview of system performance and key statistics
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<!-- بطاقات الإحصائيات -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 32px;">
+    <!-- إجمالي المبيعات -->
+    <div class="card">
+        <div class="card-body">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <h3 style="color: var(--gray-600); font-size: var(--font-size-sm); margin-bottom: 8px;">
+                        {% if session.get('language', 'ar') == 'ar' %}إجمالي المبيعات{% else %}Total Sales{% endif %}
+                    </h3>
+                    <p style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--gray-900); margin: 0;">
+                        $45,231
+                    </p>
+                </div>
+                <div style="width: 48px; height: 48px; background: var(--primary-color); border-radius: var(--border-radius-lg); display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-chart-line" style="color: white; font-size: 20px;"></i>
+                </div>
+            </div>
+            <div style="margin-top: 16px; display: flex; align-items: center; gap: 8px;">
+                <span style="color: #059669; font-size: var(--font-size-sm); font-weight: 500;">+12.5%</span>
+                <span style="color: var(--gray-500); font-size: var(--font-size-sm);">
+                    {% if session.get('language', 'ar') == 'ar' %}من الشهر الماضي{% else %}from last month{% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- عدد الفواتير -->
+    <div class="card">
+        <div class="card-body">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <h3 style="color: var(--gray-600); font-size: var(--font-size-sm); margin-bottom: 8px;">
+                        {% if session.get('language', 'ar') == 'ar' %}عدد الفواتير{% else %}Total Invoices{% endif %}
+                    </h3>
+                    <p style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--gray-900); margin: 0;">
+                        1,234
+                    </p>
+                </div>
+                <div style="width: 48px; height: 48px; background: var(--gray-600); border-radius: var(--border-radius-lg); display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-file-invoice" style="color: white; font-size: 20px;"></i>
+                </div>
+            </div>
+            <div style="margin-top: 16px; display: flex; align-items: center; gap: 8px;">
+                <span style="color: #059669; font-size: var(--font-size-sm); font-weight: 500;">+8.2%</span>
+                <span style="color: var(--gray-500); font-size: var(--font-size-sm);">
+                    {% if session.get('language', 'ar') == 'ar' %}من الشهر الماضي{% else %}from last month{% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- عدد العملاء -->
+    <div class="card">
+        <div class="card-body">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <h3 style="color: var(--gray-600); font-size: var(--font-size-sm); margin-bottom: 8px;">
+                        {% if session.get('language', 'ar') == 'ar' %}عدد العملاء{% else %}Total Customers{% endif %}
+                    </h3>
+                    <p style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--gray-900); margin: 0;">
+                        567
+                    </p>
+                </div>
+                <div style="width: 48px; height: 48px; background: var(--gray-600); border-radius: var(--border-radius-lg); display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-users" style="color: white; font-size: 20px;"></i>
+                </div>
+            </div>
+            <div style="margin-top: 16px; display: flex; align-items: center; gap: 8px;">
+                <span style="color: #059669; font-size: var(--font-size-sm); font-weight: 500;">+15.3%</span>
+                <span style="color: var(--gray-500); font-size: var(--font-size-sm);">
+                    {% if session.get('language', 'ar') == 'ar' %}من الشهر الماضي{% else %}from last month{% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- المنتجات -->
+    <div class="card">
+        <div class="card-body">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <h3 style="color: var(--gray-600); font-size: var(--font-size-sm); margin-bottom: 8px;">
+                        {% if session.get('language', 'ar') == 'ar' %}عدد المنتجات{% else %}Total Products{% endif %}
+                    </h3>
+                    <p style="font-size: var(--font-size-2xl); font-weight: 700; color: var(--gray-900); margin: 0;">
+                        89
+                    </p>
+                </div>
+                <div style="width: 48px; height: 48px; background: var(--gray-600); border-radius: var(--border-radius-lg); display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-box" style="color: white; font-size: 20px;"></i>
+                </div>
+            </div>
+            <div style="margin-top: 16px; display: flex; align-items: center; gap: 8px;">
+                <span style="color: #059669; font-size: var(--font-size-sm); font-weight: 500;">+5.7%</span>
+                <span style="color: var(--gray-500); font-size: var(--font-size-sm);">
+                    {% if session.get('language', 'ar') == 'ar' %}من الشهر الماضي{% else %}from last month{% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- الإجراءات السريعة -->
+<div class="card" style="margin-bottom: 32px;">
+    <div class="card-header">
+        <h2 class="card-title">
+            {% if session.get('language', 'ar') == 'ar' %}الإجراءات السريعة{% else %}Quick Actions{% endif %}
+        </h2>
+        <p class="card-subtitle">
+            {% if session.get('language', 'ar') == 'ar' %}الوصول السريع للوظائف الأساسية{% else %}Quick access to essential functions{% endif %}
+        </p>
+    </div>
+    <div class="card-body">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+            <a href="{{ url_for('sales') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-receipt nav-icon"></i>
+                {% if session.get('language', 'ar') == 'ar' %}إدارة المبيعات{% else %}Sales Management{% endif %}
+            </a>
+            <a href="{{ url_for('unified_products') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-cogs nav-icon"></i>
+                {% if session.get('language', 'ar') == 'ar' %}إدارة المنتجات{% else %}Manage Products{% endif %}
+            </a>
+            <a href="{{ url_for('sales') }}" class="btn btn-secondary btn-lg">
+                <i class="fas fa-shopping-cart nav-icon"></i>
+                {% if session.get('language', 'ar') == 'ar' %}عرض المبيعات{% else %}View Sales{% endif %}
+            </a>
+            <button class="btn btn-outline btn-lg" onclick="generateReport()">
+                <i class="fas fa-chart-bar nav-icon"></i>
+                {% if session.get('language', 'ar') == 'ar' %}تقرير سريع{% else %}Quick Report{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- الرسم البياني -->
+<div class="card">
+    <div class="card-header">
+        <h2 class="card-title">
+            {% if session.get('language', 'ar') == 'ar' %}مبيعات الأشهر الأخيرة{% else %}Recent Months Sales{% endif %}
+        </h2>
+        <p class="card-subtitle">
+            {% if session.get('language', 'ar') == 'ar' %}تطور المبيعات خلال الـ 6 أشهر الماضية{% else %}Sales trend over the last 6 months{% endif %}
+        </p>
+    </div>
+    <div class="card-body">
+        <canvas id="salesChart" style="max-height: 400px;"></canvas>
+    </div>
+</div>
+
+<script>
+// رسم بياني للمبيعات
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+            datasets: [{
+                label: '{% if session.get("language", "ar") == "ar" %}المبيعات{% else %}Sales{% endif %}',
+                data: [12000, 19000, 15000, 25000, 22000, 30000],
+                borderColor: 'var(--primary-color)',
+                backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'var(--gray-200)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'var(--gray-200)'
+                    }
+                }
+            }
+        }
+    });
+});
+
+// وظيفة تقرير سريع
+function generateReport() {
+    alert('{% if session.get("language", "ar") == "ar" %}سيتم إنشاء التقرير قريباً{% else %}Report will be generated soon{% endif %}');
+}
+</script>
+{% endblock %}

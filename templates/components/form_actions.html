@@ -1,0 +1,20 @@
+<!-- مكون أزرار النماذج -->
+<div class="d-flex justify-content-end gap-2">
+    <!-- زر الحفظ -->
+    <button type="submit" class="btn btn-success">
+        <i class="fas fa-save me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}{{ save_text|default('حفظ') }}{% else %}{{ save_text|default('Save') }}{% endif %}
+    </button>
+    
+    <!-- زر الإلغاء -->
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+        <i class="fas fa-times me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}إلغاء{% else %}Cancel{% endif %}
+    </button>
+    
+    <!-- زر إعادة التعيين -->
+    <button type="reset" class="btn btn-outline-warning">
+        <i class="fas fa-undo me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}إعادة تعيين{% else %}Reset{% endif %}
+    </button>
+</div>

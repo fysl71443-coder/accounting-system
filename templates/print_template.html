@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            direction: rtl;
+            margin: 20px;
+            background: white;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 4px solid {{ color }};
+            padding-bottom: 25px;
+        }
+        .company-name {
+            font-size: 32px;
+            font-weight: bold;
+            color: {{ color }};
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        .report-title {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        .print-date {
+            color: #666;
+            font-size: 16px;
+            font-style: italic;
+        }
+        .summary-box {
+            background: linear-gradient(135deg, {{ color }}20 0%, {{ color }}10 100%);
+            border: 2px solid {{ color }};
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .summary-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: {{ color }};
+            margin-bottom: 10px;
+        }
+        .summary-stats {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+        .stat-item {
+            margin: 10px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: {{ color }};
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 18px 12px;
+            text-align: center;
+            font-size: 15px;
+        }
+        th {
+            background: linear-gradient(135deg, {{ color }} 0%, {{ color }}CC 100%);
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        tr:hover {
+            background-color: {{ color }}10;
+            transition: background-color 0.3s ease;
+        }
+        .total-row {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+            color: white !important;
+            font-weight: bold;
+            font-size: 18px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 3px solid {{ color }};
+            color: #666;
+            font-size: 14px;
+        }
+        .footer-logo {
+            font-size: 18px;
+            font-weight: bold;
+            color: {{ color }};
+            margin-bottom: 10px;
+        }
+        @media print {
+            body { margin: 0; }
+            .no-print { display: none !important; }
+        }
+        .print-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: {{ color }};
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        .print-button:hover {
+            background: {{ color }}CC;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <button class="print-button no-print" onclick="window.print()">
+        🖨️ طباعة التقرير
+    </button>
+    
+    <div class="header">
+        <div class="company-name">نظام المحاسبة المتكامل</div>
+        <div class="report-title">{{ title }}</div>
+        <div class="print-date">تاريخ الطباعة: {{ moment().format('YYYY-MM-DD HH:mm:ss') }}</div>
+    </div>
+    
+    {% set total_amount = 0 %}
+    {% for item in data %}
+        {% set amount_str = item.amount.replace(' ريال', '').replace(',', '') %}
+        {% set amount_num = amount_str | float %}
+        {% set total_amount = total_amount + amount_num %}
+    {% endfor %}
+    
+    <div class="summary-box">
+        <div class="summary-title">ملخص {{ title }}</div>
+        <div class="summary-stats">
+            <div class="stat-item">
+                <div class="stat-number">{{ data|length }}</div>
+                <div class="stat-label">عدد العناصر</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ "%.2f"|format(total_amount) }}</div>
+                <div class="stat-label">إجمالي المبلغ (ريال)</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ "%.2f"|format(total_amount / data|length) if data|length > 0 else 0 }}</div>
+                <div class="stat-label">متوسط المبلغ (ريال)</div>
+            </div>
+        </div>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                {% if invoice_type == 'sales' %}
+                    <th>رقم الفاتورة</th>
+                    <th>اسم العميل</th>
+                    <th>تاريخ الفاتورة</th>
+                    <th>المبلغ</th>
+                {% elif invoice_type == 'purchases' %}
+                    <th>رقم الفاتورة</th>
+                    <th>اسم المورد</th>
+                    <th>تاريخ الفاتورة</th>
+                    <th>المبلغ</th>
+                {% elif invoice_type == 'expenses' %}
+                    <th>رقم المصروف</th>
+                    <th>نوع المصروف</th>
+                    <th>تاريخ المصروف</th>
+                    <th>المبلغ</th>
+                {% elif invoice_type == 'payroll' %}
+                    <th>اسم الموظف</th>
+                    <th>المنصب</th>
+                    <th>تاريخ الراتب</th>
+                    <th>المبلغ</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in data %}
+            <tr>
+                {% if invoice_type == 'sales' %}
+                    <td><strong>{{ item.invoice }}</strong></td>
+                    <td>{{ item.customer }}</td>
+                    <td>{{ item.date }}</td>
+                    <td>{{ item.amount }}</td>
+                {% elif invoice_type == 'purchases' %}
+                    <td><strong>{{ item.invoice }}</strong></td>
+                    <td>{{ item.supplier }}</td>
+                    <td>{{ item.date }}</td>
+                    <td>{{ item.amount }}</td>
+                {% elif invoice_type == 'expenses' %}
+                    <td><strong>{{ item.invoice }}</strong></td>
+                    <td>{{ item.type }}</td>
+                    <td>{{ item.date }}</td>
+                    <td>{{ item.amount }}</td>
+                {% elif invoice_type == 'payroll' %}
+                    <td><strong>{{ item.employee }}</strong></td>
+                    <td>{{ item.position }}</td>
+                    <td>{{ item.date }}</td>
+                    <td>{{ item.amount }}</td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+            
+            <tr class="total-row">
+                <td colspan="3"><strong>المجموع الإجمالي</strong></td>
+                <td><strong>{{ "%.2f"|format(total_amount) }} ريال</strong></td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <div class="footer">
+        <div class="footer-logo">نظام المحاسبة المتكامل</div>
+        <p>تم إنشاء هذا التقرير تلقائياً بواسطة النظام</p>
+        <p>للاستفسارات والدعم الفني: support@accounting-system.com</p>
+        <p><strong>عدد العناصر: {{ data|length }} | إجمالي المبلغ: {{ "%.2f"|format(total_amount) }} ريال</strong></p>
+    </div>
+    
+    <script>
+        // طباعة تلقائية بعد التحميل
+        window.onload = function() {
+            setTimeout(function() {
+                window.print();
+            }, 1000);
+        };
+    </script>
+</body>
+</html>

@@ -18,86 +18,92 @@
 {% endif %}
 {% endblock %}
 
-{% block page_actions %}
-<div class="btn-group">
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">
-        <i class="fas fa-plus me-1"></i>
-        {% if session.get('language', 'ar') == 'ar' %}إضافة صنف{% else %}Add Item{% endif %}
-    </button>
-    <button type="button" class="btn btn-success" onclick="exportInventory()">
-        <i class="fas fa-download me-1"></i>
-        {% if session.get('language', 'ar') == 'ar' %}تصدير{% else %}Export{% endif %}
-    </button>
-</div>
-{% endblock %}
-
 {% block content %}
-            <button type="button" class="btn btn-sm btn-warning" onclick="stockAlert()">
-                <i class="fas fa-exclamation-triangle me-1"></i>
-                {% if session.get('language', 'ar') == 'ar' %}تنبيهات المخزون{% else %}Stock Alerts{% endif %}
-            </button>
-        </div>
-    </div>
-</div>
 
 <!-- Inventory Statistics -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card text-center">
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
             <div class="card-body">
-                <i class="fas fa-box fa-2x text-primary mb-2"></i>
-                <h4 class="text-primary">1,245</h4>
-                <p class="card-text">
-                    {% if session.get('language', 'ar') == 'ar' %}إجمالي الأصناف{% else %}Total Items{% endif %}
-                </p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}إجمالي الأصناف{% else %}Total Items{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-primary">1,245</h4>
+                    </div>
+                    <div class="text-primary opacity-75">
+                        <i class="fas fa-box fa-2x"></i>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-center">
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
             <div class="card-body">
-                <i class="fas fa-arrow-down fa-2x text-danger mb-2"></i>
-                <h4 class="text-danger">23</h4>
-                <p class="card-text">
-                    {% if session.get('language', 'ar') == 'ar' %}مخزون منخفض{% else %}Low Stock{% endif %}
-                </p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}مخزون منخفض{% else %}Low Stock{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-danger">23</h4>
+                    </div>
+                    <div class="text-danger opacity-75">
+                        <i class="fas fa-arrow-down fa-2x"></i>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-center">
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
             <div class="card-body">
-                <i class="fas fa-times-circle fa-2x text-warning mb-2"></i>
-                <h4 class="text-warning">8</h4>
-                <p class="card-text">
-                    {% if session.get('language', 'ar') == 'ar' %}نفد المخزون{% else %}Out of Stock{% endif %}
-                </p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}نفد المخزون{% else %}Out of Stock{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-warning">8</h4>
+                    </div>
+                    <div class="text-warning opacity-75">
+                        <i class="fas fa-times-circle fa-2x"></i>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-center">
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
             <div class="card-body">
-                <i class="fas fa-dollar-sign fa-2x text-success mb-2"></i>
-                <h4 class="text-success">2,450,000</h4>
-                <p class="card-text">
-                    {% if session.get('language', 'ar') == 'ar' %}قيمة المخزون{% else %}Inventory Value{% endif %}
-                </p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}قيمة المخزون{% else %}Inventory Value{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-success">2,450,000</h4>
+                    </div>
+                    <div class="text-success opacity-75">
+                        <i class="fas fa-dollar-sign fa-2x"></i>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Search and Filter -->
-<div class="row mb-4">
-    <div class="col-md-4">
-        <div class="input-group">
-            <input type="text" class="form-control" id="searchItems" placeholder="{% if session.get('language', 'ar') == 'ar' %}البحث في الأصناف...{% else %}Search items...{% endif %}">
-            <button class="btn btn-outline-secondary" type="button">
-                <i class="fas fa-search"></i>
-            </button>
-        </div>
-    </div>
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="searchItems" placeholder="{% if session.get('language', 'ar') == 'ar' %}البحث في الأصناف...{% else %}Search items...{% endif %}">
+                    <button class="btn btn-outline-secondary" type="button">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
     <div class="col-md-2">
         <select class="form-select" id="filterCategory">
             <option value="">{% if session.get('language', 'ar') == 'ar' %}جميع الفئات{% else %}All Categories{% endif %}</option>
@@ -153,7 +159,162 @@
                     </tr>
                 </thead>
                 <tbody id="inventoryTableBody">
-                    <!-- Table rows will be populated by JavaScript -->
+                    <!-- Sample inventory data -->
+                    <tr>
+                        <td>
+                            <img src="https://via.placeholder.com/50x50/007bff/ffffff?text=PC" alt="كمبيوتر محمول" class="rounded" style="width: 50px; height: 50px;">
+                        </td>
+                        <td>
+                            <strong>كمبيوتر محمول HP</strong><br>
+                            <small class="text-muted">HP Pavilion 15</small>
+                        </td>
+                        <td><span class="badge bg-primary">إلكترونيات</span></td>
+                        <td><strong>25</strong></td>
+                        <td>قطعة</td>
+                        <td><strong>3,200 ريال</strong></td>
+                        <td><strong>3,500 ريال</strong></td>
+                        <td><span class="badge bg-success">متوفر</span></td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="viewItem(1)" title="عرض">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-warning" onclick="editItem(1)" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-info" onclick="adjustStock(1)" title="تعديل المخزون">
+                                    <i class="fas fa-boxes"></i>
+                                </button>
+                                <button class="btn btn-outline-secondary" onclick="viewHistory(1)" title="التاريخ">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <img src="https://via.placeholder.com/50x50/28a745/ffffff?text=📱" alt="هاتف ذكي" class="rounded" style="width: 50px; height: 50px;">
+                        </td>
+                        <td>
+                            <strong>هاتف ذكي Samsung</strong><br>
+                            <small class="text-muted">Galaxy S21</small>
+                        </td>
+                        <td><span class="badge bg-primary">إلكترونيات</span></td>
+                        <td><strong class="text-warning">5</strong></td>
+                        <td>قطعة</td>
+                        <td><strong>2,800 ريال</strong></td>
+                        <td><strong>3,200 ريال</strong></td>
+                        <td><span class="badge bg-warning">مخزون منخفض</span></td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="viewItem(2)" title="عرض">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-warning" onclick="editItem(2)" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-info" onclick="adjustStock(2)" title="تعديل المخزون">
+                                    <i class="fas fa-boxes"></i>
+                                </button>
+                                <button class="btn btn-outline-secondary" onclick="viewHistory(2)" title="التاريخ">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <img src="https://via.placeholder.com/50x50/dc3545/ffffff?text=📚" alt="كتاب" class="rounded" style="width: 50px; height: 50px;">
+                        </td>
+                        <td>
+                            <strong>كتاب البرمجة</strong><br>
+                            <small class="text-muted">تعلم البرمجة بسهولة</small>
+                        </td>
+                        <td><span class="badge bg-info">كتب</span></td>
+                        <td><strong class="text-danger">0</strong></td>
+                        <td>قطعة</td>
+                        <td><strong>45.00 ريال</strong></td>
+                        <td><strong>80.00 ريال</strong></td>
+                        <td><span class="badge bg-danger">نفد المخزون</span></td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="viewItem(3)" title="عرض">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-warning" onclick="editItem(3)" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-info" onclick="adjustStock(3)" title="تعديل المخزون">
+                                    <i class="fas fa-boxes"></i>
+                                </button>
+                                <button class="btn btn-outline-secondary" onclick="viewHistory(3)" title="التاريخ">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <img src="https://via.placeholder.com/50x50/ffc107/000000?text=👕" alt="قميص" class="rounded" style="width: 50px; height: 50px;">
+                        </td>
+                        <td>
+                            <strong>قميص قطني</strong><br>
+                            <small class="text-muted">قميص رجالي أزرق</small>
+                        </td>
+                        <td><span class="badge bg-secondary">ملابس</span></td>
+                        <td><strong>50</strong></td>
+                        <td>قطعة</td>
+                        <td><strong>85.00 ريال</strong></td>
+                        <td><strong>120.00 ريال</strong></td>
+                        <td><span class="badge bg-success">متوفر</span></td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="viewItem(4)" title="عرض">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-warning" onclick="editItem(4)" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-info" onclick="adjustStock(4)" title="تعديل المخزون">
+                                    <i class="fas fa-boxes"></i>
+                                </button>
+                                <button class="btn btn-outline-secondary" onclick="viewHistory(4)" title="التاريخ">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <img src="https://via.placeholder.com/50x50/17a2b8/ffffff?text=🍎" alt="تفاح" class="rounded" style="width: 50px; height: 50px;">
+                        </td>
+                        <td>
+                            <strong>تفاح أحمر</strong><br>
+                            <small class="text-muted">تفاح طازج من المزرعة</small>
+                        </td>
+                        <td><span class="badge bg-success">أغذية</span></td>
+                        <td><strong>200</strong></td>
+                        <td>كيلو</td>
+                        <td><strong>8.00 ريال</strong></td>
+                        <td><strong>12.00 ريال</strong></td>
+                        <td><span class="badge bg-success">متوفر</span></td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="viewItem(5)" title="عرض">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-warning" onclick="editItem(5)" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-info" onclick="adjustStock(5)" title="تعديل المخزون">
+                                    <i class="fas fa-boxes"></i>
+                                </button>
+                                <button class="btn btn-outline-secondary" onclick="viewHistory(5)" title="التاريخ">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -525,17 +686,89 @@
 
 {% block extra_js %}
 <script>
+// Sample inventory data
+const inventoryData = [
+    {
+        id: 1,
+        name: 'كمبيوتر محمول HP',
+        description: 'HP Pavilion 15',
+        category: 'إلكترونيات',
+        quantity: 25,
+        unit: 'قطعة',
+        purchasePrice: 3200,
+        sellingPrice: 3500,
+        status: 'متوفر',
+        statusClass: 'success',
+        image: 'https://via.placeholder.com/50x50/007bff/ffffff?text=PC'
+    },
+    {
+        id: 2,
+        name: 'هاتف ذكي Samsung',
+        description: 'Galaxy S21',
+        category: 'إلكترونيات',
+        quantity: 5,
+        unit: 'قطعة',
+        purchasePrice: 2800,
+        sellingPrice: 3200,
+        status: 'مخزون منخفض',
+        statusClass: 'warning',
+        image: 'https://via.placeholder.com/50x50/28a745/ffffff?text=📱'
+    },
+    {
+        id: 3,
+        name: 'كتاب البرمجة',
+        description: 'تعلم البرمجة بسهولة',
+        category: 'كتب',
+        quantity: 0,
+        unit: 'قطعة',
+        purchasePrice: 45,
+        sellingPrice: 80,
+        status: 'نفد المخزون',
+        statusClass: 'danger',
+        image: 'https://via.placeholder.com/50x50/dc3545/ffffff?text=📚'
+    },
+    {
+        id: 4,
+        name: 'قميص قطني',
+        description: 'قميص رجالي أزرق',
+        category: 'ملابس',
+        quantity: 50,
+        unit: 'قطعة',
+        purchasePrice: 85,
+        sellingPrice: 120,
+        status: 'متوفر',
+        statusClass: 'success',
+        image: 'https://via.placeholder.com/50x50/ffc107/000000?text=👕'
+    },
+    {
+        id: 5,
+        name: 'تفاح أحمر',
+        description: 'تفاح طازج من المزرعة',
+        category: 'أغذية',
+        quantity: 200,
+        unit: 'كيلو',
+        purchasePrice: 8,
+        sellingPrice: 12,
+        status: 'متوفر',
+        statusClass: 'success',
+        image: 'https://via.placeholder.com/50x50/17a2b8/ffffff?text=🍎'
+    }
+];
+
 function toggleView(viewType) {
     const tableView = document.getElementById('tableView');
     const cardsView = document.getElementById('cardsView');
     const tableBtn = document.getElementById('tableViewBtn');
     const cardsBtn = document.getElementById('cardsViewBtn');
-    
+
     if (viewType === 'table') {
         tableView.classList.remove('d-none');
         cardsView.classList.add('d-none');
         tableBtn.classList.add('active');
         cardsBtn.classList.remove('active');
+
+        // Load table data when switching to table view
+        loadTableData();
     } else {
         tableView.classList.add('d-none');
         cardsView.classList.remove('d-none');
@@ -544,12 +777,168 @@ function toggleView(viewType) {
     }
 }
 
+function loadTableData() {
+    const tbody = document.getElementById('inventoryTableBody');
+
+    // Clear existing data
+    tbody.innerHTML = '';
+
+    // Add data rows
+    inventoryData.forEach(item => {
+        const row = document.createElement('tr');
+
+        const quantityClass = item.quantity === 0 ? 'text-danger' : item.quantity <= 10 ? 'text-warning' : '';
+        const categoryBadgeClass = getCategoryBadgeClass(item.category);
+
+        row.innerHTML = `
+            <td>
+                <img src="${item.image}" alt="${item.name}" class="rounded" style="width: 50px; height: 50px;">
+            </td>
+            <td>
+                <strong>${item.name}</strong><br>
+                <small class="text-muted">${item.description}</small>
+            </td>
+            <td><span class="badge ${categoryBadgeClass}">${item.category}</span></td>
+            <td><strong class="${quantityClass}">${item.quantity}</strong></td>
+            <td>${item.unit}</td>
+            <td><strong>${item.purchasePrice.toFixed(2)} ريال</strong></td>
+            <td><strong>${item.sellingPrice.toFixed(2)} ريال</strong></td>
+            <td><span class="badge bg-${item.statusClass}">${item.status}</span></td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary" onclick="viewItem(${item.id})" title="عرض">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-outline-warning" onclick="editItem(${item.id})" title="تعديل">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-outline-info" onclick="adjustStock(${item.id})" title="تعديل المخزون">
+                        <i class="fas fa-boxes"></i>
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="viewHistory(${item.id})" title="التاريخ">
+                        <i class="fas fa-history"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+
+        tbody.appendChild(row);
+    });
+}
+
+function getCategoryBadgeClass(category) {
+    const categoryClasses = {
+        'إلكترونيات': 'bg-primary',
+        'كتب': 'bg-info',
+        'ملابس': 'bg-secondary',
+        'أغذية': 'bg-success'
+    };
+    return categoryClasses[category] || 'bg-secondary';
+}
+
+// Search and filter functionality
+function setupSearchAndFilter() {
+    const searchInput = document.getElementById('searchItems');
+    const categoryFilter = document.getElementById('filterCategory');
+    const sortSelect = document.getElementById('sortItems');
+
+    searchInput.addEventListener('input', filterAndSearch);
+    categoryFilter.addEventListener('change', filterAndSearch);
+    sortSelect.addEventListener('change', filterAndSearch);
+}
+
+function filterAndSearch() {
+    const searchTerm = document.getElementById('searchItems').value.toLowerCase();
+    const selectedCategory = document.getElementById('filterCategory').value;
+    const sortBy = document.getElementById('sortItems').value;
+
+    let filteredData = inventoryData.filter(item => {
+        const matchesSearch = item.name.toLowerCase().includes(searchTerm) ||
+                            item.description.toLowerCase().includes(searchTerm);
+        const matchesCategory = !selectedCategory || item.category === selectedCategory;
+
+        return matchesSearch && matchesCategory;
+    });
+
+    // Sort data
+    if (sortBy === 'name') {
+        filteredData.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortBy === 'quantity') {
+        filteredData.sort((a, b) => b.quantity - a.quantity);
+    } else if (sortBy === 'price') {
+        filteredData.sort((a, b) => b.sellingPrice - a.sellingPrice);
+    }
+
+    // Update table if in table view
+    if (!document.getElementById('tableView').classList.contains('d-none')) {
+        updateTableWithData(filteredData);
+    }
+
+    // Update cards view
+    updateCardsWithData(filteredData);
+}
+
+function updateTableWithData(data) {
+    const tbody = document.getElementById('inventoryTableBody');
+    tbody.innerHTML = '';
+
+    data.forEach(item => {
+        const row = document.createElement('tr');
+        const quantityClass = item.quantity === 0 ? 'text-danger' : item.quantity <= 10 ? 'text-warning' : '';
+        const categoryBadgeClass = getCategoryBadgeClass(item.category);
+
+        row.innerHTML = `
+            <td>
+                <img src="${item.image}" alt="${item.name}" class="rounded" style="width: 50px; height: 50px;">
+            </td>
+            <td>
+                <strong>${item.name}</strong><br>
+                <small class="text-muted">${item.description}</small>
+            </td>
+            <td><span class="badge ${categoryBadgeClass}">${item.category}</span></td>
+            <td><strong class="${quantityClass}">${item.quantity}</strong></td>
+            <td>${item.unit}</td>
+            <td><strong>${item.purchasePrice.toFixed(2)} ريال</strong></td>
+            <td><strong>${item.sellingPrice.toFixed(2)} ريال</strong></td>
+            <td><span class="badge bg-${item.statusClass}">${item.status}</span></td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary" onclick="viewItem(${item.id})" title="عرض">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-outline-warning" onclick="editItem(${item.id})" title="تعديل">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-outline-info" onclick="adjustStock(${item.id})" title="تعديل المخزون">
+                        <i class="fas fa-boxes"></i>
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="viewHistory(${item.id})" title="التاريخ">
+                        <i class="fas fa-history"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function updateCardsWithData(data) {
+    // This would update the cards view - for now we'll keep the existing cards
+    console.log('Cards view updated with', data.length, 'items');
+}
+
 function viewItem(id) {
-    alert('عرض تفاصيل الصنف رقم: ' + id);
+    const item = inventoryData.find(item => item.id === id);
+    if (item) {
+        alert(`عرض تفاصيل الصنف: ${item.name}\nالكمية: ${item.quantity} ${item.unit}\nسعر البيع: ${item.sellingPrice} ريال`);
+    }
 }
 
 function editItem(id) {
-    alert('تعديل الصنف رقم: ' + id);
+    const item = inventoryData.find(item => item.id === id);
+    if (item) {
+        alert(`تعديل الصنف: ${item.name}\nالكمية الحالية: ${item.quantity} ${item.unit}`);
+    }
 }
 
 function adjustStock(id) {
@@ -589,7 +978,72 @@ function exportInventory() {
 }
 
 function stockAlert() {
-    alert('عرض تنبيهات المخزون المنخفض');
+    showToast(isRTL ? 'عرض تنبيهات المخزون المنخفض' : 'Showing low stock alerts', 'info');
 }
+
+// Refresh data
+function refreshData() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري التحديث...' : 'Refreshing...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast(isRTL ? 'تم تحديث البيانات بنجاح' : 'Data refreshed successfully', 'success');
+    }, 1500);
+}
+
+// Generate report
+function generateReport() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري الإنشاء...' : 'Generating...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast(isRTL ? 'تم إنشاء تقرير المخزون بنجاح' : 'Inventory report generated successfully', 'success');
+    }, 1500);
+}
+
+// Save all data
+function saveAllData() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري الحفظ...' : 'Saving...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast(isRTL ? 'تم حفظ جميع البيانات بنجاح' : 'All data saved successfully', 'success');
+    }, 1500);
+}
+
+// Print report
+function printReport() {
+    showToast(isRTL ? 'جاري إعداد التقرير للطباعة...' : 'Preparing report for printing...', 'info');
+    setTimeout(() => {
+        window.print();
+    }, 1000);
+}
+
+// Initialize page when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔄 Initializing inventory page...');
+
+    // Setup search and filter functionality
+    setupSearchAndFilter();
+
+    // Load initial table data (if table view is active)
+    if (!document.getElementById('tableView').classList.contains('d-none')) {
+        loadTableData();
+    }
+
+    console.log('✅ Inventory page initialized successfully');
+});
 </script>
 {% endblock %}

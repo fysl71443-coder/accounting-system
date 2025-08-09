@@ -1,0 +1,30 @@
+<!-- مكون أزرار إدارة البيانات -->
+<div class="btn-toolbar" role="toolbar">
+    <div class="btn-group me-2" role="group">
+        <!-- زر إضافة -->
+        <button type="button" class="btn btn-success btn-sm" onclick="{{ add_function|default('addNew()') }}">
+            <i class="fas fa-plus me-1"></i>
+            {% if session.get('language', 'ar') == 'ar' %}إضافة{% else %}Add{% endif %}
+        </button>
+        
+        <!-- زر تعديل -->
+        <button type="button" class="btn btn-warning btn-sm" onclick="{{ edit_function|default('editSelected()') }}">
+            <i class="fas fa-edit me-1"></i>
+            {% if session.get('language', 'ar') == 'ar' %}تعديل{% else %}Edit{% endif %}
+        </button>
+        
+        <!-- زر حذف -->
+        <button type="button" class="btn btn-danger btn-sm" onclick="{{ delete_function|default('deleteSelected()') }}">
+            <i class="fas fa-trash me-1"></i>
+            {% if session.get('language', 'ar') == 'ar' %}حذف{% else %}Delete{% endif %}
+        </button>
+    </div>
+    
+    <div class="btn-group" role="group">
+        <!-- زر مسح الفلاتر -->
+        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="{{ clear_function|default('clearFilters()') }}">
+            <i class="fas fa-times me-1"></i>
+            {% if session.get('language', 'ar') == 'ar' %}مسح الفلاتر{% else %}Clear Filters{% endif %}
+        </button>
+    </div>
+</div>

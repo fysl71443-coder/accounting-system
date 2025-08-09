@@ -1,0 +1,19 @@
+# متطلبات شاشة المصروفات المتقدمة
+# Advanced Expenses Screen Requirements
+
+# معالجة الصور
+Pillow==10.0.1
+
+# الرسوم البيانية
+matplotlib==3.7.2
+
+# معالجة البيانات
+pandas==2.1.1
+openpyxl==3.1.2
+
+# تصدير PDF
+reportlab==4.0.4
+
+# دعم اللغة العربية
+arabic-reshaper==3.0.0
+python-bidi==0.4.2

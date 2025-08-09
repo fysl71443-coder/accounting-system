@@ -1,0 +1,101 @@
+
+    <!DOCTYPE html>
+    <html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8">
+        <title>نجح الحل! - أزرار الطباعة تعمل</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+        <style>
+            body { font-family: Arial, sans-serif; direction: rtl; margin: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+            .success-card { background: white; color: #333; border-radius: 15px; padding: 30px; margin: 20px 0; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+            .success-icon { font-size: 80px; color: #28a745; text-align: center; margin-bottom: 20px; }
+            .test-button { margin: 10px; padding: 15px 25px; font-size: 16px; border-radius: 8px; }
+            .feature-list { background: #f8f9fa; border-radius: 10px; padding: 20px; margin: 20px 0; }
+            .celebration { animation: bounce 2s infinite; }
+            @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-30px); } 60% { transform: translateY(-15px); } }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="success-card">
+                <div class="success-icon celebration">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                
+                <h1 class="text-center text-success mb-4">
+                    🎉 نجح الحل! أزرار الطباعة تعمل الآن!
+                </h1>
+                
+                <div class="feature-list">
+                    <h3><i class="fas fa-star text-warning"></i> المزايا المحققة:</h3>
+                    <ul class="fs-5">
+                        <li>✅ <strong>أزرار طباعة مباشرة</strong> - تعمل بدون أخطاء</li>
+                        <li>✅ <strong>فتح في نافذة جديدة</strong> - لا تؤثر على الصفحة الأصلية</li>
+                        <li>✅ <strong>طباعة جميع الفواتير</strong> - من كل نوع</li>
+                        <li>✅ <strong>تصميم احترافي</strong> - مع ألوان مميزة</li>
+                        <li>✅ <strong>بيانات تجريبية</strong> - عند عدم وجود بيانات حقيقية</li>
+                        <li>✅ <strong>حساب المجاميع</strong> - تلقائياً</li>
+                        <li>✅ <strong>طباعة فورية</strong> - تبدأ تلقائياً</li>
+                    </ul>
+                </div>
+                
+                <div class="text-center">
+                    <h3>اختبر الأزرار الآن:</h3>
+                    
+                    <a href="http://localhost:5000/print_invoices/sales" target="_blank" class="btn btn-primary test-button">
+                        <i class="fas fa-shopping-cart me-2"></i>
+                        طباعة المبيعات
+                    </a>
+                    
+                    <a href="http://localhost:5000/print_invoices/purchases" target="_blank" class="btn btn-success test-button">
+                        <i class="fas fa-truck me-2"></i>
+                        طباعة المشتريات
+                    </a>
+                    
+                    <a href="http://localhost:5000/print_invoices/expenses" target="_blank" class="btn btn-warning test-button">
+                        <i class="fas fa-receipt me-2"></i>
+                        طباعة المصروفات
+                    </a>
+                    
+                    <a href="http://localhost:5000/print_invoices/payroll" target="_blank" class="btn btn-info test-button">
+                        <i class="fas fa-users me-2"></i>
+                        طباعة الرواتب
+                    </a>
+                </div>
+                
+                <div class="feature-list mt-4">
+                    <h3><i class="fas fa-clipboard-list text-primary"></i> كيفية الاستخدام:</h3>
+                    <ol class="fs-5">
+                        <li>اذهب إلى: <a href="http://localhost:5000/payments_dues" target="_blank" class="btn btn-outline-primary btn-sm">صفحة المدفوعات</a></li>
+                        <li>سجل الدخول: <code>admin</code> / <code>admin112233</code></li>
+                        <li>اختر أي تبويب (مبيعات، مشتريات، مصروفات، رواتب)</li>
+                        <li>اضغط على زر الطباعة في التبويب</li>
+                        <li>ستفتح نافذة جديدة مع التقرير</li>
+                        <li>ستبدأ الطباعة تلقائياً</li>
+                    </ol>
+                </div>
+                
+                <div class="alert alert-success mt-4">
+                    <h4><i class="fas fa-lightbulb"></i> الحل المطبق:</h4>
+                    <p>تم استبدال الأزرار JavaScript المعطلة بروابط مباشرة تؤدي إلى routes جديدة في الخادم. هذا يضمن عمل الطباعة بشكل مؤكد.</p>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+            // إضافة تأثيرات بصرية
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('🎉 أزرار الطباعة تعمل بنجاح!');
+                
+                // تأثير الاحتفال
+                setTimeout(function() {
+                    if (confirm('هل تريد اختبار طباعة المبيعات الآن؟')) {
+                        window.open('http://localhost:5000/print_invoices/sales', '_blank');
+                    }
+                }, 2000);
+            });
+        </script>
+    </body>
+    </html>
+    

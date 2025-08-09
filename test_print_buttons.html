@@ -1,0 +1,85 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>اختبار أزرار الطباعة</title>
+    <style>
+        body { font-family: Arial, sans-serif; direction: rtl; margin: 20px; }
+        button { margin: 10px; padding: 10px 20px; font-size: 16px; }
+        .test-button { background: #007bff; color: white; border: none; cursor: pointer; }
+        .test-button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>اختبار أزرار الطباعة</h1>
+    
+    <button class="test-button" onclick="testPrintSales()">🖨️ اختبار طباعة المبيعات</button>
+    <button class="test-button" onclick="testPrintPurchases()">🖨️ اختبار طباعة المشتريات</button>
+    <button class="test-button" onclick="testPrintExpenses()">🖨️ اختبار طباعة المصروفات</button>
+    <button class="test-button" onclick="testPrintPayroll()">🖨️ اختبار طباعة الرواتب</button>
+    
+    <div id="test-results" style="margin-top: 20px; padding: 10px; background: #f8f9fa; border: 1px solid #dee2e6;"></div>
+    
+    <script>
+        function testPrintSales() {
+            console.log('🖨️ اختبار طباعة المبيعات');
+            document.getElementById('test-results').innerHTML += '<p>✅ تم اختبار طباعة المبيعات</p>';
+            
+            // محاولة استدعاء الوظيفة الأصلية
+            if (typeof printSalesInvoices === 'function') {
+                printSalesInvoices();
+            } else {
+                alert('❌ وظيفة printSalesInvoices غير موجودة');
+            }
+        }
+        
+        function testPrintPurchases() {
+            console.log('🖨️ اختبار طباعة المشتريات');
+            document.getElementById('test-results').innerHTML += '<p>✅ تم اختبار طباعة المشتريات</p>';
+            
+            if (typeof printPurchasesInvoices === 'function') {
+                printPurchasesInvoices();
+            } else {
+                alert('❌ وظيفة printPurchasesInvoices غير موجودة');
+            }
+        }
+        
+        function testPrintExpenses() {
+            console.log('🖨️ اختبار طباعة المصروفات');
+            document.getElementById('test-results').innerHTML += '<p>✅ تم اختبار طباعة المصروفات</p>';
+            
+            if (typeof printExpensesInvoices === 'function') {
+                printExpensesInvoices();
+            } else {
+                alert('❌ وظيفة printExpensesInvoices غير موجودة');
+            }
+        }
+        
+        function testPrintPayroll() {
+            console.log('🖨️ اختبار طباعة الرواتب');
+            document.getElementById('test-results').innerHTML += '<p>✅ تم اختبار طباعة الرواتب</p>';
+            
+            if (typeof printPayrollInvoices === 'function') {
+                printPayrollInvoices();
+            } else {
+                alert('❌ وظيفة printPayrollInvoices غير موجودة');
+            }
+        }
+        
+        // تحميل ملف JavaScript الخارجي
+        const script = document.createElement('script');
+        script.src = '/static/js/payments_functions.js';
+        script.onload = function() {
+            console.log('✅ تم تحميل ملف JavaScript');
+            document.getElementById('test-results').innerHTML += '<p>✅ تم تحميل ملف JavaScript</p>';
+        };
+        script.onerror = function() {
+            console.error('❌ فشل تحميل ملف JavaScript');
+            document.getElementById('test-results').innerHTML += '<p>❌ فشل تحميل ملف JavaScript</p>';
+        };
+        document.head.appendChild(script);
+    </script>
+</body>
+</html>
+    

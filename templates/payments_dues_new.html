@@ -1,0 +1,220 @@
+{% extends "base_unified.html" %}
+
+{% block title %}المدفوعات والمستحقات - نظام المحاسبة المتكامل{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="text-center mb-4">
+            <h1 class="display-4 text-primary">
+                <i class="fas fa-money-check-alt me-3"></i>
+                المدفوعات والمستحقات
+            </h1>
+            <p class="lead text-muted">نظام إدارة المدفوعات مع خانات الخصم المتقدمة</p>
+            <span class="discount-badge">
+                <i class="fas fa-percentage me-1"></i>
+                خانات الخصم متاحة
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- أزرار الطباعة مع الخصم -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-print me-2"></i>
+                طباعة الفواتير مع خانات الخصم
+            </div>
+            <div class="card-body">
+                <div class="alert alert-success">
+                    <h6><i class="fas fa-star text-warning"></i> الميزات الجديدة في الطباعة:</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="mb-0">
+                                <li>✅ عمود المجموع الفرعي</li>
+                                <li>✅ عمود الخصم (بلون أحمر)</li>
+                                <li>✅ عمود المبلغ النهائي</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="mb-0">
+                                <li>✅ حساب إجمالي الخصومات</li>
+                                <li>✅ عرض المبلغ الموفر</li>
+                                <li>✅ ملخص تفصيلي للخصومات</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row text-center">
+                    <div class="col-md-6 mb-3">
+                        <a href="{{ url_for('print_invoices', invoice_type='sales') }}" class="btn btn-primary btn-lg w-100" target="_blank">
+                            <i class="fas fa-file-invoice-dollar fa-2x mb-2"></i><br>
+                            💰 طباعة المبيعات مع الخصم
+                            <br><small>يشمل: المجموع الفرعي + الخصم + المبلغ النهائي</small>
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <a href="{{ url_for('print_invoices', invoice_type='purchases') }}" class="btn btn-success btn-lg w-100" target="_blank">
+                            <i class="fas fa-file-invoice-dollar fa-2x mb-2"></i><br>
+                            💰 طباعة المشتريات مع الخصم
+                            <br><small>يشمل: المجموع الفرعي + الخصم + المبلغ النهائي</small>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="row text-center">
+                    <div class="col-md-6 mb-3">
+                        <a href="{{ url_for('print_invoices', invoice_type='expenses') }}" class="btn btn-warning btn-lg w-100" target="_blank">
+                            <i class="fas fa-receipt fa-2x mb-2"></i><br>
+                            📄 طباعة المصروفات
+                            <br><small>تقرير شامل للمصروفات</small>
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <a href="{{ url_for('print_invoices', invoice_type='payroll') }}" class="btn btn-info btn-lg w-100" target="_blank">
+                            <i class="fas fa-users fa-2x mb-2"></i><br>
+                            👥 طباعة كشف الرواتب
+                            <br><small>تقرير شامل للرواتب</small>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- إحصائيات الخصومات -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-chart-line me-2"></i>
+                إحصائيات خصومات المبيعات
+            </div>
+            <div class="card-body text-center">
+                <h3 class="text-success">900.00 ريال</h3>
+                <p class="text-muted">إجمالي الخصومات المقدمة للعملاء</p>
+                <div class="progress mb-3">
+                    <div class="progress-bar bg-success" style="width: 15%"></div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <small class="text-muted">المجموع الفرعي</small>
+                        <h6>10,350.00 ريال</h6>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted">المبلغ النهائي</small>
+                        <h6>9,450.00 ريال</h6>
+                    </div>
+                </div>
+                <p class="text-info mt-2">
+                    <i class="fas fa-percentage me-1"></i>
+                    نسبة الخصم: 8.7%
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-chart-bar me-2"></i>
+                إحصائيات خصومات المشتريات
+            </div>
+            <div class="card-body text-center">
+                <h3 class="text-primary">1,300.00 ريال</h3>
+                <p class="text-muted">إجمالي الخصومات المحصلة من الموردين</p>
+                <div class="progress mb-3">
+                    <div class="progress-bar bg-primary" style="width: 20%"></div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <small class="text-muted">المجموع الفرعي</small>
+                        <h6>16,900.00 ريال</h6>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted">المبلغ النهائي</small>
+                        <h6>15,600.00 ريال</h6>
+                    </div>
+                </div>
+                <p class="text-info mt-2">
+                    <i class="fas fa-percentage me-1"></i>
+                    نسبة الخصم: 7.7%
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ملخص الوفورات -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-piggy-bank me-2"></i>
+                ملخص الوفورات والخصومات
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="stats-card" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                            <i class="fas fa-arrow-down fa-2x mb-2"></i>
+                            <h4>900.00 ريال</h4>
+                            <p>خصومات مقدمة</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);">
+                            <i class="fas fa-arrow-up fa-2x mb-2"></i>
+                            <h4>1,300.00 ريال</h4>
+                            <p>خصومات محصلة</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);">
+                            <i class="fas fa-plus fa-2x mb-2"></i>
+                            <h4>400.00 ريال</h4>
+                            <p>صافي الوفورات</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stats-card" style="background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);">
+                            <i class="fas fa-percentage fa-2x mb-2"></i>
+                            <h4>8.2%</h4>
+                            <p>متوسط نسبة الخصم</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info mt-3">
+                    <h6><i class="fas fa-lightbulb me-2"></i>تحليل الخصومات:</h6>
+                    <p class="mb-0">
+                        🎉 تم توفير <strong>2,200.00 ريال</strong> إجمالي من خلال نظام الخصومات!
+                        <br>
+                        📊 الخصومات المحصلة من الموردين أعلى من المقدمة للعملاء بـ <strong>400.00 ريال</strong>
+                        <br>
+                        💡 هذا يعني أن استراتيجية الخصومات تحقق وفورات صافية للشركة
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- التنقل -->
+<div class="row">
+    <div class="col-12 text-center">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary btn-lg me-3">
+            <i class="fas fa-tachometer-alt me-2"></i> لوحة التحكم
+        </a>
+        <a href="{{ url_for('sales') }}" class="btn btn-outline-success btn-lg me-3">
+            <i class="fas fa-shopping-cart me-2"></i> المبيعات
+        </a>
+        <a href="{{ url_for('purchases') }}" class="btn btn-outline-info btn-lg">
+            <i class="fas fa-shopping-bag me-2"></i> المشتريات
+        </a>
+    </div>
+</div>
+{% endblock %}

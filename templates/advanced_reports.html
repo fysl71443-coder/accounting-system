@@ -1,92 +1,43 @@
-{% extends "base_simple.html" %}
+{% extends "base_unified.html" %}
 
 {% block title %}
-    {% if session.get('language', 'ar') == 'ar' %}
-        التقارير المالية المتقدمة
-    {% else %}
-        Advanced Financial Reports
-    {% endif %}
+{% if session.get('language', 'ar') == 'ar' %}
+التقارير المتقدمة - نظام المحاسبة
+{% else %}
+Advanced Reports - Accounting System
+{% endif %}
+{% endblock %}
+
+{% block page_icon %}<i class="fas fa-chart-line"></i>{% endblock %}
+
+{% block page_title %}
+{% if session.get('language', 'ar') == 'ar' %}التقارير المتقدمة{% else %}Advanced Reports{% endif %}
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">
-            {% if session.get('language', 'ar') == 'ar' %}
-                <i class="fas fa-chart-line"></i> التقارير المالية المتقدمة
-            {% else %}
-                <i class="fas fa-chart-line"></i> Advanced Financial Reports
-            {% endif %}
-        </h1>
-        <div class="btn-group" role="group">
-            <button type="button" class="btn btn-primary" onclick="generateReport()">
-                {% if session.get('language', 'ar') == 'ar' %}
-                    <i class="fas fa-sync-alt"></i> تحديث التقرير
-                {% else %}
-                    <i class="fas fa-sync-alt"></i> Refresh Report
-                {% endif %}
-            </button>
-            <button type="button" class="btn btn-success" onclick="exportToPDF()">
-                {% if session.get('language', 'ar') == 'ar' %}
-                    <i class="fas fa-file-pdf"></i> تصدير PDF
-                {% else %}
-                    <i class="fas fa-file-pdf"></i> Export PDF
-                {% endif %}
-            </button>
-            <button type="button" class="btn btn-info" onclick="exportToExcel()">
-                {% if session.get('language', 'ar') == 'ar' %}
-                    <i class="fas fa-file-excel"></i> تصدير Excel
-                {% else %}
-                    <i class="fas fa-file-excel"></i> Export Excel
-                {% endif %}
-            </button>
-            <button type="button" class="btn btn-secondary" onclick="printReport()">
-                {% if session.get('language', 'ar') == 'ar' %}
-                    <i class="fas fa-print"></i> طباعة
-                {% else %}
-                    <i class="fas fa-print"></i> Print
-                {% endif %}
-            </button>
-        </div>
-    </div>
-
     <!-- Report Filters -->
     <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card">
+        <div class="col-12">
+            <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
                     <h5 class="card-title mb-0">
                         <i class="fas fa-filter me-2"></i>
-                        {% if session.get('language', 'ar') == 'ar' %}
-                            فلاتر التقرير
-                        {% else %}
-                            Report Filters
-                        {% endif %}
+                        {% if session.get('language', 'ar') == 'ar' %}فلاتر التقرير{% else %}Report Filters{% endif %}
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="row">
+                    <div class="row g-3">
                         <div class="col-md-3">
                             <label class="form-label">
                                 {% if session.get('language', 'ar') == 'ar' %}الفترة الزمنية{% else %}Time Period{% endif %}
                             </label>
                             <select class="form-select" id="period-type" onchange="toggleCustomDates()">
-                                <option value="daily">
-                                    {% if session.get('language', 'ar') == 'ar' %}تقرير يومي{% else %}Daily Report{% endif %}
-                                </option>
-                                <option value="weekly">
-                                    {% if session.get('language', 'ar') == 'ar' %}تقرير أسبوعي{% else %}Weekly Report{% endif %}
-                                </option>
-                                <option value="monthly" selected>
-                                    {% if session.get('language', 'ar') == 'ar' %}تقرير شهري{% else %}Monthly Report{% endif %}
-                                </option>
-                                <option value="yearly">
-                                    {% if session.get('language', 'ar') == 'ar' %}تقرير سنوي{% else %}Yearly Report{% endif %}
-                                </option>
-                                <option value="custom">
-                                    {% if session.get('language', 'ar') == 'ar' %}فترة مخصصة{% else %}Custom Period{% endif %}
-                                </option>
+                                <option value="daily">{% if session.get('language', 'ar') == 'ar' %}تقرير يومي{% else %}Daily Report{% endif %}</option>
+                                <option value="weekly">{% if session.get('language', 'ar') == 'ar' %}تقرير أسبوعي{% else %}Weekly Report{% endif %}</option>
+                                <option value="monthly" selected>{% if session.get('language', 'ar') == 'ar' %}تقرير شهري{% else %}Monthly Report{% endif %}</option>
+                                <option value="yearly">{% if session.get('language', 'ar') == 'ar' %}تقرير سنوي{% else %}Yearly Report{% endif %}</option>
+                                <option value="custom">{% if session.get('language', 'ar') == 'ar' %}فترة مخصصة{% else %}Custom Period{% endif %}</option>
                             </select>
                         </div>
                         <div class="col-md-2" id="from-date-container">
@@ -106,21 +57,11 @@
                                 {% if session.get('language', 'ar') == 'ar' %}نوع التقرير{% else %}Report Type{% endif %}
                             </label>
                             <select class="form-select" id="report-type">
-                                <option value="all">
-                                    {% if session.get('language', 'ar') == 'ar' %}تقرير شامل{% else %}Comprehensive Report{% endif %}
-                                </option>
-                                <option value="sales">
-                                    {% if session.get('language', 'ar') == 'ar' %}المبيعات فقط{% else %}Sales Only{% endif %}
-                                </option>
-                                <option value="purchases">
-                                    {% if session.get('language', 'ar') == 'ar' %}المشتريات فقط{% else %}Purchases Only{% endif %}
-                                </option>
-                                <option value="expenses">
-                                    {% if session.get('language', 'ar') == 'ar' %}المصروفات فقط{% else %}Expenses Only{% endif %}
-                                </option>
-                                <option value="salaries">
-                                    {% if session.get('language', 'ar') == 'ar' %}الرواتب فقط{% else %}Salaries Only{% endif %}
-                                </option>
+                                <option value="all">{% if session.get('language', 'ar') == 'ar' %}تقرير شامل{% else %}Comprehensive Report{% endif %}</option>
+                                <option value="sales">{% if session.get('language', 'ar') == 'ar' %}المبيعات فقط{% else %}Sales Only{% endif %}</option>
+                                <option value="purchases">{% if session.get('language', 'ar') == 'ar' %}المشتريات فقط{% else %}Purchases Only{% endif %}</option>
+                                <option value="expenses">{% if session.get('language', 'ar') == 'ar' %}المصروفات فقط{% else %}Expenses Only{% endif %}</option>
+                                <option value="salaries">{% if session.get('language', 'ar') == 'ar' %}الرواتب فقط{% else %}Salaries Only{% endif %}</option>
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -128,27 +69,20 @@
                                 {% if session.get('language', 'ar') == 'ar' %}طريقة الدفع{% else %}Payment Method{% endif %}
                             </label>
                             <select class="form-select" id="payment-method">
-                                <option value="all">
-                                    {% if session.get('language', 'ar') == 'ar' %}جميع الطرق{% else %}All Methods{% endif %}
-                                </option>
-                                <option value="CASH">
-                                    {% if session.get('language', 'ar') == 'ar' %}نقدي{% else %}Cash{% endif %}
-                                </option>
+                                <option value="all">{% if session.get('language', 'ar') == 'ar' %}جميع الطرق{% else %}All Methods{% endif %}</option>
+                                <option value="CASH">{% if session.get('language', 'ar') == 'ar' %}نقدي{% else %}Cash{% endif %}</option>
                                 <option value="MADA">مدى - MADA</option>
                                 <option value="VISA">فيزا - VISA</option>
                                 <option value="MASTERCARD">ماستركارد - MASTERCARD</option>
-                                <option value="BANK">
-                                    {% if session.get('language', 'ar') == 'ar' %}تحويل بنكي{% else %}Bank Transfer{% endif %}
-                                </option>
-                                <option value="CREDIT">
-                                    {% if session.get('language', 'ar') == 'ar' %}آجل{% else %}Credit{% endif %}
-                                </option>
+                                <option value="BANK">{% if session.get('language', 'ar') == 'ar' %}تحويل بنكي{% else %}Bank Transfer{% endif %}</option>
+                                <option value="CREDIT">{% if session.get('language', 'ar') == 'ar' %}آجل{% else %}Credit{% endif %}</option>
                             </select>
                         </div>
                         <div class="col-md-1">
                             <label class="form-label">&nbsp;</label>
                             <button type="button" class="btn btn-primary w-100" onclick="generateReport()">
-                                <i class="fas fa-search"></i>
+                                <i class="fas fa-search me-1"></i>
+                                <span class="d-none d-lg-inline">{% if session.get('language', 'ar') == 'ar' %}بحث{% else %}Search{% endif %}</span>
                             </button>
                         </div>
                     </div>
@@ -371,8 +305,8 @@ function generateReport() {
     // Show loading
     showLoading();
 
-    // Generate sample data
-    generateSampleData(fromDate, toDate, reportType, paymentMethod);
+    // Initialize empty data
+    reportData = [];
 
     // Update display
     updateReportDisplay();

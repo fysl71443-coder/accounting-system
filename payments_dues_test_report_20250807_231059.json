@@ -1,0 +1,187 @@
+{
+  "timestamp": "2025-08-07T23:10:59.973138",
+  "summary": {
+    "total": 25,
+    "passed": 14,
+    "failed": 11,
+    "warnings": 0,
+    "success_rate": 56.00000000000001
+  },
+  "results": [
+    {
+      "test": "تسجيل الدخول",
+      "status": "PASS",
+      "message": "تم تسجيل الدخول بنجاح",
+      "details": "",
+      "timestamp": "23:10:45"
+    },
+    {
+      "test": "عنوان الصفحة",
+      "status": "PASS",
+      "message": "عنوان المدفوعات والمستحقات موجود",
+      "details": "",
+      "timestamp": "23:10:47"
+    },
+    {
+      "test": "تبويب sales",
+      "status": "PASS",
+      "message": "تبويب sales موجود",
+      "details": "",
+      "timestamp": "23:10:47"
+    },
+    {
+      "test": "تبويب purchases",
+      "status": "PASS",
+      "message": "تبويب purchases موجود",
+      "details": "",
+      "timestamp": "23:10:47"
+    },
+    {
+      "test": "تبويب expenses",
+      "status": "PASS",
+      "message": "تبويب expenses موجود",
+      "details": "",
+      "timestamp": "23:10:47"
+    },
+    {
+      "test": "تبويب payroll",
+      "status": "PASS",
+      "message": "تبويب payroll موجود",
+      "details": "",
+      "timestamp": "23:10:47"
+    },
+    {
+      "test": "أزرار الطباعة",
+      "status": "FAIL",
+      "message": "عدد أزرار الطباعة غير كافي: 0",
+      "details": "",
+      "timestamp": "23:10:47"
+    },
+    {
+      "test": "فلتر sales-status-filter",
+      "status": "PASS",
+      "message": "فلتر sales-status-filter موجود",
+      "details": "",
+      "timestamp": "23:10:47"
+    },
+    {
+      "test": "فلتر purchases-status-filter",
+      "status": "PASS",
+      "message": "فلتر purchases-status-filter موجود",
+      "details": "",
+      "timestamp": "23:10:47"
+    },
+    {
+      "test": "فلتر expenses-status-filter",
+      "status": "PASS",
+      "message": "فلتر expenses-status-filter موجود",
+      "details": "",
+      "timestamp": "23:10:47"
+    },
+    {
+      "test": "نافذة الطباعة",
+      "status": "FAIL",
+      "message": "نافذة الطباعة غير موجودة",
+      "details": "",
+      "timestamp": "23:10:47"
+    },
+    {
+      "test": "route معاينة الطباعة",
+      "status": "PASS",
+      "message": "route المعاينة يعمل",
+      "details": "",
+      "timestamp": "23:10:49"
+    },
+    {
+      "test": "route الطباعة",
+      "status": "FAIL",
+      "message": "route الطباعة لا يعمل: 404",
+      "details": "",
+      "timestamp": "23:10:51"
+    },
+    {
+      "test": "بيانات المبيعات",
+      "status": "FAIL",
+      "message": "API المبيعات لا يعمل: 404",
+      "details": "",
+      "timestamp": "23:10:53"
+    },
+    {
+      "test": "بيانات المشتريات",
+      "status": "PASS",
+      "message": "تم جلب 2 فاتورة مشتريات",
+      "details": "",
+      "timestamp": "23:10:55"
+    },
+    {
+      "test": "بيانات المصروفات",
+      "status": "PASS",
+      "message": "تم جلب 9 مصروف",
+      "details": "",
+      "timestamp": "23:10:57"
+    },
+    {
+      "test": "وظيفة openPrintModal",
+      "status": "FAIL",
+      "message": "وظيفة openPrintModal غير موجودة",
+      "details": "",
+      "timestamp": "23:10:59"
+    },
+    {
+      "test": "وظيفة generatePrintReport",
+      "status": "FAIL",
+      "message": "وظيفة generatePrintReport غير موجودة",
+      "details": "",
+      "timestamp": "23:10:59"
+    },
+    {
+      "test": "وظيفة printReport",
+      "status": "FAIL",
+      "message": "وظيفة printReport غير موجودة",
+      "details": "",
+      "timestamp": "23:10:59"
+    },
+    {
+      "test": "وظيفة filterSalesTable",
+      "status": "FAIL",
+      "message": "وظيفة filterSalesTable غير موجودة",
+      "details": "",
+      "timestamp": "23:10:59"
+    },
+    {
+      "test": "وظيفة filterPurchasesTable",
+      "status": "FAIL",
+      "message": "وظيفة filterPurchasesTable غير موجودة",
+      "details": "",
+      "timestamp": "23:10:59"
+    },
+    {
+      "test": "وظيفة filterExpensesTable",
+      "status": "FAIL",
+      "message": "وظيفة filterExpensesTable غير موجودة",
+      "details": "",
+      "timestamp": "23:10:59"
+    },
+    {
+      "test": "وظيفة updateFilterCount",
+      "status": "FAIL",
+      "message": "وظيفة updateFilterCount غير موجودة",
+      "details": "",
+      "timestamp": "23:10:59"
+    },
+    {
+      "test": "Bootstrap",
+      "status": "PASS",
+      "message": "Bootstrap محمل",
+      "details": "",
+      "timestamp": "23:10:59"
+    },
+    {
+      "test": "jQuery",
+      "status": "PASS",
+      "message": "jQuery محمل",
+      "details": "",
+      "timestamp": "23:10:59"
+    }
+  ]
+}

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار التصميم الموحد</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="static/css/unified-design.css" rel="stylesheet">
+</head>
+<body>
+    <!-- القائمة الجانبية -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">
+                <i class="fas fa-calculator nav-icon"></i>
+                نظام المحاسبة المتكامل
+            </div>
+            <div class="sidebar-subtitle">مرحباً المستخدم</div>
+        </div>
+        
+        <div class="sidebar-nav">
+            <div class="nav-section">
+                <a class="nav-link active" href="#">
+                    <i class="fas fa-tachometer-alt nav-icon"></i>
+                    لوحة التحكم
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">الشاشات المتقدمة</div>
+                <a class="nav-link featured" href="#">
+                    <i class="fas fa-cogs nav-icon"></i>
+                    <div style="flex-grow: 1;">
+                        <div style="font-weight: 600;">🌟 إدارة المنتجات والتكاليف</div>
+                        <small style="opacity: 0.8;">شاشة موحدة متكاملة</small>
+                    </div>
+                    <span class="badge badge-new">جديد</span>
+                </a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">الشاشات الأساسية</div>
+                <a class="nav-link" href="#">
+                    <i class="fas fa-plus-circle nav-icon"></i>
+                    فاتورة جديدة
+                </a>
+                <a class="nav-link" href="#">
+                    <i class="fas fa-shopping-cart nav-icon"></i>
+                    المبيعات
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">اختبار التصميم الموحد</h1>
+            <p class="page-subtitle">عرض جميع عناصر التصميم الموحد</p>
+        </div>
+        
+        <div class="page-content">
+            <!-- البطاقات -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 32px;">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">بطاقة تجريبية</h2>
+                        <p class="card-subtitle">وصف البطاقة</p>
+                    </div>
+                    <div class="card-body">
+                        <p>محتوى البطاقة هنا</p>
+                        <button class="btn btn-primary">زر أساسي</button>
+                        <button class="btn btn-secondary">زر ثانوي</button>
+                        <button class="btn btn-outline">زر محدد</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- النماذج -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">نموذج تجريبي</h2>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label class="form-label">حقل نصي</label>
+                        <input type="text" class="form-control" placeholder="أدخل النص">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">قائمة منسدلة</label>
+                        <select class="form-control">
+                            <option>خيار 1</option>
+                            <option>خيار 2</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- تبديل اللغة -->
+    <div style="position: fixed; top: 20px; left: 20px; z-index: 1050;">
+        <div style="display: flex; gap: 8px;">
+            <button class="btn btn-sm btn-primary">العربية</button>
+            <button class="btn btn-sm btn-outline">English</button>
+        </div>
+    </div>
+</body>
+</html>

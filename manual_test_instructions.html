@@ -1,0 +1,125 @@
+
+    <!DOCTYPE html>
+    <html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8">
+        <title>تعليمات الاختبار اليدوي</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+        <style>
+            body { font-family: Arial, sans-serif; direction: rtl; margin: 20px; }
+            .step-card { margin: 20px 0; padding: 20px; border: 2px solid #007bff; border-radius: 10px; }
+            .step-number { background: #007bff; color: white; border-radius: 50%; width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; margin-left: 15px; }
+            .important-note { background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 15px; margin: 15px 0; }
+            .success-indicator { color: #28a745; font-weight: bold; }
+            .error-indicator { color: #dc3545; font-weight: bold; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1 class="text-center text-primary mb-4">
+                <i class="fas fa-clipboard-check"></i>
+                تعليمات الاختبار اليدوي للطباعة
+            </h1>
+            
+            <div class="important-note">
+                <h5><i class="fas fa-exclamation-triangle text-warning"></i> ملاحظة مهمة:</h5>
+                <p>إذا كانت الأزرار لا تعمل في صفحة المدفوعات، فهذا يعني أن الخادم لم يُعاد تشغيله بعد التحديثات.</p>
+            </div>
+            
+            <div class="step-card">
+                <h3><span class="step-number">1</span>فتح صفحة المدفوعات</h3>
+                <p>اذهب إلى: <a href="http://localhost:5000/payments_dues" target="_blank" class="btn btn-primary">http://localhost:5000/payments_dues</a></p>
+            </div>
+            
+            <div class="step-card">
+                <h3><span class="step-number">2</span>تسجيل الدخول</h3>
+                <ul>
+                    <li><strong>اسم المستخدم:</strong> <code>admin</code></li>
+                    <li><strong>كلمة المرور:</strong> <code>admin112233</code></li>
+                </ul>
+            </div>
+            
+            <div class="step-card">
+                <h3><span class="step-number">3</span>اختبار أزرار الطباعة</h3>
+                <p>في كل تبويب، ابحث عن الأزرار التالية واختبرها:</p>
+                <ul>
+                    <li><span class="badge bg-primary">تبويب المبيعات:</span> زر "طباعة جميع المبيعات"</li>
+                    <li><span class="badge bg-success">تبويب المشتريات:</span> زر "طباعة جميع المشتريات"</li>
+                    <li><span class="badge bg-warning">تبويب المصروفات:</span> زر "طباعة جميع المصروفات"</li>
+                    <li><span class="badge bg-info">تبويب الرواتب:</span> زر "طباعة جميع الرواتب"</li>
+                </ul>
+            </div>
+            
+            <div class="step-card">
+                <h3><span class="step-number">4</span>النتائج المتوقعة</h3>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="success-indicator"><i class="fas fa-check"></i> إذا كانت تعمل:</h5>
+                        <ul>
+                            <li>تفتح نافذة جديدة</li>
+                            <li>تظهر تقرير منسق</li>
+                            <li>تحتوي على بيانات (حقيقية أو تجريبية)</li>
+                            <li>يمكن طباعتها أو حفظها كـ PDF</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5 class="error-indicator"><i class="fas fa-times"></i> إذا كانت لا تعمل:</h5>
+                        <ul>
+                            <li>رسالة "Not Found"</li>
+                            <li>لا تفتح نافذة</li>
+                            <li>رسالة خطأ في المتصفح</li>
+                            <li>لا يحدث شيء عند الضغط</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="step-card">
+                <h3><span class="step-number">5</span>استكشاف الأخطاء</h3>
+                <p>إذا لم تعمل الأزرار:</p>
+                <ol>
+                    <li>اضغط F12 لفتح أدوات المطور</li>
+                    <li>اذهب لتبويب "Console"</li>
+                    <li>اضغط على زر الطباعة</li>
+                    <li>ابحث عن رسائل الخطأ</li>
+                    <li>تأكد من وجود الوظائف JavaScript</li>
+                </ol>
+            </div>
+            
+            <div class="step-card">
+                <h3><span class="step-number">6</span>البديل المؤقت</h3>
+                <p>إذا لم تعمل الأزرار، يمكنك استخدام:</p>
+                <a href="http://localhost:5000/simple_print" target="_blank" class="btn btn-outline-secondary">
+                    <i class="fas fa-print"></i>
+                    صفحة الطباعة المنفصلة
+                </a>
+            </div>
+            
+            <div class="important-note">
+                <h5><i class="fas fa-lightbulb text-info"></i> نصائح:</h5>
+                <ul>
+                    <li>تأكد من إعادة تحميل الصفحة (Ctrl+F5)</li>
+                    <li>امسح cache المتصفح إذا لزم الأمر</li>
+                    <li>جرب متصفح آخر للتأكد</li>
+                    <li>تحقق من أن الخادم يعمل بشكل صحيح</li>
+                </ul>
+            </div>
+        </div>
+        
+        <script>
+            // إضافة مؤشرات تفاعلية
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('✅ تم تحميل تعليمات الاختبار اليدوي');
+                
+                // إضافة تأثيرات بصرية
+                const stepCards = document.querySelectorAll('.step-card');
+                stepCards.forEach((card, index) => {
+                    card.style.animationDelay = `${index * 0.2}s`;
+                    card.classList.add('animate__animated', 'animate__fadeInUp');
+                });
+            });
+        </script>
+    </body>
+    </html>
+    

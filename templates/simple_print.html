@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>طباعة الفواتير</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            direction: rtl;
+            background-color: #f8f9fa;
+        }
+        .print-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            transition: transform 0.2s;
+        }
+        .print-card:hover {
+            transform: translateY(-2px);
+        }
+        .invoice-item {
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+        }
+        .invoice-item:hover {
+            background: #e3f2fd;
+        }
+        .select-all-section {
+            background: #e8f5e8;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .print-summary {
+            background: #fff3cd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="text-center mb-4">
+                    <i class="fas fa-print text-primary"></i>
+                    طباعة الفواتير
+                </h2>
+            </div>
+        </div>
+
+        <!-- قسم التحديد الشامل -->
+        <div class="select-all-section no-print">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h5><i class="fas fa-check-square text-success"></i> تحديد الفواتير للطباعة</h5>
+                </div>
+                <div class="col-md-6 text-end">
+                    <button class="btn btn-success me-2" onclick="selectAll()">
+                        <i class="fas fa-check-double"></i> تحديد الكل
+                    </button>
+                    <button class="btn btn-warning me-2" onclick="unselectAll()">
+                        <i class="fas fa-times"></i> إلغاء التحديد
+                    </button>
+                    <button class="btn btn-primary" onclick="printSelected()">
+                        <i class="fas fa-print"></i> طباعة المحدد
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- أزرار الطباعة السريعة -->
+        <div class="row no-print">
+            <div class="col-md-3 mb-3">
+                <div class="print-card p-3 text-center">
+                    <i class="fas fa-shopping-cart fa-2x text-primary mb-2"></i>
+                    <h6>فواتير المبيعات</h6>
+                    <button class="btn btn-primary btn-sm" onclick="loadInvoices('sales')">
+                        <i class="fas fa-list"></i> عرض الفواتير
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="print-card p-3 text-center">
+                    <i class="fas fa-truck fa-2x text-success mb-2"></i>
+                    <h6>فواتير المشتريات</h6>
+                    <button class="btn btn-success btn-sm" onclick="loadInvoices('purchases')">
+                        <i class="fas fa-list"></i> عرض الفواتير
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="print-card p-3 text-center">
+                    <i class="fas fa-receipt fa-2x text-warning mb-2"></i>
+                    <h6>فواتير المصروفات</h6>
+                    <button class="btn btn-warning btn-sm" onclick="loadInvoices('expenses')">
+                        <i class="fas fa-list"></i> عرض الفواتير
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="print-card p-3 text-center">
+                    <i class="fas fa-users fa-2x text-info mb-2"></i>
+                    <h6>كشف الرواتب</h6>
+                    <button class="btn btn-info btn-sm" onclick="loadInvoices('payroll')">
+                        <i class="fas fa-list"></i> عرض الكشوف
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- منطقة عرض الفواتير -->
+        <div id="invoices-container">
+            <div class="text-center text-muted py-5">
+                <i class="fas fa-file-invoice fa-3x mb-3"></i>
+                <p>اختر نوع الفواتير من الأعلى لعرضها</p>
+            </div>
+        </div>
+
+        <!-- ملخص الطباعة -->
+        <div id="print-summary" class="print-summary no-print" style="display: none;">
+            <h6><i class="fas fa-info-circle"></i> ملخص الطباعة</h6>
+            <div id="summary-content"></div>
+        </div>
+
+        <!-- أزرار التحكم -->
+        <div class="text-center mt-4 no-print">
+            <button class="btn btn-secondary me-2" onclick="window.history.back()">
+                <i class="fas fa-arrow-right"></i> العودة
+            </button>
+            <button class="btn btn-primary me-2" onclick="window.print()">
+                <i class="fas fa-print"></i> طباعة الصفحة
+            </button>
+            <button class="btn btn-success" onclick="exportToPDF()">
+                <i class="fas fa-file-pdf"></i> تصدير PDF
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentInvoices = [];
+        let selectedInvoices = [];
+
+        // تحميل الفواتير حسب النوع
+        async function loadInvoices(type) {
+            console.log('📄 تحميل فواتير:', type);
+            
+            try {
+                showLoading();
+                
+                let apiUrl = '';
+                let title = '';
+                
+                switch(type) {
+                    case 'sales':
+                        apiUrl = '/api/sales/list';
+                        title = 'فواتير المبيعات';
+                        break;
+                    case 'purchases':
+                        apiUrl = '/api/purchases/list';
+                        title = 'فواتير المشتريات';
+                        break;
+                    case 'expenses':
+                        apiUrl = '/api/expenses/list';
+                        title = 'فواتير المصروفات';
+                        break;
+                    case 'payroll':
+                        apiUrl = '/api/payroll/list';
+                        title = 'كشوف الرواتب';
+                        break;
+                }
+                
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentInvoices = data[Object.keys(data)[1]] || []; // البيانات الفعلية
+                    displayInvoices(currentInvoices, title, type);
+                } else {
+                    showError('فشل في تحميل البيانات: ' + data.message);
+                }
+                
+            } catch (error) {
+                console.error('خطأ في تحميل الفواتير:', error);
+                showError('حدث خطأ في تحميل الفواتير');
+            }
+        }
+
+        // عرض الفواتير
+        function displayInvoices(invoices, title, type) {
+            const container = document.getElementById('invoices-container');
+            
+            if (invoices.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                        <p>لا توجد ${title} للعرض</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = `
+                <div class="print-card p-4">
+                    <h4 class="text-center mb-4">
+                        <i class="fas fa-file-invoice text-primary"></i>
+                        ${title}
+                    </h4>
+                    <div class="row">
+            `;
+            
+            invoices.forEach((invoice, index) => {
+                const invoiceId = invoice.id || index;
+                const invoiceNumber = invoice.invoice_number || invoice.expense_number || invoice.employee_name || `#${invoiceId}`;
+                const date = invoice.invoice_date || invoice.expense_date || invoice.created_at || 'غير محدد';
+                const amount = invoice.final_amount || invoice.amount || invoice.net_salary || 0;
+                const customer = invoice.customer_name || invoice.supplier_name || invoice.expense_type || invoice.position || 'غير محدد';
+                
+                html += `
+                    <div class="col-md-6 mb-3">
+                        <div class="invoice-item">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" 
+                                       id="invoice_${invoiceId}" 
+                                       value="${invoiceId}"
+                                       onchange="updateSelection()">
+                                <label class="form-check-label" for="invoice_${invoiceId}">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>${invoiceNumber}</strong><br>
+                                            <small class="text-muted">${customer}</small><br>
+                                            <small class="text-muted">${date}</small>
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="badge bg-primary">${amount} ريال</span>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+            updateSummary();
+        }
+
+        // تحديد الكل
+        function selectAll() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                cb.checked = true;
+            });
+            updateSelection();
+        }
+
+        // إلغاء تحديد الكل
+        function unselectAll() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                cb.checked = false;
+            });
+            updateSelection();
+        }
+
+        // تحديث التحديد
+        function updateSelection() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+            selectedInvoices = Array.from(checkboxes).map(cb => cb.value);
+            updateSummary();
+        }
+
+        // تحديث الملخص
+        function updateSummary() {
+            const summaryDiv = document.getElementById('print-summary');
+            const summaryContent = document.getElementById('summary-content');
+            
+            if (selectedInvoices.length > 0) {
+                summaryDiv.style.display = 'block';
+                summaryContent.innerHTML = `
+                    <p><strong>عدد الفواتير المحددة:</strong> ${selectedInvoices.length}</p>
+                    <p><strong>إجمالي الفواتير:</strong> ${currentInvoices.length}</p>
+                `;
+            } else {
+                summaryDiv.style.display = 'none';
+            }
+        }
+
+        // طباعة المحدد
+        function printSelected() {
+            if (selectedInvoices.length === 0) {
+                alert('يرجى تحديد فاتورة واحدة على الأقل للطباعة');
+                return;
+            }
+            
+            console.log('🖨️ طباعة الفواتير المحددة:', selectedInvoices);
+            
+            // إخفاء العناصر غير المطلوبة للطباعة
+            const noprint = document.querySelectorAll('.no-print');
+            noprint.forEach(el => el.style.display = 'none');
+            
+            // إخفاء الفواتير غير المحددة
+            const allInvoices = document.querySelectorAll('.invoice-item');
+            allInvoices.forEach(item => {
+                const checkbox = item.querySelector('input[type="checkbox"]');
+                if (!checkbox.checked) {
+                    item.style.display = 'none';
+                }
+            });
+            
+            // طباعة
+            window.print();
+            
+            // إعادة إظهار العناصر
+            setTimeout(() => {
+                noprint.forEach(el => el.style.display = '');
+                allInvoices.forEach(item => item.style.display = '');
+            }, 1000);
+        }
+
+        // تصدير PDF
+        function exportToPDF() {
+            if (selectedInvoices.length === 0) {
+                alert('يرجى تحديد فاتورة واحدة على الأقل للتصدير');
+                return;
+            }
+            
+            console.log('📄 تصدير PDF للفواتير المحددة:', selectedInvoices);
+            alert('ميزة تصدير PDF ستكون متاحة قريباً');
+        }
+
+        // عرض التحميل
+        function showLoading() {
+            document.getElementById('invoices-container').innerHTML = `
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">جاري التحميل...</span>
+                    </div>
+                    <p class="mt-2">جاري تحميل الفواتير...</p>
+                </div>
+            `;
+        }
+
+        // عرض الخطأ
+        function showError(message) {
+            document.getElementById('invoices-container').innerHTML = `
+                <div class="alert alert-danger text-center">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    ${message}
+                </div>
+            `;
+        }
+
+        // تهيئة الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ تم تحميل صفحة الطباعة');
+        });
+    </script>
+</body>
+</html>

@@ -148,15 +148,7 @@
 </head>
 <body>
     <!-- Language Switcher -->
-    <div class="language-switcher">
-        <div class="btn-group">
-            <a href="?lang=ar" class="btn btn-sm btn-outline-primary {{ 'active' if session.get('language', 'ar') == 'ar' else '' }}">
-                العربية
-            </a>
-            <a href="?lang=en" class="btn btn-sm btn-outline-primary {{ 'active' if session.get('language', 'ar') == 'en' else '' }}">
-                English
-            </a>
-        </div>
+    {% include "components/language_switcher.html" %}
     </div>
 
     <!-- Sidebar - Always show for debugging -->

@@ -1,0 +1,693 @@
+{% extends "base_unified.html" %}
+
+{% block title %}
+    {% if session.get('language', 'ar') == 'ar' %}
+        إدارة المخزون - نظام المحاسبة
+    {% else %}
+        Inventory Management - Accounting System
+    {% endif %}
+{% endblock %}
+
+{% block page_icon %}<i class="fas fa-boxes"></i>{% endblock %}
+
+{% block page_title %}
+{% if session.get('language', 'ar') == 'ar' %}
+    إدارة المخزون
+{% else %}
+    Inventory Management
+{% endif %}
+{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <button type="button" class="btn btn-primary" onclick="refreshData()">
+        <i class="fas fa-sync-alt me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تحديث البيانات{% else %}Refresh Data{% endif %}
+    </button>
+    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addItemModal">
+        <i class="fas fa-plus me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}إضافة صنف{% else %}Add Item{% endif %}
+    </button>
+    <button type="button" class="btn btn-warning" onclick="stockAlert()">
+        <i class="fas fa-exclamation-triangle me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تنبيهات المخزون{% else %}Stock Alerts{% endif %}
+    </button>
+    <button type="button" class="btn btn-info" onclick="generateReport()">
+        <i class="fas fa-file-alt me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تقرير المخزون{% else %}Inventory Report{% endif %}
+    </button>
+    <button type="button" class="btn btn-secondary" onclick="exportInventory()">
+        <i class="fas fa-download me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تصدير{% else %}Export{% endif %}
+    </button>
+    <button type="button" class="btn btn-outline-warning" onclick="saveAllData()">
+        <i class="fas fa-save me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}حفظ البيانات{% else %}Save Data{% endif %}
+    </button>
+    <button type="button" class="btn btn-dark" onclick="printReport()">
+        <i class="fas fa-print me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}طباعة{% else %}Print{% endif %}
+    </button>
+    <button type="button" class="btn btn-outline-danger" onclick="deleteSelected()">
+        <i class="fas fa-trash me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}حذف المحدد{% else %}Delete Selected{% endif %}
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<!-- Inventory Statistics -->
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}إجمالي الأصناف{% else %}Total Items{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-primary">1,245</h4>
+                    </div>
+                    <div class="text-primary opacity-75">
+                        <i class="fas fa-box fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}مخزون منخفض{% else %}Low Stock{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-danger">23</h4>
+                    </div>
+                    <div class="text-danger opacity-75">
+                        <i class="fas fa-arrow-down fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}نفد المخزون{% else %}Out of Stock{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-warning">8</h4>
+                    </div>
+                    <div class="text-warning opacity-75">
+                        <i class="fas fa-times-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}قيمة المخزون{% else %}Inventory Value{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-success">2,450,000</h4>
+                    </div>
+                    <div class="text-success opacity-75">
+                        <i class="fas fa-dollar-sign fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search and Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="searchItems" placeholder="{% if session.get('language', 'ar') == 'ar' %}البحث في الأصناف...{% else %}Search items...{% endif %}">
+                    <button class="btn btn-outline-secondary" type="button">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+    <div class="col-md-2">
+        <select class="form-select" id="filterCategory">
+            <option value="">{% if session.get('language', 'ar') == 'ar' %}جميع الفئات{% else %}All Categories{% endif %}</option>
+            <option value="electronics">إلكترونيات</option>
+            <option value="food">أغذية</option>
+            <option value="clothing">ملابس</option>
+            <option value="books">كتب</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select class="form-select" id="filterStock">
+            <option value="">{% if session.get('language', 'ar') == 'ar' %}جميع المخزون{% else %}All Stock{% endif %}</option>
+            <option value="in_stock">متوفر</option>
+            <option value="low_stock">مخزون منخفض</option>
+            <option value="out_of_stock">نفد المخزون</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select class="form-select" id="sortBy">
+            <option value="name">{% if session.get('language', 'ar') == 'ar' %}ترتيب بالاسم{% else %}Sort by Name{% endif %}</option>
+            <option value="stock">{% if session.get('language', 'ar') == 'ar' %}ترتيب بالمخزون{% else %}Sort by Stock{% endif %}</option>
+            <option value="price">{% if session.get('language', 'ar') == 'ar' %}ترتيب بالسعر{% else %}Sort by Price{% endif %}</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <div class="btn-group w-100" role="group">
+            <button type="button" class="btn btn-outline-secondary" onclick="toggleView('table')" id="tableViewBtn">
+                <i class="fas fa-table"></i>
+            </button>
+            <button type="button" class="btn btn-outline-secondary active" onclick="toggleView('cards')" id="cardsViewBtn">
+                <i class="fas fa-th"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Inventory Table View -->
+<div class="card d-none" id="tableView">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الصورة{% else %}Image{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}اسم الصنف{% else %}Item Name{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الفئة{% else %}Category{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الكمية{% else %}Quantity{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الوحدة{% else %}Unit{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}سعر الشراء{% else %}Purchase Price{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}سعر البيع{% else %}Selling Price{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الحالة{% else %}Status{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}إجراءات{% else %}Actions{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody id="inventoryTableBody">
+                    <!-- Table rows will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Inventory Cards View -->
+<div class="row" id="cardsView">
+    <!-- Sample Inventory Cards -->
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card inventory-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0">iPhone 14 Pro</h6>
+                <span class="badge bg-success">متوفر</span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-4">
+                        <img src="https://via.placeholder.com/80x80" class="img-fluid rounded" alt="iPhone 14 Pro">
+                    </div>
+                    <div class="col-8">
+                        <div class="row">
+                            <div class="col-12 mb-1">
+                                <small class="text-muted">
+                                    {% if session.get('language', 'ar') == 'ar' %}الفئة:{% else %}Category:{% endif %}
+                                </small>
+                                <span class="badge bg-primary">إلكترونيات</span>
+                            </div>
+                            <div class="col-6 mb-1">
+                                <small class="text-muted">
+                                    {% if session.get('language', 'ar') == 'ar' %}الكمية:{% else %}Qty:{% endif %}
+                                </small>
+                                <br><strong>25</strong>
+                            </div>
+                            <div class="col-6 mb-1">
+                                <small class="text-muted">
+                                    {% if session.get('language', 'ar') == 'ar' %}الوحدة:{% else %}Unit:{% endif %}
+                                </small>
+                                <br>قطعة
+                            </div>
+                            <div class="col-6 mb-1">
+                                <small class="text-muted">
+                                    {% if session.get('language', 'ar') == 'ar' %}سعر الشراء:{% else %}Purchase:{% endif %}
+                                </small>
+                                <br><strong>3,200 ريال</strong>
+                            </div>
+                            <div class="col-6 mb-1">
+                                <small class="text-muted">
+                                    {% if session.get('language', 'ar') == 'ar' %}سعر البيع:{% else %}Selling:{% endif %}
+                                </small>
+                                <br><strong>3,500 ريال</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="btn-group w-100" role="group">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="viewItem(1)">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-warning" onclick="editItem(1)">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-success" onclick="adjustStock(1)">
+                        <i class="fas fa-plus-minus"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-info" onclick="viewHistory(1)">
+                        <i class="fas fa-history"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card inventory-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0">برياني دجاج</h6>
+                <span class="badge bg-warning">مخزون منخفض</span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-4">
+                        <img src="https://via.placeholder.com/80x80" class="img-fluid rounded" alt="برياني دجاج">
+                    </div>
+                    <div class="col-8">
+                        <div class="row">
+                            <div class="col-12 mb-1">
+                                <small class="text-muted">
+                                    {% if session.get('language', 'ar') == 'ar' %}الفئة:{% else %}Category:{% endif %}
+                                </small>
+                                <span class="badge bg-success">أغذية</span>
+                            </div>
+                            <div class="col-6 mb-1">
+                                <small class="text-muted">
+                                    {% if session.get('language', 'ar') == 'ar' %}الكمية:{% else %}Qty:{% endif %}
+                                </small>
+                                <br><strong class="text-warning">5</strong>
+                            </div>
+                            <div class="col-6 mb-1">
+                                <small class="text-muted">
+                                    {% if session.get('language', 'ar') == 'ar' %}الوحدة:{% else %}Unit:{% endif %}
+                                </small>
+                                <br>طبق
+                            </div>
+                            <div class="col-6 mb-1">
+                                <small class="text-muted">
+                                    {% if session.get('language', 'ar') == 'ar' %}سعر الشراء:{% else %}Purchase:{% endif %}
+                                </small>
+                                <br><strong>15.50 ريال</strong>
+                            </div>
+                            <div class="col-6 mb-1">
+                                <small class="text-muted">
+                                    {% if session.get('language', 'ar') == 'ar' %}سعر البيع:{% else %}Selling:{% endif %}
+                                </small>
+                                <br><strong>25.00 ريال</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="btn-group w-100" role="group">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="viewItem(2)">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-warning" onclick="editItem(2)">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-success" onclick="adjustStock(2)">
+                        <i class="fas fa-plus-minus"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-info" onclick="viewHistory(2)">
+                        <i class="fas fa-history"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card inventory-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0">قميص قطني أزرق</h6>
+                <span class="badge bg-danger">نفد المخزون</span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-4">
+                        <img src="https://via.placeholder.com/80x80" class="img-fluid rounded" alt="قميص قطني">
+                    </div>
+                    <div class="col-8">
+                        <div class="row">
+                            <div class="col-12 mb-1">
+                                <small class="text-muted">
+                                    {% if session.get('language', 'ar') == 'ar' %}الفئة:{% else %}Category:{% endif %}
+                                </small>
+                                <span class="badge bg-info">ملابس</span>
+                            </div>
+                            <div class="col-6 mb-1">
+                                <small class="text-muted">
+                                    {% if session.get('language', 'ar') == 'ar' %}الكمية:{% else %}Qty:{% endif %}
+                                </small>
+                                <br><strong class="text-danger">0</strong>
+                            </div>
+                            <div class="col-6 mb-1">
+                                <small class="text-muted">
+                                    {% if session.get('language', 'ar') == 'ar' %}الوحدة:{% else %}Unit:{% endif %}
+                                </small>
+                                <br>قطعة
+                            </div>
+                            <div class="col-6 mb-1">
+                                <small class="text-muted">
+                                    {% if session.get('language', 'ar') == 'ar' %}سعر الشراء:{% else %}Purchase:{% endif %}
+                                </small>
+                                <br><strong>45.00 ريال</strong>
+                            </div>
+                            <div class="col-6 mb-1">
+                                <small class="text-muted">
+                                    {% if session.get('language', 'ar') == 'ar' %}سعر البيع:{% else %}Selling:{% endif %}
+                                </small>
+                                <br><strong>80.00 ريال</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="btn-group w-100" role="group">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="viewItem(3)">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-warning" onclick="editItem(3)">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-success" onclick="adjustStock(3)">
+                        <i class="fas fa-plus-minus"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-info" onclick="viewHistory(3)">
+                        <i class="fas fa-history"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Item Modal -->
+<div class="modal fade" id="addItemModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {% if session.get('language', 'ar') == 'ar' %}إضافة صنف جديد{% else %}Add New Item{% endif %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="itemForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}اسم الصنف{% else %}Item Name{% endif %}
+                            </label>
+                            <input type="text" class="form-control" name="item_name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}الفئة{% else %}Category{% endif %}
+                            </label>
+                            <select class="form-select" name="category" required>
+                                <option value="">{% if session.get('language', 'ar') == 'ar' %}اختر الفئة{% else %}Select Category{% endif %}</option>
+                                <option value="electronics">إلكترونيات</option>
+                                <option value="food">أغذية</option>
+                                <option value="clothing">ملابس</option>
+                                <option value="books">كتب</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}الكمية الابتدائية{% else %}Initial Quantity{% endif %}
+                            </label>
+                            <input type="number" class="form-control" name="initial_quantity" min="0" step="0.01">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}الوحدة{% else %}Unit{% endif %}
+                            </label>
+                            <select class="form-select" name="unit">
+                                <option value="قطعة">قطعة</option>
+                                <option value="كيلو">كيلو</option>
+                                <option value="لتر">لتر</option>
+                                <option value="متر">متر</option>
+                                <option value="طبق">طبق</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}سعر الشراء{% else %}Purchase Price{% endif %}
+                            </label>
+                            <input type="number" class="form-control" name="purchase_price" step="0.01" min="0">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}سعر البيع{% else %}Selling Price{% endif %}
+                            </label>
+                            <input type="number" class="form-control" name="selling_price" step="0.01" min="0">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}الحد الأدنى للمخزون{% else %}Minimum Stock Level{% endif %}
+                            </label>
+                            <input type="number" class="form-control" name="min_stock" min="0" step="0.01">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}الحد الأقصى للمخزون{% else %}Maximum Stock Level{% endif %}
+                            </label>
+                            <input type="number" class="form-control" name="max_stock" min="0" step="0.01">
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}الوصف{% else %}Description{% endif %}
+                            </label>
+                            <textarea class="form-control" name="description" rows="3"></textarea>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}صورة الصنف{% else %}Item Image{% endif %}
+                            </label>
+                            <input type="file" class="form-control" name="item_image" accept="image/*">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {% if session.get('language', 'ar') == 'ar' %}إلغاء{% else %}Cancel{% endif %}
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveItem()">
+                    {% if session.get('language', 'ar') == 'ar' %}حفظ{% else %}Save{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stock Adjustment Modal -->
+<div class="modal fade" id="stockAdjustmentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {% if session.get('language', 'ar') == 'ar' %}تعديل المخزون{% else %}Stock Adjustment{% endif %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="stockAdjustmentForm">
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}نوع التعديل{% else %}Adjustment Type{% endif %}
+                        </label>
+                        <select class="form-select" name="adjustment_type" required>
+                            <option value="add">{% if session.get('language', 'ar') == 'ar' %}إضافة{% else %}Add{% endif %}</option>
+                            <option value="subtract">{% if session.get('language', 'ar') == 'ar' %}خصم{% else %}Subtract{% endif %}</option>
+                            <option value="set">{% if session.get('language', 'ar') == 'ar' %}تعيين{% else %}Set{% endif %}</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}الكمية{% else %}Quantity{% endif %}
+                        </label>
+                        <input type="number" class="form-control" name="quantity" step="0.01" min="0" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}السبب{% else %}Reason{% endif %}
+                        </label>
+                        <select class="form-select" name="reason">
+                            <option value="purchase">{% if session.get('language', 'ar') == 'ar' %}شراء{% else %}Purchase{% endif %}</option>
+                            <option value="sale">{% if session.get('language', 'ar') == 'ar' %}بيع{% else %}Sale{% endif %}</option>
+                            <option value="damage">{% if session.get('language', 'ar') == 'ar' %}تلف{% else %}Damage{% endif %}</option>
+                            <option value="theft">{% if session.get('language', 'ar') == 'ar' %}سرقة{% else %}Theft{% endif %}</option>
+                            <option value="adjustment">{% if session.get('language', 'ar') == 'ar' %}تعديل{% else %}Adjustment{% endif %}</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if session.get('language', 'ar') == 'ar' %}ملاحظات{% else %}Notes{% endif %}
+                        </label>
+                        <textarea class="form-control" name="notes" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {% if session.get('language', 'ar') == 'ar' %}إلغاء{% else %}Cancel{% endif %}
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveStockAdjustment()">
+                    {% if session.get('language', 'ar') == 'ar' %}حفظ{% else %}Save{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleView(viewType) {
+    const tableView = document.getElementById('tableView');
+    const cardsView = document.getElementById('cardsView');
+    const tableBtn = document.getElementById('tableViewBtn');
+    const cardsBtn = document.getElementById('cardsViewBtn');
+    
+    if (viewType === 'table') {
+        tableView.classList.remove('d-none');
+        cardsView.classList.add('d-none');
+        tableBtn.classList.add('active');
+        cardsBtn.classList.remove('active');
+    } else {
+        tableView.classList.add('d-none');
+        cardsView.classList.remove('d-none');
+        tableBtn.classList.remove('active');
+        cardsBtn.classList.add('active');
+    }
+}
+
+function viewItem(id) {
+    alert('عرض تفاصيل الصنف رقم: ' + id);
+}
+
+function editItem(id) {
+    alert('تعديل الصنف رقم: ' + id);
+}
+
+function adjustStock(id) {
+    // Show stock adjustment modal
+    const modal = new bootstrap.Modal(document.getElementById('stockAdjustmentModal'));
+    modal.show();
+}
+
+function viewHistory(id) {
+    alert('عرض تاريخ حركة المخزون للصنف رقم: ' + id);
+}
+
+function saveItem() {
+    const form = document.getElementById('itemForm');
+    const formData = new FormData(form);
+    
+    alert('تم حفظ الصنف بنجاح');
+    
+    const modal = bootstrap.Modal.getInstance(document.getElementById('addItemModal'));
+    modal.hide();
+    form.reset();
+}
+
+function saveStockAdjustment() {
+    const form = document.getElementById('stockAdjustmentForm');
+    const formData = new FormData(form);
+    
+    alert('تم تعديل المخزون بنجاح');
+    
+    const modal = bootstrap.Modal.getInstance(document.getElementById('stockAdjustmentModal'));
+    modal.hide();
+    form.reset();
+}
+
+function exportInventory() {
+    alert('تصدير قائمة المخزون');
+}
+
+function stockAlert() {
+    showToast(isRTL ? 'عرض تنبيهات المخزون المنخفض' : 'Showing low stock alerts', 'info');
+}
+
+// Refresh data
+function refreshData() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري التحديث...' : 'Refreshing...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast(isRTL ? 'تم تحديث البيانات بنجاح' : 'Data refreshed successfully', 'success');
+    }, 1500);
+}
+
+// Generate report
+function generateReport() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري الإنشاء...' : 'Generating...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast(isRTL ? 'تم إنشاء تقرير المخزون بنجاح' : 'Inventory report generated successfully', 'success');
+    }, 1500);
+}
+
+// Save all data
+function saveAllData() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري الحفظ...' : 'Saving...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast(isRTL ? 'تم حفظ جميع البيانات بنجاح' : 'All data saved successfully', 'success');
+    }, 1500);
+}
+
+// Print report
+function printReport() {
+    showToast(isRTL ? 'جاري إعداد التقرير للطباعة...' : 'Preparing report for printing...', 'info');
+    setTimeout(() => {
+        window.print();
+    }, 1000);
+}
+
+// Delete selected
+function deleteSelected() {
+    showToast(isRTL ? 'يرجى اختيار صنف واحد على الأقل' : 'Please select at least one item', 'warning');
+}
+</script>
+{% endblock %}

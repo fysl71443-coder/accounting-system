@@ -18,14 +18,29 @@
 {% endif %}
 {% endblock %}
 
-{% block page_actions %}
-<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
-    <i class="fas fa-plus me-1"></i>
-    {% if session.get('language', 'ar') == 'ar' %}إضافة مورد{% else %}Add Supplier{% endif %}
-</button>
-{% endblock %}
-
 {% block content %}
+
+<!-- Action Buttons -->
+<div class="card mb-4">
+    <div class="card-body">
+        <button type="button" class="btn btn-success btn-sm" onclick="location.href='/suppliers/new'" title="إضافة مورد جديد">
+            <i class="fas fa-plus me-1"></i>
+            ➕ إضافة مورد
+        </button>
+        <button type="button" class="btn btn-danger btn-sm" onclick="deleteSelectedSuppliers()" title="حذف الموردين المحددين">
+            <i class="fas fa-trash me-1"></i>
+            🗑 حذف المحدد
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="window.print()" title="طباعة قائمة الموردين">
+            <i class="fas fa-print me-1"></i>
+            🖨 طباعة القائمة
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="location.href='/purchases'" title="المشتريات">
+            <i class="fas fa-shopping-bag me-1"></i>
+            💵 المشتريات
+        </button>
+    </div>
+</div>
 
 <!-- Search and Filter -->
 <div class="row mb-4">
@@ -55,8 +70,203 @@
     </div>
 </div>
 
-<!-- Suppliers Grid -->
-<div class="row" id="suppliersGrid">
+<!-- View Toggle Controls -->
+<div class="row mb-3">
+    <div class="col-md-6">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+            <label class="form-check-label" for="selectAll">
+                {% if session.get('language', 'ar') == 'ar' %}تحديد جميع الموردين{% else %}Select All Suppliers{% endif %}
+            </label>
+        </div>
+    </div>
+    <div class="col-md-6 text-end">
+        <div class="btn-group me-2" role="group">
+            <button type="button" class="btn btn-outline-secondary" onclick="toggleView('table')" id="tableViewBtn">
+                <i class="fas fa-table"></i>
+                {% if session.get('language', 'ar') == 'ar' %}جدول{% else %}Table{% endif %}
+            </button>
+            <button type="button" class="btn btn-outline-secondary active" onclick="toggleView('cards')" id="cardsViewBtn">
+                <i class="fas fa-th"></i>
+                {% if session.get('language', 'ar') == 'ar' %}كروت{% else %}Cards{% endif %}
+            </button>
+        </div>
+        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearFilters()">
+            <i class="fas fa-times me-1"></i>
+            {% if session.get('language', 'ar') == 'ar' %}مسح الفلاتر{% else %}Clear Filters{% endif %}
+        </button>
+    </div>
+</div>
+
+<!-- Suppliers Table View -->
+<div class="card d-none" id="tableView">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover" id="suppliersTable">
+                <thead>
+                    <tr>
+                        <th>
+                            <input type="checkbox" class="form-check-input" id="selectAllTable" onchange="toggleSelectAllTable()">
+                        </th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}اسم المورد{% else %}Supplier Name{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الفئة{% else %}Category{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الهاتف{% else %}Phone{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}البريد الإلكتروني{% else %}Email{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}آخر طلبية{% else %}Last Order{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الحالة{% else %}Status{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}إجراءات{% else %}Actions{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody id="suppliersTableBody">
+                    <!-- Sample suppliers data -->
+                    <tr>
+                        <td><input type="checkbox" class="form-check-input supplier-checkbox" data-id="1"></td>
+                        <td>
+                            <strong>مورد الأرز المحلي</strong><br>
+                            <small class="text-muted">مورد منذ 2022</small>
+                        </td>
+                        <td><span class="badge bg-info">أغذية</span></td>
+                        <td>+966 50 123 4567</td>
+                        <td>rice@supplier.com</td>
+                        <td>2024-01-15</td>
+                        <td><span class="badge bg-success">نشط</span></td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="viewSupplier(1)" title="عرض">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-warning" onclick="editSupplier(1)" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-success" onclick="newOrder(1)" title="طلبية جديدة">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </button>
+                                <button class="btn btn-outline-info" onclick="viewOrders(1)" title="الطلبيات">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" class="form-check-input supplier-checkbox" data-id="2"></td>
+                        <td>
+                            <strong>مورد البهارات الشرقية</strong><br>
+                            <small class="text-muted">مورد منذ 2021</small>
+                        </td>
+                        <td><span class="badge bg-warning">بهارات</span></td>
+                        <td>+966 55 987 6543</td>
+                        <td>spices@supplier.com</td>
+                        <td>2024-01-18</td>
+                        <td><span class="badge bg-success">نشط</span></td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="viewSupplier(2)" title="عرض">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-warning" onclick="editSupplier(2)" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-success" onclick="newOrder(2)" title="طلبية جديدة">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </button>
+                                <button class="btn btn-outline-info" onclick="viewOrders(2)" title="الطلبيات">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" class="form-check-input supplier-checkbox" data-id="3"></td>
+                        <td>
+                            <strong>مورد اللحوم الطازجة</strong><br>
+                            <small class="text-muted">مورد منذ 2023</small>
+                        </td>
+                        <td><span class="badge bg-danger">لحوم</span></td>
+                        <td>+966 56 234 5678</td>
+                        <td>meat@supplier.com</td>
+                        <td>2024-01-20</td>
+                        <td><span class="badge bg-success">نشط</span></td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="viewSupplier(3)" title="عرض">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-warning" onclick="editSupplier(3)" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-success" onclick="newOrder(3)" title="طلبية جديدة">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </button>
+                                <button class="btn btn-outline-info" onclick="viewOrders(3)" title="الطلبيات">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" class="form-check-input supplier-checkbox" data-id="4"></td>
+                        <td>
+                            <strong>مورد الخضروات الطازجة</strong><br>
+                            <small class="text-muted">مورد منذ 2024</small>
+                        </td>
+                        <td><span class="badge bg-success">خضروات</span></td>
+                        <td>+966 57 345 6789</td>
+                        <td>vegetables@supplier.com</td>
+                        <td>2024-01-22</td>
+                        <td><span class="badge bg-success">نشط</span></td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="viewSupplier(4)" title="عرض">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-warning" onclick="editSupplier(4)" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-success" onclick="newOrder(4)" title="طلبية جديدة">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </button>
+                                <button class="btn btn-outline-info" onclick="viewOrders(4)" title="الطلبيات">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" class="form-check-input supplier-checkbox" data-id="5"></td>
+                        <td>
+                            <strong>مورد المواد الغذائية المجمدة</strong><br>
+                            <small class="text-muted">مورد منذ 2020</small>
+                        </td>
+                        <td><span class="badge bg-info">أغذية</span></td>
+                        <td>+966 58 456 7890</td>
+                        <td>frozen@supplier.com</td>
+                        <td>2023-12-28</td>
+                        <td><span class="badge bg-warning">غير نشط</span></td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" onclick="viewSupplier(5)" title="عرض">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-outline-warning" onclick="editSupplier(5)" title="تعديل">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-outline-success" onclick="newOrder(5)" title="طلبية جديدة">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </button>
+                                <button class="btn btn-outline-info" onclick="viewOrders(5)" title="الطلبيات">
+                                    <i class="fas fa-history"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Suppliers Cards View -->
+<div class="row" id="cardsView">
     <!-- Sample Supplier Cards -->
     <div class="col-md-6 col-lg-4 mb-4">
         <div class="card supplier-card">
@@ -307,61 +517,502 @@
 
 {% block extra_js %}
 <script>
+// Sample suppliers data
+const suppliersData = [
+    {
+        id: 1,
+        name: 'مورد الأرز المحلي',
+        category: 'أغذية',
+        categoryClass: 'info',
+        phone: '+966 50 123 4567',
+        email: 'rice@supplier.com',
+        lastOrder: '2024-01-15',
+        status: 'نشط',
+        statusClass: 'success',
+        joinDate: '2022'
+    },
+    {
+        id: 2,
+        name: 'مورد البهارات الشرقية',
+        category: 'بهارات',
+        categoryClass: 'warning',
+        phone: '+966 55 987 6543',
+        email: 'spices@supplier.com',
+        lastOrder: '2024-01-18',
+        status: 'نشط',
+        statusClass: 'success',
+        joinDate: '2021'
+    },
+    {
+        id: 3,
+        name: 'مورد اللحوم الطازجة',
+        category: 'لحوم',
+        categoryClass: 'danger',
+        phone: '+966 56 234 5678',
+        email: 'meat@supplier.com',
+        lastOrder: '2024-01-20',
+        status: 'نشط',
+        statusClass: 'success',
+        joinDate: '2023'
+    },
+    {
+        id: 4,
+        name: 'مورد الخضروات الطازجة',
+        category: 'خضروات',
+        categoryClass: 'success',
+        phone: '+966 57 345 6789',
+        email: 'vegetables@supplier.com',
+        lastOrder: '2024-01-22',
+        status: 'نشط',
+        statusClass: 'success',
+        joinDate: '2024'
+    },
+    {
+        id: 5,
+        name: 'مورد المواد الغذائية المجمدة',
+        category: 'أغذية',
+        categoryClass: 'info',
+        phone: '+966 58 456 7890',
+        email: 'frozen@supplier.com',
+        lastOrder: '2023-12-28',
+        status: 'غير نشط',
+        statusClass: 'warning',
+        joinDate: '2020'
+    }
+];
+
+function toggleView(viewType) {
+    const tableView = document.getElementById('tableView');
+    const cardsView = document.getElementById('cardsView');
+    const tableBtn = document.getElementById('tableViewBtn');
+    const cardsBtn = document.getElementById('cardsViewBtn');
+
+    if (viewType === 'table') {
+        tableView.classList.remove('d-none');
+        cardsView.classList.add('d-none');
+        tableBtn.classList.add('active');
+        cardsBtn.classList.remove('active');
+
+        // Load table data when switching to table view
+        loadTableData();
+    } else {
+        tableView.classList.add('d-none');
+        cardsView.classList.remove('d-none');
+        tableBtn.classList.remove('active');
+        cardsBtn.classList.add('active');
+    }
+}
+
+function loadTableData() {
+    const tbody = document.getElementById('suppliersTableBody');
+
+    // Clear existing data
+    tbody.innerHTML = '';
+
+    // Add data rows
+    suppliersData.forEach(supplier => {
+        const row = document.createElement('tr');
+
+        row.innerHTML = `
+            <td><input type="checkbox" class="form-check-input supplier-checkbox" data-id="${supplier.id}"></td>
+            <td>
+                <strong>${supplier.name}</strong><br>
+                <small class="text-muted">مورد منذ ${supplier.joinDate}</small>
+            </td>
+            <td><span class="badge bg-${supplier.categoryClass}">${supplier.category}</span></td>
+            <td>${supplier.phone}</td>
+            <td>${supplier.email}</td>
+            <td>${supplier.lastOrder}</td>
+            <td><span class="badge bg-${supplier.statusClass}">${supplier.status}</span></td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary" onclick="viewSupplier(${supplier.id})" title="عرض">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-outline-warning" onclick="editSupplier(${supplier.id})" title="تعديل">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-outline-success" onclick="newOrder(${supplier.id})" title="طلبية جديدة">
+                        <i class="fas fa-shopping-cart"></i>
+                    </button>
+                    <button class="btn btn-outline-info" onclick="viewOrders(${supplier.id})" title="الطلبيات">
+                        <i class="fas fa-history"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+
+        tbody.appendChild(row);
+    });
+
+    // Re-attach event listeners for checkboxes
+    attachCheckboxListeners();
+}
+
+function attachCheckboxListeners() {
+    document.querySelectorAll('.supplier-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedCount);
+    });
+}
+
+function updateSelectedCount() {
+    const selected = document.querySelectorAll('.supplier-checkbox:checked');
+    const count = selected.length;
+    const selectedCountElement = document.getElementById('selectedCount');
+
+    if (selectedCountElement) {
+        if (count === 0) {
+            selectedCountElement.textContent = 'لم يتم تحديد أي مورد';
+        } else {
+            selectedCountElement.textContent = `تم تحديد ${count} مورد`;
+        }
+    }
+}
+
+function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.supplier-checkbox');
+
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+
+    updateSelectedCount();
+}
+
+function clearFilters() {
+    document.getElementById('searchSuppliers').value = '';
+    document.getElementById('filterCategory').value = '';
+    document.getElementById('filterStatus').value = '';
+
+    // Reset to show all data
+    updateCardsWithData(suppliersData);
+    if (!document.getElementById('tableView').classList.contains('d-none')) {
+        updateTableWithData(suppliersData);
+    }
+}
+
+function toggleSelectAllTable() {
+    const selectAllTable = document.getElementById('selectAllTable');
+    const checkboxes = document.querySelectorAll('#suppliersTable .supplier-checkbox');
+
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAllTable.checked;
+    });
+
+    updateSelectedCount();
+}
+
 // Search functionality
-document.getElementById('searchSuppliers').addEventListener('input', function() {
-    filterSuppliers();
-});
+function setupSearchAndFilter() {
+    const searchInput = document.getElementById('searchSuppliers');
+    const categoryFilter = document.getElementById('filterCategory');
+    const statusFilter = document.getElementById('filterStatus');
 
-document.getElementById('filterCategory').addEventListener('change', function() {
-    filterSuppliers();
-});
-
-document.getElementById('filterStatus').addEventListener('change', function() {
-    filterSuppliers();
-});
+    if (searchInput) searchInput.addEventListener('input', filterSuppliers);
+    if (categoryFilter) categoryFilter.addEventListener('change', filterSuppliers);
+    if (statusFilter) statusFilter.addEventListener('change', filterSuppliers);
+}
 
 function filterSuppliers() {
     const searchTerm = document.getElementById('searchSuppliers').value.toLowerCase();
-    const categoryFilter = document.getElementById('filterCategory').value;
-    const statusFilter = document.getElementById('filterStatus').value;
-    
-    // Filter logic would go here
-    console.log('Filtering suppliers:', { searchTerm, categoryFilter, statusFilter });
+    const selectedCategory = document.getElementById('filterCategory').value;
+    const selectedStatus = document.getElementById('filterStatus').value;
+
+    let filteredData = suppliersData.filter(supplier => {
+        const matchesSearch = supplier.name.toLowerCase().includes(searchTerm) ||
+                            supplier.phone.includes(searchTerm) ||
+                            supplier.email.toLowerCase().includes(searchTerm);
+        const matchesCategory = !selectedCategory || supplier.category === selectedCategory;
+        const matchesStatus = !selectedStatus || supplier.status === selectedStatus;
+
+        return matchesSearch && matchesCategory && matchesStatus;
+    });
+
+    // Update table if in table view
+    if (!document.getElementById('tableView').classList.contains('d-none')) {
+        updateTableWithData(filteredData);
+    }
+
+    // Update cards view
+    updateCardsWithData(filteredData);
+}
+
+function updateTableWithData(data) {
+    const tbody = document.getElementById('suppliersTableBody');
+    tbody.innerHTML = '';
+
+    data.forEach(supplier => {
+        const row = document.createElement('tr');
+
+        row.innerHTML = `
+            <td><input type="checkbox" class="form-check-input supplier-checkbox" data-id="${supplier.id}"></td>
+            <td>
+                <strong>${supplier.name}</strong><br>
+                <small class="text-muted">مورد منذ ${supplier.joinDate}</small>
+            </td>
+            <td><span class="badge bg-${supplier.categoryClass}">${supplier.category}</span></td>
+            <td>${supplier.phone}</td>
+            <td>${supplier.email}</td>
+            <td>${supplier.lastOrder}</td>
+            <td><span class="badge bg-${supplier.statusClass}">${supplier.status}</span></td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary" onclick="viewSupplier(${supplier.id})" title="عرض">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-outline-warning" onclick="editSupplier(${supplier.id})" title="تعديل">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-outline-success" onclick="newOrder(${supplier.id})" title="طلبية جديدة">
+                        <i class="fas fa-shopping-cart"></i>
+                    </button>
+                    <button class="btn btn-outline-info" onclick="viewOrders(${supplier.id})" title="الطلبيات">
+                        <i class="fas fa-history"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    // Re-attach event listeners
+    attachCheckboxListeners();
+}
+
+function updateCardsWithData(data) {
+    const cardsContainer = document.getElementById('cardsView');
+    cardsContainer.innerHTML = '';
+
+    data.forEach(supplier => {
+        const cardCol = document.createElement('div');
+        cardCol.className = 'col-md-6 col-lg-4 mb-4';
+
+        cardCol.innerHTML = `
+            <div class="card supplier-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h6 class="card-title mb-0">${supplier.name}</h6>
+                    <span class="badge bg-${supplier.statusClass}">${supplier.status}</span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12 mb-2">
+                            <small class="text-muted">
+                                {% if session.get('language', 'ar') == 'ar' %}الفئة:{% else %}Category:{% endif %}
+                            </small>
+                            <span class="badge bg-${supplier.categoryClass}">${supplier.category}</span>
+                        </div>
+                        <div class="col-12 mb-2">
+                            <small class="text-muted">
+                                {% if session.get('language', 'ar') == 'ar' %}الهاتف:{% else %}Phone:{% endif %}
+                            </small>
+                            <br>${supplier.phone}
+                        </div>
+                        <div class="col-12 mb-2">
+                            <small class="text-muted">
+                                {% if session.get('language', 'ar') == 'ar' %}البريد الإلكتروني:{% else %}Email:{% endif %}
+                            </small>
+                            <br>${supplier.email}
+                        </div>
+                        <div class="col-12 mb-2">
+                            <small class="text-muted">
+                                {% if session.get('language', 'ar') == 'ar' %}آخر طلبية:{% else %}Last Order:{% endif %}
+                            </small>
+                            <br>${supplier.lastOrder}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="btn-group w-100" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="viewSupplier(${supplier.id})">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="editSupplier(${supplier.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-success" onclick="newOrder(${supplier.id})">
+                            <i class="fas fa-shopping-cart"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-info" onclick="viewOrders(${supplier.id})">
+                            <i class="fas fa-history"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        cardsContainer.appendChild(cardCol);
+    });
+
+    // Re-attach event listeners for checkboxes if needed
+    attachCheckboxListeners();
+
+    console.log('Cards view updated with', data.length, 'suppliers');
+}
 }
 
 function viewSupplier(id) {
-    // View supplier details
-    alert('عرض تفاصيل المورد رقم: ' + id);
+    const supplier = suppliersData.find(s => s.id === id);
+    if (supplier) {
+        const message = `عرض تفاصيل المورد: ${supplier.name}\nالفئة: ${supplier.category}\nالهاتف: ${supplier.phone}\nالبريد: ${supplier.email}\nآخر طلبية: ${supplier.lastOrder}`;
+        alert(message);
+    } else {
+        showToast(isRTL ? `عرض تفاصيل المورد رقم: ${id}` : `Viewing supplier: ${id}`, 'info');
+    }
 }
 
 function editSupplier(id) {
-    // Edit supplier
-    alert('تعديل المورد رقم: ' + id);
+    const supplier = suppliersData.find(s => s.id === id);
+    if (supplier) {
+        alert(`تعديل المورد: ${supplier.name}\nالحالة الحالية: ${supplier.status}`);
+    }
+
+    // Show modal for editing
+    const modal = new bootstrap.Modal(document.getElementById('addSupplierModal'));
+    modal.show();
+    showToast(isRTL ? `تعديل المورد رقم: ${id}` : `Editing supplier: ${id}`, 'info');
 }
 
 function newOrder(id) {
-    // Create new order
-    alert('طلبية جديدة من المورد رقم: ' + id);
+    const supplier = suppliersData.find(s => s.id === id);
+    if (supplier) {
+        alert(`إنشاء طلبية شراء جديدة من المورد: ${supplier.name}`);
+        // Redirect to purchases page with supplier pre-selected
+        // window.location.href = `/purchases?supplier_id=${id}`;
+    }
 }
 
 function viewOrders(id) {
-    // View order history
-    alert('عرض تاريخ الطلبيات للمورد رقم: ' + id);
+    const supplier = suppliersData.find(s => s.id === id);
+    if (supplier) {
+        alert(`عرض طلبيات المورد: ${supplier.name}\nآخر طلبية: ${supplier.lastOrder}`);
+        // Redirect to purchases page filtered by supplier
+        // window.location.href = `/purchases?supplier_id=${id}`;
+    }
 }
 
 function saveSupplier() {
     const form = document.getElementById('supplierForm');
-    const formData = new FormData(form);
-    
-    // Save supplier logic
-    alert('تم حفظ المورد بنجاح');
-    
-    // Close modal
-    const modal = bootstrap.Modal.getInstance(document.getElementById('addSupplierModal'));
-    modal.hide();
-    
-    // Reset form
-    form.reset();
+
+    if (!validateForm(form)) {
+        showToast(isRTL ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill all required fields', 'warning');
+        return;
+    }
+
+    const saveBtn = document.querySelector('#addSupplierModal .btn-primary');
+    showLoading(saveBtn);
+
+    // Simulate API call
+    setTimeout(() => {
+        hideLoading(saveBtn);
+        showToast(isRTL ? 'تم حفظ المورد بنجاح' : 'Supplier saved successfully', 'success');
+
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('addSupplierModal'));
+        modal.hide();
+
+        // Reset form
+        form.reset();
+    }, 1000);
 }
+
+// Refresh data
+function refreshData() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري التحديث...' : 'Refreshing...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast(isRTL ? 'تم تحديث البيانات بنجاح' : 'Data refreshed successfully', 'success');
+    }, 1500);
+}
+
+// Generate report
+function generateReport() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري الإنشاء...' : 'Generating...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast(isRTL ? 'تم إنشاء تقرير الموردين بنجاح' : 'Suppliers report generated successfully', 'success');
+    }, 1500);
+}
+
+// Export data
+function exportData() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري التصدير...' : 'Exporting...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast(isRTL ? 'تم تصدير البيانات بنجاح' : 'Data exported successfully', 'success');
+    }, 1500);
+}
+
+// Save all data
+function saveAllData() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري الحفظ...' : 'Saving...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast(isRTL ? 'تم حفظ جميع البيانات بنجاح' : 'All data saved successfully', 'success');
+    }, 1500);
+}
+
+// Print report
+function printReport() {
+    showToast(isRTL ? 'جاري إعداد التقرير للطباعة...' : 'Preparing report for printing...', 'info');
+    setTimeout(() => {
+        window.print();
+    }, 1000);
+}
+
+// Delete selected
+function deleteSelected() {
+    showToast(isRTL ? 'يرجى اختيار مورد واحد على الأقل' : 'Please select at least one supplier', 'warning');
+}
+
+// Delete selected suppliers
+function deleteSelectedSuppliers() {
+    const selected = document.querySelectorAll('.supplier-checkbox:checked');
+    if (selected.length === 0) {
+        alert('يرجى تحديد مورد واحد على الأقل للحذف');
+        return;
+    }
+
+    if (confirm(`هل أنت متأكد من حذف ${selected.length} مورد؟`)) {
+        alert(`تم حذف ${selected.length} مورد بنجاح`);
+        location.reload();
+    }
+}
+
+// Initialize page when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔄 Initializing suppliers page...');
+
+    // Setup search functionality
+    setupSearchAndFilter();
+
+    // Load initial cards data
+    updateCardsWithData(suppliersData);
+
+    // Add event listeners to supplier checkboxes
+    attachCheckboxListeners();
+
+    console.log('✅ Suppliers page initialized successfully');
+});
 </script>
 {% endblock %}

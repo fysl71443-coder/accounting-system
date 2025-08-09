@@ -1,0 +1,250 @@
+
+    <!DOCTYPE html>
+    <html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8">
+        <title>تقرير فواتير المبيعات - عرض توضيحي</title>
+        <style>
+            body {
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                direction: rtl;
+                margin: 20px;
+                background: white;
+                color: #333;
+            }
+            .header {
+                text-align: center;
+                margin-bottom: 40px;
+                border-bottom: 4px solid #007bff;
+                padding-bottom: 25px;
+            }
+            .company-name {
+                font-size: 32px;
+                font-weight: bold;
+                color: #007bff;
+                margin-bottom: 15px;
+                text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            }
+            .report-title {
+                font-size: 24px;
+                color: #333;
+                margin-bottom: 10px;
+                font-weight: 600;
+            }
+            .print-date {
+                color: #666;
+                font-size: 16px;
+                font-style: italic;
+            }
+            .summary-box {
+                background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+                border: 2px solid #007bff;
+                border-radius: 10px;
+                padding: 20px;
+                margin: 20px 0;
+                text-align: center;
+            }
+            .summary-title {
+                font-size: 20px;
+                font-weight: bold;
+                color: #007bff;
+                margin-bottom: 10px;
+            }
+            .summary-stats {
+                display: flex;
+                justify-content: space-around;
+                flex-wrap: wrap;
+            }
+            .stat-item {
+                margin: 10px;
+                padding: 15px;
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .stat-number {
+                font-size: 24px;
+                font-weight: bold;
+                color: #007bff;
+            }
+            .stat-label {
+                font-size: 14px;
+                color: #666;
+                margin-top: 5px;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 30px 0;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                border-radius: 10px;
+                overflow: hidden;
+            }
+            th, td {
+                border: 1px solid #ddd;
+                padding: 18px 12px;
+                text-align: center;
+                font-size: 15px;
+            }
+            th {
+                background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+                color: white;
+                font-weight: bold;
+                font-size: 16px;
+                text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            }
+            tr:nth-child(even) {
+                background-color: #f8f9fa;
+            }
+            tr:hover {
+                background-color: #e3f2fd;
+                transition: background-color 0.3s ease;
+            }
+            .total-row {
+                background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+                color: white !important;
+                font-weight: bold;
+                font-size: 18px;
+                text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            }
+            .footer {
+                text-align: center;
+                margin-top: 50px;
+                padding-top: 30px;
+                border-top: 3px solid #007bff;
+                color: #666;
+                font-size: 14px;
+            }
+            .footer-logo {
+                font-size: 18px;
+                font-weight: bold;
+                color: #007bff;
+                margin-bottom: 10px;
+            }
+            @media print {
+                body { margin: 0; }
+                .no-print { display: none !important; }
+            }
+            .print-button {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #007bff;
+                color: white;
+                border: none;
+                padding: 15px 25px;
+                border-radius: 8px;
+                font-size: 16px;
+                cursor: pointer;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                transition: all 0.3s ease;
+            }
+            .print-button:hover {
+                background: #0056b3;
+                transform: translateY(-2px);
+                box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+            }
+        </style>
+    </head>
+    <body>
+        <button class="print-button no-print" onclick="window.print()">
+            🖨️ طباعة التقرير
+        </button>
+        
+        <div class="header">
+            <div class="company-name">نظام المحاسبة المتكامل</div>
+            <div class="report-title">تقرير فواتير المبيعات</div>
+            <div class="print-date">تاريخ الطباعة: 2025-08-08 01:23:58</div>
+        </div>
+        
+        <div class="summary-box">
+            <div class="summary-title">ملخص المبيعات</div>
+            <div class="summary-stats">
+                <div class="stat-item">
+                    <div class="stat-number">5</div>
+                    <div class="stat-label">عدد الفواتير</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">9,950.00</div>
+                    <div class="stat-label">إجمالي المبيعات (ريال)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">1,990.00</div>
+                    <div class="stat-label">متوسط الفاتورة (ريال)</div>
+                </div>
+            </div>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>رقم الفاتورة</th>
+                    <th>اسم العميل</th>
+                    <th>تاريخ الفاتورة</th>
+                    <th>المبلغ (ريال)</th>
+                </tr>
+            </thead>
+            <tbody>
+    
+                <tr>
+                    <td><strong>INV-2024-001</strong></td>
+                    <td>شركة الأمل التجارية</td>
+                    <td>2024-01-15</td>
+                    <td>2,500.00 ريال</td>
+                </tr>
+        
+                <tr>
+                    <td><strong>INV-2024-002</strong></td>
+                    <td>مؤسسة النور للتجارة</td>
+                    <td>2024-01-16</td>
+                    <td>1,800.00 ريال</td>
+                </tr>
+        
+                <tr>
+                    <td><strong>INV-2024-003</strong></td>
+                    <td>شركة الفجر الجديد</td>
+                    <td>2024-01-17</td>
+                    <td>3,200.00 ريال</td>
+                </tr>
+        
+                <tr>
+                    <td><strong>INV-2024-004</strong></td>
+                    <td>مكتب الرياض للاستشارات</td>
+                    <td>2024-01-18</td>
+                    <td>1,500.00 ريال</td>
+                </tr>
+        
+                <tr>
+                    <td><strong>INV-2024-005</strong></td>
+                    <td>عميل نقدي</td>
+                    <td>2024-01-19</td>
+                    <td>950.00 ريال</td>
+                </tr>
+        
+                <tr class="total-row">
+                    <td colspan="3"><strong>المجموع الإجمالي</strong></td>
+                    <td><strong>9,950.00 ريال</strong></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="footer">
+            <div class="footer-logo">نظام المحاسبة المتكامل</div>
+            <p>تم إنشاء هذا التقرير تلقائياً بواسطة النظام</p>
+            <p>للاستفسارات والدعم الفني: support@accounting-system.com</p>
+            <p><strong>هذا عرض توضيحي لوظيفة طباعة فواتير المبيعات</strong></p>
+        </div>
+        
+        <script>
+            // طباعة تلقائية بعد التحميل
+            window.onload = function() {
+                setTimeout(function() {
+                    if (confirm('هل تريد طباعة التقرير الآن؟')) {
+                        window.print();
+                    }
+                }, 1000);
+            };
+        </script>
+    </body>
+    </html>
+    

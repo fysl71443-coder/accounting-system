@@ -1,0 +1,636 @@
+{% extends "base_unified.html" %}
+
+{% block title %}
+{% if session.get('language', 'ar') == 'ar' %}
+المصروفات - نظام المحاسبة
+{% else %}
+Expenses - Accounting System
+{% endif %}
+{% endblock %}
+
+{% block page_icon %}<i class="fas fa-receipt"></i>{% endblock %}
+
+{% block page_title %}
+{% if session.get('language', 'ar') == 'ar' %}إدارة المصروفات{% else %}Expenses Management{% endif %}
+{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <button type="button" class="btn btn-primary" onclick="refreshData()">
+        <i class="fas fa-sync-alt me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تحديث البيانات{% else %}Refresh Data{% endif %}
+    </button>
+    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#expenseModal">
+        <i class="fas fa-plus me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}إضافة مصروف{% else %}Add Expense{% endif %}
+    </button>
+    <button type="button" class="btn btn-info" onclick="generateReport()">
+        <i class="fas fa-file-alt me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تقرير المصروفات{% else %}Expenses Report{% endif %}
+    </button>
+    <button type="button" class="btn btn-secondary" onclick="exportData()">
+        <i class="fas fa-download me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تصدير{% else %}Export{% endif %}
+    </button>
+    <button type="button" class="btn btn-warning" onclick="saveAllData()">
+        <i class="fas fa-save me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}حفظ البيانات{% else %}Save Data{% endif %}
+    </button>
+    <button type="button" class="btn btn-dark" onclick="printReport()">
+        <i class="fas fa-print me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}طباعة{% else %}Print{% endif %}
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}إجمالي المصروفات{% else %}Total Expenses{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-danger" id="total-expenses">45,750.00 ريال</h4>
+                    </div>
+                    <div class="text-danger opacity-75">
+                        <i class="fas fa-money-bill-wave fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}مصروفات هذا الشهر{% else %}This Month{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-warning" id="month-expenses">12,500.00 ريال</h4>
+                    </div>
+                    <div class="text-warning opacity-75">
+                        <i class="fas fa-calendar-month fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}عدد المصروفات{% else %}Expenses Count{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-info" id="expenses-count">0</h4>
+                    </div>
+                    <div class="text-info opacity-75">
+                        <i class="fas fa-list fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}متوسط المصروف{% else %}Average Expense{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-primary" id="avg-expense">1,525.00 ريال</h4>
+                    </div>
+                    <div class="text-primary opacity-75">
+                        <i class="fas fa-chart-line fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h6 class="mb-0">
+            <i class="fas fa-filter me-2"></i>
+            {% if session.get('language', 'ar') == 'ar' %}فلاتر البحث{% else %}Search Filters{% endif %}
+        </h6>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label small">
+                    {% if session.get('language', 'ar') == 'ar' %}نوع المصروف{% else %}Expense Type{% endif %}
+                </label>
+                <select class="form-select" id="expense-type-filter" onchange="filterData()">
+                    <option value="all">{% if session.get('language', 'ar') == 'ar' %}جميع الأنواع{% else %}All Types{% endif %}</option>
+                    <option value="office">{% if session.get('language', 'ar') == 'ar' %}مصروفات مكتبية{% else %}Office Expenses{% endif %}</option>
+                    <option value="transport">{% if session.get('language', 'ar') == 'ar' %}مواصلات{% else %}Transportation{% endif %}</option>
+                    <option value="utilities">{% if session.get('language', 'ar') == 'ar' %}خدمات عامة{% else %}Utilities{% endif %}</option>
+                    <option value="marketing">{% if session.get('language', 'ar') == 'ar' %}تسويق{% else %}Marketing{% endif %}</option>
+                    <option value="maintenance">{% if session.get('language', 'ar') == 'ar' %}صيانة{% else %}Maintenance{% endif %}</option>
+                    <option value="other">{% if session.get('language', 'ar') == 'ar' %}أخرى{% else %}Other{% endif %}</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">
+                    {% if session.get('language', 'ar') == 'ar' %}من تاريخ{% else %}From Date{% endif %}
+                </label>
+                <input type="date" class="form-control" id="from-date" onchange="filterData()">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">
+                    {% if session.get('language', 'ar') == 'ar' %}إلى تاريخ{% else %}To Date{% endif %}
+                </label>
+                <input type="date" class="form-control" id="to-date" onchange="filterData()">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">
+                    {% if session.get('language', 'ar') == 'ar' %}الحد الأدنى{% else %}Min Amount{% endif %}
+                </label>
+                <input type="number" class="form-control" id="min-amount" step="0.01" onchange="filterData()">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small">
+                    {% if session.get('language', 'ar') == 'ar' %}الحد الأقصى{% else %}Max Amount{% endif %}
+                </label>
+                <input type="number" class="form-control" id="max-amount" step="0.01" onchange="filterData()">
+            </div>
+            <div class="col-md-1">
+                <label class="form-label small">&nbsp;</label>
+                <button type="button" class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Expenses Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">
+            <i class="fas fa-table me-2"></i>
+            {% if session.get('language', 'ar') == 'ar' %}قائمة المصروفات{% else %}Expenses List{% endif %}
+        </h6>
+        <div class="d-flex gap-2">
+            <input type="text" class="form-control form-control-sm" id="search-input" placeholder="{% if session.get('language', 'ar') == 'ar' %}البحث...{% else %}Search...{% endif %}" onkeyup="searchExpenses()">
+            <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteSelected()">
+                <i class="fas fa-trash me-1"></i>
+                {% if session.get('language', 'ar') == 'ar' %}حذف المحدد{% else %}Delete Selected{% endif %}
+            </button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="expenses-table">
+                <thead>
+                    <tr>
+                        <th>
+                            <input type="checkbox" class="form-check-input" id="select-all" onchange="toggleSelectAll()">
+                        </th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}رقم المصروف{% else %}Expense ID{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}التاريخ{% else %}Date{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}النوع{% else %}Type{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الوصف{% else %}Description{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}المبلغ{% else %}Amount{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}طريقة الدفع{% else %}Payment Method{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الإجراءات{% else %}Actions{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody id="expenses-tbody">
+                    <tr>
+                        <td colspan="8" class="text-center text-muted">
+                            {% if session.get('language', 'ar') == 'ar' %}لا توجد مصروفات محفوظة{% else %}No saved expenses{% endif %}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Expense Modal -->
+<div class="modal fade" id="expenseModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {% if session.get('language', 'ar') == 'ar' %}إضافة مصروف جديد{% else %}Add New Expense{% endif %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="expenseForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}نوع المصروف{% else %}Expense Type{% endif %} *
+                            </label>
+                            <select class="form-select" id="expenseType" required>
+                                <option value="">{% if session.get('language', 'ar') == 'ar' %}اختر النوع{% else %}Select Type{% endif %}</option>
+                                <option value="office">{% if session.get('language', 'ar') == 'ar' %}مصروفات مكتبية{% else %}Office Expenses{% endif %}</option>
+                                <option value="transport">{% if session.get('language', 'ar') == 'ar' %}مواصلات{% else %}Transportation{% endif %}</option>
+                                <option value="utilities">{% if session.get('language', 'ar') == 'ar' %}خدمات عامة{% else %}Utilities{% endif %}</option>
+                                <option value="marketing">{% if session.get('language', 'ar') == 'ar' %}تسويق{% else %}Marketing{% endif %}</option>
+                                <option value="maintenance">{% if session.get('language', 'ar') == 'ar' %}صيانة{% else %}Maintenance{% endif %}</option>
+                                <option value="other">{% if session.get('language', 'ar') == 'ar' %}أخرى{% else %}Other{% endif %}</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}المبلغ{% else %}Amount{% endif %} *
+                            </label>
+                            <input type="number" class="form-control" id="expenseAmount" step="0.01" min="0" required>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}التاريخ{% else %}Date{% endif %} *
+                            </label>
+                            <input type="date" class="form-control" id="expenseDate" required>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}طريقة الدفع{% else %}Payment Method{% endif %}
+                            </label>
+                            <select class="form-select" id="expensePaymentMethod">
+                                <option value="CASH">{% if session.get('language', 'ar') == 'ar' %}نقدي{% else %}Cash{% endif %}</option>
+                                <option value="BANK">{% if session.get('language', 'ar') == 'ar' %}تحويل بنكي{% else %}Bank Transfer{% endif %}</option>
+                                <option value="CHECK">{% if session.get('language', 'ar') == 'ar' %}شيك{% else %}Check{% endif %}</option>
+                                <option value="CARD">{% if session.get('language', 'ar') == 'ar' %}بطاقة{% else %}Card{% endif %}</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}الوصف{% else %}Description{% endif %} *
+                            </label>
+                            <textarea class="form-control" id="expenseDescription" rows="3" required></textarea>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}رقم المرجع{% else %}Reference Number{% endif %}
+                            </label>
+                            <input type="text" class="form-control" id="expenseReference">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}المورد/الجهة{% else %}Vendor/Entity{% endif %}
+                            </label>
+                            <input type="text" class="form-control" id="expenseVendor">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {% if session.get('language', 'ar') == 'ar' %}إلغاء{% else %}Cancel{% endif %}
+                </button>
+                <button type="button" class="btn btn-success" onclick="saveExpense()">
+                    <i class="fas fa-save me-1"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}حفظ المصروف{% else %}Save Expense{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const isRTL = '{{ session.get("language", "ar") }}' === 'ar';
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    // Set today's date as default
+    document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
+
+    // Set date filters to current month
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    document.getElementById('from-date').value = firstDay.toISOString().split('T')[0];
+    document.getElementById('to-date').value = today.toISOString().split('T')[0];
+
+    // Load expenses on page load
+    loadExpenses();
+});
+
+// Refresh data
+function refreshData() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري التحديث...' : 'Refreshing...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        alert(isRTL ? 'تم تحديث البيانات بنجاح' : 'Data refreshed successfully');
+        loadExpenses();
+    }, 1500);
+}
+
+// Save expense
+function saveExpense() {
+    const type = document.getElementById('expenseType').value;
+    const amount = document.getElementById('expenseAmount').value;
+    const date = document.getElementById('expenseDate').value;
+    const paymentMethod = document.getElementById('expensePaymentMethod').value;
+    const description = document.getElementById('expenseDescription').value;
+    const reference = document.getElementById('expenseReference').value;
+    const vendor = document.getElementById('expenseVendor').value;
+
+    if (!type) {
+        alert(isRTL ? 'يرجى اختيار نوع المصروف' : 'Please select expense type');
+        return;
+    }
+
+    if (!amount || parseFloat(amount) <= 0) {
+        alert(isRTL ? 'يرجى إدخال مبلغ صحيح' : 'Please enter a valid amount');
+        return;
+    }
+
+    if (!date) {
+        alert(isRTL ? 'يرجى اختيار التاريخ' : 'Please select date');
+        return;
+    }
+
+    if (!description.trim()) {
+        alert(isRTL ? 'يرجى إدخال وصف المصروف' : 'Please enter expense description');
+        return;
+    }
+
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري الحفظ...' : 'Saving...');
+
+    const expenseData = {
+        expense_type: type,
+        amount: parseFloat(amount),
+        date: date,
+        payment_method: paymentMethod,
+        description: description.trim(),
+        reference: reference.trim(),
+        vendor: vendor.trim()
+    };
+
+    fetch('/api/save_expense', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(expenseData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+
+        if (data.success) {
+            alert(isRTL ? 'تم حفظ المصروف بنجاح - رقم المصروف: ' + data.expense_id : 'Expense saved successfully - Expense ID: ' + data.expense_id);
+
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('expenseModal'));
+            modal.hide();
+
+            // Clear form
+            document.getElementById('expenseForm').reset();
+            document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
+
+            // Reload expenses
+            loadExpenses();
+            updateSummaryCards();
+        } else {
+            alert(isRTL ? 'خطأ في حفظ المصروف: ' + data.message : 'Error saving expense: ' + data.message);
+        }
+    })
+    .catch(error => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        console.error('Error:', error);
+        alert(isRTL ? 'خطأ في الاتصال بالخادم' : 'Connection error');
+    });
+}
+
+// Load expenses
+function loadExpenses() {
+    fetch('/api/get_expenses')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayExpenses(data.expenses);
+            updateSummaryCards(data.expenses);
+        } else {
+            console.error('Error loading expenses:', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+// Display expenses in table
+function displayExpenses(expenses) {
+    const tbody = document.getElementById('expenses-tbody');
+
+    if (expenses.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center text-muted">
+                    ${isRTL ? 'لا توجد مصروفات محفوظة' : 'No saved expenses'}
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = expenses.map(expense => `
+        <tr>
+            <td><input type="checkbox" class="form-check-input expense-checkbox" data-id="${expense.id}"></td>
+            <td><strong>#${expense.id}</strong></td>
+            <td>${expense.date}</td>
+            <td><span class="badge bg-primary">${getExpenseTypeText(expense.expense_type)}</span></td>
+            <td>${expense.description}</td>
+            <td>${expense.amount.toFixed(2)} ريال</td>
+            <td>${getPaymentMethodText(expense.payment_method)}</td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary" onclick="editExpense(${expense.id})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-outline-danger" onclick="deleteExpense(${expense.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Get expense type text
+function getExpenseTypeText(type) {
+    const types = {
+        'office': isRTL ? 'مصروفات مكتبية' : 'Office Expenses',
+        'transport': isRTL ? 'مواصلات' : 'Transportation',
+        'utilities': isRTL ? 'خدمات عامة' : 'Utilities',
+        'marketing': isRTL ? 'تسويق' : 'Marketing',
+        'maintenance': isRTL ? 'صيانة' : 'Maintenance',
+        'other': isRTL ? 'أخرى' : 'Other'
+    };
+    return types[type] || type;
+}
+
+// Get payment method text
+function getPaymentMethodText(method) {
+    const methods = {
+        'CASH': isRTL ? 'نقدي' : 'Cash',
+        'BANK': isRTL ? 'تحويل بنكي' : 'Bank Transfer',
+        'CHECK': isRTL ? 'شيك' : 'Check',
+        'CARD': isRTL ? 'بطاقة' : 'Card'
+    };
+    return methods[method] || method;
+}
+
+// Update summary cards
+function updateSummaryCards(expenses = []) {
+    const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const monthExpenses = expenses.filter(exp => {
+        const expDate = new Date(exp.date);
+        return expDate.getMonth() === currentMonth && expDate.getFullYear() === currentYear;
+    }).reduce((sum, exp) => sum + exp.amount, 0);
+
+    const avgExpense = expenses.length > 0 ? totalExpenses / expenses.length : 0;
+
+    document.getElementById('total-expenses').textContent = totalExpenses.toFixed(2) + ' ريال';
+    document.getElementById('month-expenses').textContent = monthExpenses.toFixed(2) + ' ريال';
+    document.getElementById('expenses-count').textContent = expenses.length;
+    document.getElementById('avg-expense').textContent = avgExpense.toFixed(2) + ' ريال';
+}
+
+// Filter data
+function filterData() {
+    // Implementation for filtering
+    alert(isRTL ? 'جاري تطبيق الفلاتر...' : 'Applying filters...');
+}
+
+// Clear filters
+function clearFilters() {
+    document.getElementById('expense-type-filter').value = 'all';
+    document.getElementById('from-date').value = '';
+    document.getElementById('to-date').value = '';
+    document.getElementById('min-amount').value = '';
+    document.getElementById('max-amount').value = '';
+    filterData();
+}
+
+// Search expenses
+function searchExpenses() {
+    // Implementation for search
+    const searchTerm = document.getElementById('search-input').value.toLowerCase();
+    // Filter table rows based on search term
+}
+
+// Toggle select all
+function toggleSelectAll() {
+    const selectAll = document.getElementById('select-all');
+    const checkboxes = document.querySelectorAll('.expense-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+}
+
+// Delete selected
+function deleteSelected() {
+    const selected = document.querySelectorAll('.expense-checkbox:checked');
+    if (selected.length === 0) {
+        alert(isRTL ? 'يرجى اختيار مصروف واحد على الأقل' : 'Please select at least one expense');
+        return;
+    }
+
+    if (confirm(isRTL ? 'هل أنت متأكد من حذف المصروفات المحددة؟' : 'Are you sure you want to delete selected expenses?')) {
+        alert(isRTL ? 'تم حذف المصروفات المحددة' : 'Selected expenses deleted');
+        loadExpenses();
+    }
+}
+
+// Edit expense
+function editExpense(id) {
+    alert(isRTL ? 'تعديل المصروف رقم: ' + id : 'Edit expense ID: ' + id);
+}
+
+// Delete expense
+function deleteExpense(id) {
+    if (confirm(isRTL ? 'هل أنت متأكد من حذف هذا المصروف؟' : 'Are you sure you want to delete this expense?')) {
+        alert(isRTL ? 'تم حذف المصروف رقم: ' + id : 'Deleted expense ID: ' + id);
+        loadExpenses();
+    }
+}
+
+// Generate report
+function generateReport() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري الإنشاء...' : 'Generating...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        alert(isRTL ? 'تم إنشاء تقرير المصروفات بنجاح' : 'Expenses report generated successfully');
+    }, 1500);
+}
+
+// Export data
+function exportData() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري التصدير...' : 'Exporting...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        alert(isRTL ? 'تم تصدير البيانات بنجاح' : 'Data exported successfully');
+    }, 1500);
+}
+
+// Save all data
+function saveAllData() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري الحفظ...' : 'Saving...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        alert(isRTL ? 'تم حفظ جميع البيانات بنجاح' : 'All data saved successfully');
+    }, 1500);
+}
+
+// Print report
+function printReport() {
+    alert(isRTL ? 'جاري إعداد التقرير للطباعة...' : 'Preparing report for printing...');
+    window.print();
+}
+</script>
+{% endblock %}

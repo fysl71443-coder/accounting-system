@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فواتير {{ section }} لشهر {{ month }}</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            direction: rtl;
+            background-color: #fff;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 15px;
+        }
+
+        .header h1 {
+            color: #333;
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .header p {
+            color: #666;
+            margin: 5px 0;
+        }
+
+        .invoice {
+            border: 1px solid #444;
+            margin-bottom: 30px;
+            padding: 15px;
+            background-color: #fafafa;
+            border-radius: 5px;
+        }
+
+        .invoice-header {
+            font-size: 18px;
+            margin-bottom: 15px;
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 3px;
+            border-right: 4px solid #007bff;
+        }
+
+        .invoice-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .invoice-info div {
+            margin: 5px 0;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background-color: #fff;
+        }
+
+        .items-table th {
+            background-color: #007bff;
+            color: white;
+            border: 1px solid #0056b3;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .items-table td {
+            border: 1px solid #888;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .items-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .total {
+            text-align: left;
+            margin-top: 15px;
+            font-weight: bold;
+            font-size: 16px;
+            background-color: #d4edda;
+            padding: 10px;
+            border-radius: 3px;
+            border-right: 4px solid #28a745;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status.paid {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status.partial {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .status.pending {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .summary {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+
+        .summary h3 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 5px 0;
+            border-bottom: 1px dotted #ccc;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+            font-size: 18px;
+        }
+
+        hr {
+            margin: 30px 0;
+            border: none;
+            border-top: 2px solid #dee2e6;
+        }
+
+        @media print {
+            body {
+                margin: 0;
+            }
+            .invoice {
+                page-break-inside: avoid;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>فواتير {{ section }} لشهر {{ month }}</h1>
+        <p>تاريخ الطباعة: {{ moment().strftime('%Y-%m-%d %H:%M:%S') if moment else '2025-08-06' }}</p>
+        <p>حالة الفلترة: {{ status if status != 'all' else 'جميع الحالات' }}</p>
+    </div>
+
+    {% if invoices and invoices|length > 0 %}
+        {% for invoice in invoices %}
+        <div class="invoice">
+            <div class="invoice-header">
+                {% if invoice.invoice_number %}
+                    فاتورة رقم: {{ invoice.invoice_number }}
+                {% elif invoice.expense_number %}
+                    مصروف رقم: {{ invoice.expense_number }}
+                {% else %}
+                    سجل رقم: {{ invoice.id }}
+                {% endif %}
+            </div>
+
+            <div class="invoice-info">
+                <div><strong>التاريخ:</strong> {{ invoice.invoice_date or invoice.expense_date }}</div>
+                {% if invoice.customer_name %}
+                    <div><strong>العميل:</strong> {{ invoice.customer_name }}</div>
+                {% elif invoice.supplier_name %}
+                    <div><strong>المورد:</strong> {{ invoice.supplier_name }}</div>
+                {% elif invoice.expense_type %}
+                    <div><strong>النوع:</strong> {{ invoice.expense_type }}</div>
+                {% endif %}
+                <div><strong>الحالة:</strong> 
+                    <span class="status {{ invoice.payment_status }}">
+                        {% if invoice.payment_status == 'paid' %}مدفوع
+                        {% elif invoice.payment_status == 'partial' %}دفع جزئي
+                        {% elif invoice.payment_status == 'pending' %}معلق
+                        {% else %}{{ invoice.payment_status }}
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            {% if invoice.items and invoice.items|length > 0 %}
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>الوصف</th>
+                        <th>الكمية</th>
+                        <th>السعر</th>
+                        <th>الإجمالي</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in invoice.items %}
+                    <tr>
+                        <td>{{ item.description }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ "%.2f"|format(item.price) }}</td>
+                        <td>{{ "%.2f"|format(item.total) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+
+            {% if invoice.description %}
+            <div style="margin-top: 10px;">
+                <strong>الوصف:</strong> {{ invoice.description }}
+            </div>
+            {% endif %}
+
+            <div class="total">
+                إجمالي: {{ "%.2f"|format(invoice.total or invoice.amount) }} ريال
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- ملخص إجمالي -->
+        <div class="summary">
+            <h3>📊 ملخص التقرير</h3>
+            {% set total_amount = invoices|sum(attribute='total') or invoices|sum(attribute='amount') %}
+            {% set paid_invoices = invoices|selectattr('payment_status', 'equalto', 'paid')|list %}
+            {% set pending_invoices = invoices|selectattr('payment_status', 'equalto', 'pending')|list %}
+            {% set partial_invoices = invoices|selectattr('payment_status', 'equalto', 'partial')|list %}
+            
+            <div class="summary-row">
+                <span>إجمالي عدد السجلات:</span>
+                <span>{{ invoices|length }}</span>
+            </div>
+            <div class="summary-row">
+                <span>المدفوع:</span>
+                <span>{{ paid_invoices|length }} سجل</span>
+            </div>
+            <div class="summary-row">
+                <span>المعلق:</span>
+                <span>{{ pending_invoices|length }} سجل</span>
+            </div>
+            <div class="summary-row">
+                <span>الدفع الجزئي:</span>
+                <span>{{ partial_invoices|length }} سجل</span>
+            </div>
+            <div class="summary-row" style="border-top: 2px solid #333; font-size: 18px; font-weight: bold;">
+                <span>الإجمالي العام:</span>
+                <span>{{ "%.2f"|format(total_amount) }} ريال</span>
+            </div>
+        </div>
+
+    {% else %}
+        <div class="no-data">
+            <h3>📭 لا توجد بيانات</h3>
+            <p>لا توجد فواتير متاحة للشهر المحدد</p>
+        </div>
+    {% endif %}
+
+</body>
+</html>

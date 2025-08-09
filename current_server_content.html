@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+
+تسجيل الدخول - نظام المحاسبة
+
+</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap RTL for Arabic -->
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --success-color: #059669;
+            --danger-color: #dc2626;
+            --warning-color: #d97706;
+            --info-color: #0891b2;
+            --light-color: #f8fafc;
+            --dark-color: #1e293b;
+        }
+        
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--light-color);
+            direction: rtl;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary-color) !important;
+        }
+        
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            margin: 5px 10px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        .main-content {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin: 20px;
+            padding: 30px;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .btn {
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 10px 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+        }
+        
+        .table {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .table thead th {
+            background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+        
+        .alert {
+            border: none;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+        }
+        
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        
+        .stats-card.success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        
+        .stats-card.warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .stats-card.info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .language-switcher {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1050;
+        }
+
+        /* إصلاح القائمة الجانبية */
+        .sidebar {
+            position: fixed !important;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 100;
+            padding: 48px 0 0;
+            box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+        }
+
+        .sidebar-sticky {
+            position: relative;
+            top: 0;
+            height: calc(100vh - 48px);
+            padding-top: .5rem;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        /* إصلاح المحتوى الرئيسي */
+        .main-content {
+            margin-left: 240px;
+            padding: 20px;
+        }
+
+        @media (max-width: 767.98px) {
+            .sidebar {
+                top: 5rem;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+        }
+
+        /* إصلاح عرض القائمة الجانبية */
+        .sidebar.show {
+            display: block !important;
+        }
+
+        .sidebar .nav-link {
+            display: flex !important;
+            align-items: center;
+        }
+    </style>
+    
+    
+</head>
+<body>
+    <!-- Language Switcher -->
+    <!-- مكون أزرار تغيير اللغة -->
+<div class="btn-group btn-group-sm" role="group">
+    <a href="?lang=ar" class="btn btn-outline-primary active">
+        العربية
+    </a>
+    <a href="?lang=en" class="btn btn-outline-primary ">
+        English
+    </a>
+</div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            
+
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                
+
+                <!-- Flash Messages -->
+                
+                    
+                        
+                            <div class="alert alert-message alert-dismissible fade show" role="alert">
+                                يرجى تسجيل الدخول للوصول إلى هذه الصفحة
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        
+                    
+                
+
+                
+<div class="container-fluid vh-100">
+    <div class="row h-100">
+        <!-- Left side - Login Form -->
+        <div class="col-lg-6 d-flex align-items-center justify-content-center">
+            <div class="card shadow-lg border-0" style="width: 100%; max-width: 400px;">
+                <div class="card-body p-5">
+                    <!-- Logo -->
+                    <div class="text-center mb-4">
+                        <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="fas fa-calculator text-white fa-2x"></i>
+                        </div>
+                        <h3 class="mt-3 mb-1">
+                            
+                                نظام المحاسبة المتكامل
+                            
+                        </h3>
+                        <p class="text-muted">
+                            
+                                يرجى تسجيل الدخول للمتابعة
+                            
+                        </p>
+                    </div>
+
+                    <!-- Login Form -->
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">
+                                <i class="fas fa-user me-2"></i>
+                                
+                                    اسم المستخدم
+                                
+                            </label>
+                            <input type="text" class="form-control form-control-lg" id="username" name="username" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">
+                                <i class="fas fa-lock me-2"></i>
+                                
+                                    كلمة المرور
+                                
+                            </label>
+                            <div class="input-group">
+                                <input type="password" class="form-control form-control-lg" id="password" name="password" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword()">
+                                    <i class="fas fa-eye" id="toggleIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="language" class="form-label">
+                                <i class="fas fa-globe me-2"></i>
+                                
+                                    اللغة
+                                
+                            </label>
+                            <select class="form-select form-select-lg" id="language" name="language">
+                                <option value="ar" selected>
+                                    العربية
+                                </option>
+                                <option value="en" >
+                                    English
+                                </option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
+                            <i class="fas fa-sign-in-alt me-2"></i>
+                            
+                                تسجيل الدخول
+                            
+                        </button>
+                    </form>
+
+                    <!-- Demo Credentials -->
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-info-circle me-2"></i>
+                            
+                                بيانات تجريبية
+                            
+                        </h6>
+                        <hr>
+                        <p class="mb-1">
+                            <strong>
+                                
+                                    المستخدم:
+                                
+                            </strong> admin
+                        </p>
+                        <p class="mb-0">
+                            <strong>
+                                
+                                    كلمة المرور:
+                                
+                            </strong> admin123
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right side - Features -->
+        <div class="col-lg-6 d-none d-lg-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="text-white text-center p-5">
+                <h2 class="mb-4">
+                    
+                        مميزات النظام
+                    
+                </h2>
+                
+                <div class="row">
+                    <div class="col-12 mb-4">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-white bg-opacity-20 rounded-circle p-3 me-3">
+                                <i class="fas fa-store fa-2x"></i>
+                            </div>
+                            <div class="text-start">
+                                <h5>
+                                    
+                                        نظام فروع متقدم
+                                    
+                                </h5>
+                                <p class="mb-0">
+                                    
+                                        إدارة فروع PLACE INDIA و CHINA TOWN
+                                    
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 mb-4">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-white bg-opacity-20 rounded-circle p-3 me-3">
+                                <i class="fas fa-globe fa-2x"></i>
+                            </div>
+                            <div class="text-start">
+                                <h5>
+                                    
+                                        دعم متعدد اللغات
+                                    
+                                </h5>
+                                <p class="mb-0">
+                                    
+                                        العربية والإنجليزية مع دعم RTL
+                                    
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 mb-4">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-white bg-opacity-20 rounded-circle p-3 me-3">
+                                <i class="fas fa-chart-line fa-2x"></i>
+                            </div>
+                            <div class="text-start">
+                                <h5>
+                                    
+                                        تقارير مالية شاملة
+                                    
+                                </h5>
+                                <p class="mb-0">
+                                    
+                                        تحليلات مالية متقدمة ورسومات بيانية
+                                    
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-white bg-opacity-20 rounded-circle p-3 me-3">
+                                <i class="fas fa-shield-alt fa-2x"></i>
+                            </div>
+                            <div class="text-start">
+                                <h5>
+                                    
+                                        أمان متقدم
+                                    
+                                </h5>
+                                <p class="mb-0">
+                                    
+                                        حماية البيانات وإدارة الصلاحيات
+                                    
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+                
+                
+            </main>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script>
+        // Language switching
+        document.addEventListener('DOMContentLoaded', function() {
+            const langButtons = document.querySelectorAll('.language-switcher a');
+            langButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const lang = this.href.split('lang=')[1];
+                    
+                    // Send AJAX request to change language
+                    fetch('/change_language', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({language: lang})
+                    }).then(() => {
+                        location.reload();
+                    });
+                });
+            });
+        });
+        
+        // Auto-hide alerts
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                if (alert.classList.contains('alert-success') || alert.classList.contains('alert-info')) {
+                    alert.style.transition = 'opacity 0.5s';
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.remove(), 500);
+                }
+            });
+        }, 3000);
+
+        // إصلاح القائمة الجانبية
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) {
+                // تأكد من ظهور القائمة الجانبية
+                sidebar.classList.add('show');
+                console.log('Sidebar initialized and shown');
+
+                // إضافة معالج للنقر على روابط القائمة
+                const sidebarLinks = sidebar.querySelectorAll('.nav-link');
+                sidebarLinks.forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        console.log('Sidebar link clicked:', this.href);
+
+                        // إزالة active من جميع الروابط
+                        sidebarLinks.forEach(l => l.classList.remove('active'));
+
+                        // إضافة active للرابط المنقور
+                        this.classList.add('active');
+                    });
+                });
+            } else {
+                console.error('Sidebar not found!');
+            }
+        });
+    </script>
+    
+    
+<script>
+function togglePassword() {
+    const passwordField = document.getElementById('password');
+    const toggleIcon = document.getElementById('toggleIcon');
+    
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        toggleIcon.classList.remove('fa-eye');
+        toggleIcon.classList.add('fa-eye-slash');
+    } else {
+        passwordField.type = 'password';
+        toggleIcon.classList.remove('fa-eye-slash');
+        toggleIcon.classList.add('fa-eye');
+    }
+}
+
+// Auto-fill demo credentials
+document.addEventListener('DOMContentLoaded', function() {
+    const demoAlert = document.querySelector('.alert-info');
+    if (demoAlert) {
+        demoAlert.style.cursor = 'pointer';
+        demoAlert.addEventListener('click', function() {
+            document.getElementById('username').value = 'admin';
+            document.getElementById('password').value = 'admin123';
+        });
+    }
+});
+</script>
+
+</body>
+</html>

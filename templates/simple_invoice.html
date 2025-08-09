@@ -1,0 +1,154 @@
+{% extends "base_unified.html" %}
+
+{% block page_title %}إنشاء فاتورة جديدة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <h4>إنشاء فاتورة مبيعات جديدة</h4>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="/sales/save">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">رقم الفاتورة</label>
+                            <input type="text" class="form-control" name="invoice_number" 
+                                   value="{{ invoice_number }}" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">تاريخ الفاتورة</label>
+                            <input type="date" class="form-control" name="invoice_date" 
+                                   value="{{ today_date }}" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">الفرع</label>
+                            <select class="form-select" name="branch_id" required>
+                                <option value="">اختر الفرع</option>
+                                {% for branch in branches %}
+                                <option value="{{ branch.id }}">{{ branch.branch_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">العميل</label>
+                            <select class="form-select" name="customer_id">
+                                <option value="">عميل نقدي</option>
+                                {% for customer in customers %}
+                                <option value="{{ customer.id }}">{{ customer.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">المنتج</label>
+                    <select class="form-select" name="product_id[]" required>
+                        <option value="">اختر المنتج</option>
+                        {% for product in products %}
+                        <option value="{{ product.id }}" data-price="{{ product.selling_price }}">
+                            {{ product.product_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label class="form-label">الكمية</label>
+                            <input type="number" class="form-control" name="quantity[]" value="1" min="1" required>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label class="form-label">السعر</label>
+                            <input type="number" class="form-control" name="unit_price[]" step="0.01" required>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label class="form-label">الإجمالي</label>
+                            <input type="number" class="form-control" name="total_price[]" step="0.01" readonly>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label class="form-label">طريقة الدفع</label>
+                            <select class="form-select" name="payment_method" required>
+                                <option value="نقداً">نقداً</option>
+                                <option value="تحويل">تحويل بنكي</option>
+                                <option value="بطاقة">بطاقة ائتمان</option>
+                                <option value="آجل">آجل</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-end">
+                    <a href="/sales" class="btn btn-secondary me-2">إلغاء</a>
+                    <button type="submit" class="btn btn-primary">حفظ الفاتورة</button>
+                </div>
+
+                <!-- حقول مخفية -->
+                <input type="hidden" name="total_amount" value="0">
+                <input type="hidden" name="tax_amount" value="0">
+                <input type="hidden" name="final_amount" value="0">
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// حساب بسيط للإجمالي
+document.addEventListener('input', function(e) {
+    if (e.target.name === 'quantity[]' || e.target.name === 'unit_price[]') {
+        calculateTotals();
+    }
+});
+
+// تحديث السعر عند اختيار المنتج
+document.querySelector('select[name="product_id[]"]').addEventListener('change', function() {
+    const selectedOption = this.selectedOptions[0];
+    const price = selectedOption.dataset.price || 0;
+    document.querySelector('input[name="unit_price[]"]').value = price;
+
+    // إعادة حساب الإجمالي
+    calculateTotals();
+});
+
+// حساب الإجماليات
+function calculateTotals() {
+    const quantity = parseFloat(document.querySelector('input[name="quantity[]"]').value) || 0;
+    const price = parseFloat(document.querySelector('input[name="unit_price[]"]').value) || 0;
+    const total = quantity * price;
+
+    document.querySelector('input[name="total_price[]"]').value = total.toFixed(2);
+
+    const tax = total * 0.15;
+    const finalTotal = total + tax;
+
+    document.querySelector('input[name="total_amount"]').value = total.toFixed(2);
+    document.querySelector('input[name="tax_amount"]').value = tax.toFixed(2);
+    document.querySelector('input[name="final_amount"]').value = finalTotal.toFixed(2);
+
+    console.log('Calculated:', {total, tax, finalTotal});
+}
+
+// حساب أولي عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    calculateTotals();
+});
+</script>
+{% endblock %}

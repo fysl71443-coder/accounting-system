@@ -96,36 +96,7 @@ Login - Accounting System
                         </button>
                     </form>
 
-                    <!-- Demo Credentials -->
-                    <div class="alert alert-info">
-                        <h6 class="alert-heading">
-                            <i class="fas fa-info-circle me-2"></i>
-                            {% if session.get('language', 'ar') == 'ar' %}
-                                بيانات تجريبية
-                            {% else %}
-                                Demo Credentials
-                            {% endif %}
-                        </h6>
-                        <hr>
-                        <p class="mb-1">
-                            <strong>
-                                {% if session.get('language', 'ar') == 'ar' %}
-                                    المستخدم:
-                                {% else %}
-                                    Username:
-                                {% endif %}
-                            </strong> admin
-                        </p>
-                        <p class="mb-0">
-                            <strong>
-                                {% if session.get('language', 'ar') == 'ar' %}
-                                    كلمة المرور:
-                                {% else %}
-                                    Password:
-                                {% endif %}
-                            </strong> admin123
-                        </p>
-                    </div>
+
                 </div>
             </div>
         </div>

@@ -1,0 +1,52 @@
+<!-- Button System for Employees Screen -->
+<div class="button-toolbar mb-3" role="toolbar">
+    <div class="btn-group me-2" role="group">
+        <button type="button" 
+                id="btnSave" 
+                class="btn btn-success btn-sm"
+                onclick="employeesHandler.SaveRecord()"
+                data-bs-toggle="tooltip" 
+                title="{{ session.get('language', 'ar') == 'ar' and 'حفظ' or 'Save' }}">
+            <i class="fas fa-save me-1"></i>
+            {{ session.get('language', 'ar') == 'ar' and 'حفظ' or 'Save' }}
+        </button>
+        <button type="button" 
+                id="btnEdit" 
+                class="btn btn-warning btn-sm"
+                onclick="employeesHandler.EditRecord()"
+                data-bs-toggle="tooltip" 
+                title="{{ session.get('language', 'ar') == 'ar' and 'تعديل' or 'Edit' }}">
+            <i class="fas fa-edit me-1"></i>
+            {{ session.get('language', 'ar') == 'ar' and 'تعديل' or 'Edit' }}
+        </button>
+        <button type="button" 
+                id="btnDelete" 
+                class="btn btn-danger btn-sm"
+                onclick="employeesHandler.DeleteRecord()"
+                data-bs-toggle="tooltip" 
+                title="{{ session.get('language', 'ar') == 'ar' and 'حذف' or 'Delete' }}">
+            <i class="fas fa-trash me-1"></i>
+            {{ session.get('language', 'ar') == 'ar' and 'حذف' or 'Delete' }}
+        </button>
+        <button type="button" 
+                id="btnSearch" 
+                class="btn btn-info btn-sm"
+                onclick="employeesHandler.SearchRecords()"
+                data-bs-toggle="tooltip" 
+                title="{{ session.get('language', 'ar') == 'ar' and 'بحث' or 'Search' }}">
+            <i class="fas fa-search me-1"></i>
+            {{ session.get('language', 'ar') == 'ar' and 'بحث' or 'Search' }}
+        </button>
+        <button type="button" 
+                id="btnPrint" 
+                class="btn btn-primary btn-sm"
+                onclick="employeesHandler.PrintRecord()"
+                data-bs-toggle="tooltip" 
+                title="{{ session.get('language', 'ar') == 'ar' and 'طباعة' or 'Print' }}">
+            <i class="fas fa-print me-1"></i>
+            {{ session.get('language', 'ar') == 'ar' and 'طباعة' or 'Print' }}
+        </button>
+    </div>
+</div>
+
+<!-- Special Modals -->

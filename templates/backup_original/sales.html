@@ -1,0 +1,538 @@
+{% extends "base_unified.html" %}
+
+{% block title %}
+{% if session.get('language', 'ar') == 'ar' %}
+المبيعات - نظام المحاسبة
+{% else %}
+Sales - Accounting System
+{% endif %}
+{% endblock %}
+
+{% block page_icon %}<i class="fas fa-shopping-cart"></i>{% endblock %}
+
+{% block page_title %}
+{% if session.get('language', 'ar') == 'ar' %}
+    فواتير المبيعات
+{% else %}
+    Sales Invoices
+{% endif %}
+{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <button type="button" class="btn btn-primary" onclick="refreshData()">
+        <i class="fas fa-sync-alt me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تحديث البيانات{% else %}Refresh Data{% endif %}
+    </button>
+    <a href="{{ url_for('new_sale') }}" class="btn btn-success">
+        <i class="fas fa-plus me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}فاتورة جديدة{% else %}New Invoice{% endif %}
+    </a>
+    <button type="button" class="btn btn-info" onclick="generateReport()">
+        <i class="fas fa-file-alt me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تقرير المبيعات{% else %}Sales Report{% endif %}
+    </button>
+    <button type="button" class="btn btn-secondary" onclick="exportData()">
+        <i class="fas fa-download me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تصدير{% else %}Export{% endif %}
+    </button>
+    <button type="button" class="btn btn-warning" onclick="saveAllData()">
+        <i class="fas fa-save me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}حفظ البيانات{% else %}Save Data{% endif %}
+    </button>
+    <button type="button" class="btn btn-dark" onclick="printReport()">
+        <i class="fas fa-print me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}طباعة{% else %}Print{% endif %}
+    </button>
+    <button type="button" class="btn btn-outline-danger" onclick="deleteSelected()">
+        <i class="fas fa-trash me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}حذف المحدد{% else %}Delete Selected{% endif %}
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+
+<!-- Filters -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <label for="branchFilter" class="form-label">
+            {% if session.get('language', 'ar') == 'ar' %}الفرع{% else %}Branch{% endif %}
+        </label>
+        <select class="form-select" id="branchFilter" onchange="filterByBranch()">
+            <option value="">{% if session.get('language', 'ar') == 'ar' %}جميع الفروع{% else %}All Branches{% endif %}</option>
+            {% for branch in branches %}
+            <option value="{{ branch.id }}" {{ 'selected' if selected_branch == branch.id|string else '' }}>
+                {{ branch.branch_name }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label for="dateFrom" class="form-label">
+            {% if session.get('language', 'ar') == 'ar' %}من تاريخ{% else %}From Date{% endif %}
+        </label>
+        <input type="date" class="form-control" id="dateFrom">
+    </div>
+    <div class="col-md-3">
+        <label for="dateTo" class="form-label">
+            {% if session.get('language', 'ar') == 'ar' %}إلى تاريخ{% else %}To Date{% endif %}
+        </label>
+        <input type="date" class="form-control" id="dateTo">
+    </div>
+    <div class="col-md-3">
+        <label for="searchInvoice" class="form-label">
+            {% if session.get('language', 'ar') == 'ar' %}البحث{% else %}Search{% endif %}
+        </label>
+        <input type="text" class="form-control" id="searchInvoice" placeholder="{% if session.get('language', 'ar') == 'ar' %}رقم الفاتورة أو العميل{% else %}Invoice # or Customer{% endif %}">
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">
+                            {% if session.get('language', 'ar') == 'ar' %}إجمالي الفواتير{% else %}Total Invoices{% endif %}
+                        </h6>
+                        <h3 class="mb-0">{{ sales|length }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-receipt fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">
+                            {% if session.get('language', 'ar') == 'ar' %}إجمالي المبيعات{% else %}Total Sales{% endif %}
+                        </h6>
+                        <h3 class="mb-0">{{ "%.2f"|format(sales|sum(attribute='final_amount')) }} ريال</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-dollar-sign fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">
+                            {% if session.get('language', 'ar') == 'ar' %}إجمالي الضرائب{% else %}Total Tax{% endif %}
+                        </h6>
+                        <h3 class="mb-0">{{ "%.2f"|format(sales|sum(attribute='tax_amount')) }} ريال</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-percentage fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">
+                            {% if session.get('language', 'ar') == 'ar' %}متوسط الفاتورة{% else %}Average Invoice{% endif %}
+                        </h6>
+                        <h3 class="mb-0">
+                            {% if sales|length > 0 %}
+                                {{ "%.2f"|format((sales|sum(attribute='final_amount')) / (sales|length)) }} ريال
+                            {% else %}
+                                0.00 ريال
+                            {% endif %}
+                        </h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-chart-line fa-2x opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sales Table -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">
+            {% if session.get('language', 'ar') == 'ar' %}
+                قائمة فواتير المبيعات
+            {% else %}
+                Sales Invoices List
+            {% endif %}
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if sales %}
+        <div class="table-responsive">
+            <table class="table table-hover" id="salesTable">
+                <thead>
+                    <tr>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}رقم الفاتورة{% else %}Invoice #{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}التاريخ{% else %}Date{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}العميل{% else %}Customer{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الفرع{% else %}Branch{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}المبلغ{% else %}Amount{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الضريبة{% else %}Tax{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الإجمالي{% else %}Total{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}طريقة الدفع{% else %}Payment{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}إجراءات{% else %}Actions{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in sales %}
+                    <tr data-branch="{{ sale.branch_id }}" data-date="{{ sale.invoice_date }}" data-customer="{{ sale.customer_name or '' }}" data-invoice="{{ sale.invoice_number }}">
+                        <td>
+                            <strong>{{ sale.invoice_number }}</strong>
+                            <br>
+                            <small class="text-muted">{{ sale.created_at.strftime('%H:%M') }}</small>
+                        </td>
+                        <td>{{ sale.invoice_date.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            {% if sale.customer_name %}
+                                {{ sale.customer_name }}
+                            {% else %}
+                                <span class="text-muted">
+                                    {% if session.get('language', 'ar') == 'ar' %}عميل نقدي{% else %}Cash Customer{% endif %}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-primary">
+                                {{ sale.branch.branch_name if sale.branch else 'غير محدد' }}
+                            </span>
+                        </td>
+                        <td>{{ "%.2f"|format(sale.total_amount) }} ريال</td>
+                        <td>{{ "%.2f"|format(sale.tax_amount) }} ريال</td>
+                        <td><strong>{{ "%.2f"|format(sale.final_amount) }} ريال</strong></td>
+                        <td>
+                            <span class="badge bg-secondary">{{ sale.payment_method }}</span>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-outline-primary" onclick="viewInvoice({{ sale.id }})">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-success" onclick="printInvoice({{ sale.id }})">
+                                    <i class="fas fa-print"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-info" onclick="duplicateInvoice({{ sale.id }})">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-receipt fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">
+                {% if session.get('language', 'ar') == 'ar' %}
+                    لا توجد فواتير مبيعات
+                {% else %}
+                    No sales invoices found
+                {% endif %}
+            </h4>
+            <p class="text-muted">
+                {% if session.get('language', 'ar') == 'ar' %}
+                    ابدأ بإنشاء فاتورة مبيعات جديدة
+                {% else %}
+                    Start by creating a new sales invoice
+                {% endif %}
+            </p>
+            <a href="{{ url_for('new_sale') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>
+                {% if session.get('language', 'ar') == 'ar' %}إنشاء فاتورة جديدة{% else %}Create New Invoice{% endif %}
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Invoice Details Modal -->
+<div class="modal fade" id="invoiceModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    {% if session.get('language', 'ar') == 'ar' %}
+                        تفاصيل الفاتورة
+                    {% else %}
+                        Invoice Details
+                    {% endif %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="invoiceDetails">
+                <!-- Invoice details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {% if session.get('language', 'ar') == 'ar' %}إغلاق{% else %}Close{% endif %}
+                </button>
+                <button type="button" class="btn btn-primary" onclick="printCurrentInvoice()">
+                    <i class="fas fa-print me-2"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}طباعة{% else %}Print{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentInvoiceId = null;
+
+// Filter functions
+function filterByBranch() {
+    const branchId = document.getElementById('branchFilter').value;
+    const url = new URL(window.location);
+    
+    if (branchId) {
+        url.searchParams.set('branch_id', branchId);
+    } else {
+        url.searchParams.delete('branch_id');
+    }
+    
+    window.location.href = url.toString();
+}
+
+// Search functionality
+document.getElementById('searchInvoice').addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#salesTable tbody tr');
+    
+    rows.forEach(row => {
+        const invoice = row.dataset.invoice.toLowerCase();
+        const customer = row.dataset.customer.toLowerCase();
+        
+        if (invoice.includes(searchTerm) || customer.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+
+// Date filtering
+document.getElementById('dateFrom').addEventListener('change', filterByDate);
+document.getElementById('dateTo').addEventListener('change', filterByDate);
+
+function filterByDate() {
+    const dateFrom = document.getElementById('dateFrom').value;
+    const dateTo = document.getElementById('dateTo').value;
+    const rows = document.querySelectorAll('#salesTable tbody tr');
+    
+    rows.forEach(row => {
+        const rowDate = row.dataset.date;
+        let show = true;
+        
+        if (dateFrom && rowDate < dateFrom) {
+            show = false;
+        }
+        if (dateTo && rowDate > dateTo) {
+            show = false;
+        }
+        
+        row.style.display = show ? '' : 'none';
+    });
+}
+
+function viewInvoice(invoiceId) {
+    currentInvoiceId = invoiceId;
+    
+    // Show loading
+    document.getElementById('invoiceDetails').innerHTML = `
+        <div class="text-center py-4">
+            <i class="fas fa-spinner fa-spin fa-2x"></i>
+            <p class="mt-2">{% if session.get('language', 'ar') == 'ar' %}جاري التحميل...{% else %}Loading...{% endif %}</p>
+        </div>
+    `;
+    
+    const modal = new bootstrap.Modal(document.getElementById('invoiceModal'));
+    modal.show();
+    
+    // تحميل تفاصيل الفاتورة من الخادم
+    fetch(`/api/sale_details/${saleId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const sale = data.sale;
+                document.getElementById('invoiceDetails').innerHTML = `
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>{% if session.get('language', 'ar') == 'ar' %}معلومات الفاتورة{% else %}Invoice Information{% endif %}</h6>
+                            <p><strong>{% if session.get('language', 'ar') == 'ar' %}رقم الفاتورة:{% else %}Invoice #:{% endif %}</strong> ${sale.invoice_number}</p>
+                            <p><strong>{% if session.get('language', 'ar') == 'ar' %}التاريخ:{% else %}Date:{% endif %}</strong> ${sale.invoice_date}</p>
+                            <p><strong>{% if session.get('language', 'ar') == 'ar' %}الفرع:{% else %}Branch:{% endif %}</strong> ${sale.branch_name}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>{% if session.get('language', 'ar') == 'ar' %}معلومات العميل{% else %}Customer Information{% endif %}</h6>
+                            <p><strong>{% if session.get('language', 'ar') == 'ar' %}العميل:{% else %}Customer:{% endif %}</strong> ${sale.customer_name || 'عميل نقدي'}</p>
+                            <p><strong>{% if session.get('language', 'ar') == 'ar' %}طريقة الدفع:{% else %}Payment:{% endif %}</strong> ${sale.payment_method}</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <h6>{% if session.get('language', 'ar') == 'ar' %}عناصر الفاتورة{% else %}Invoice Items{% endif %}</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>{% if session.get('language', 'ar') == 'ar' %}المنتج{% else %}Product{% endif %}</th>
+                                    <th>{% if session.get('language', 'ar') == 'ar' %}الكمية{% else %}Qty{% endif %}</th>
+                                    <th>{% if session.get('language', 'ar') == 'ar' %}السعر{% else %}Price{% endif %}</th>
+                                    <th>{% if session.get('language', 'ar') == 'ar' %}المجموع{% else %}Total{% endif %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${sale.items.map(item => `
+                                    <tr>
+                                        <td>${item.product_name}</td>
+                                        <td>${item.quantity}</td>
+                                        <td>${item.unit_price.toFixed(2)} ريال</td>
+                                        <td>${item.total_price.toFixed(2)} ريال</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-end">
+                        <p><strong>{% if session.get('language', 'ar') == 'ar' %}المجموع الفرعي:{% else %}Subtotal:{% endif %}</strong> ${sale.total_amount.toFixed(2)} ريال</p>
+                        <p><strong>{% if session.get('language', 'ar') == 'ar' %}الضريبة (15%):{% else %}Tax (15%):{% endif %}</strong> ${sale.tax_amount.toFixed(2)} ريال</p>
+                        <p class="h5"><strong>{% if session.get('language', 'ar') == 'ar' %}المجموع النهائي:{% else %}Final Total:{% endif %}</strong> ${sale.final_amount.toFixed(2)} ريال</p>
+                    </div>
+                `;
+            } else {
+                document.getElementById('invoiceDetails').innerHTML = `
+                    <div class="alert alert-danger">
+                        {% if session.get('language', 'ar') == 'ar' %}خطأ في تحميل تفاصيل الفاتورة{% else %}Error loading invoice details{% endif %}
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('invoiceDetails').innerHTML = `
+                <div class="alert alert-danger">
+                    {% if session.get('language', 'ar') == 'ar' %}خطأ في الاتصال بالخادم{% else %}Server connection error{% endif %}
+                </div>
+            `;
+        });
+}
+
+function printInvoice(invoiceId) {
+    alert('{% if session.get('language', 'ar') == 'ar' %}سيتم تطوير وظيفة الطباعة قريباً{% else %}Print functionality coming soon{% endif %}');
+}
+
+function printCurrentInvoice() {
+    if (currentInvoiceId) {
+        printInvoice(currentInvoiceId);
+    }
+}
+
+function duplicateInvoice(invoiceId) {
+    if (confirm('{% if session.get('language', 'ar') == 'ar' %}هل تريد إنشاء فاتورة جديدة بنفس البيانات؟{% else %}Create a new invoice with the same data?{% endif %}')) {
+        // Redirect to new sale page with invoice data
+        window.location.href = `{{ url_for('new_sale') }}?duplicate=${invoiceId}`;
+    }
+}
+
+// Set default date range (last 30 days)
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
+    
+    document.getElementById('dateTo').value = today.toISOString().split('T')[0];
+    document.getElementById('dateFrom').value = thirtyDaysAgo.toISOString().split('T')[0];
+});
+
+// Refresh data
+function refreshData() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري التحديث...' : 'Refreshing...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast(isRTL ? 'تم تحديث البيانات بنجاح' : 'Data refreshed successfully', 'success');
+        location.reload();
+    }, 1500);
+}
+
+// Generate report
+function generateReport() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري الإنشاء...' : 'Generating...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast(isRTL ? 'تم إنشاء تقرير المبيعات بنجاح' : 'Sales report generated successfully', 'success');
+    }, 1500);
+}
+
+// Export data
+function exportData() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري التصدير...' : 'Exporting...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast(isRTL ? 'تم تصدير البيانات بنجاح' : 'Data exported successfully', 'success');
+    }, 1500);
+}
+
+// Save all data
+function saveAllData() {
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + (isRTL ? 'جاري الحفظ...' : 'Saving...');
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        showToast(isRTL ? 'تم حفظ جميع البيانات بنجاح' : 'All data saved successfully', 'success');
+    }, 1500);
+}
+
+// Print report
+function printReport() {
+    showToast(isRTL ? 'جاري إعداد التقرير للطباعة...' : 'Preparing report for printing...', 'info');
+    setTimeout(() => {
+        window.print();
+    }, 1000);
+}
+
+// Delete selected
+function deleteSelected() {
+    showToast(isRTL ? 'يرجى اختيار فاتورة واحدة على الأقل' : 'Please select at least one invoice', 'warning');
+}
+</script>
+{% endblock %}

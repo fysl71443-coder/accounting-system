@@ -1,0 +1,49 @@
+<!-- ماكرو الأزرار المشتركة -->
+{% macro action_button(type, text, icon, onclick, class="btn-sm") %}
+<button type="button" class="btn btn-{{ type }} {{ class }}" onclick="{{ onclick }}">
+    <i class="fas fa-{{ icon }} me-1"></i>
+    {% if session.get('language', 'ar') == 'ar' %}{{ text.ar }}{% else %}{{ text.en }}{% endif %}
+</button>
+{% endmacro %}
+
+{% macro save_button(onclick="saveData()", class="btn-sm") %}
+{{ action_button('success', {'ar': 'حفظ', 'en': 'Save'}, 'save', onclick, class) }}
+{% endmacro %}
+
+{% macro edit_button(onclick="editData()", class="btn-sm") %}
+{{ action_button('warning', {'ar': 'تعديل', 'en': 'Edit'}, 'edit', onclick, class) }}
+{% endmacro %}
+
+{% macro delete_button(onclick="deleteData()", class="btn-sm") %}
+{{ action_button('danger', {'ar': 'حذف', 'en': 'Delete'}, 'trash', onclick, class) }}
+{% endmacro %}
+
+{% macro refresh_button(onclick="refreshData()", class="btn-sm") %}
+{{ action_button('info', {'ar': 'تحديث', 'en': 'Refresh'}, 'sync-alt', onclick, class) }}
+{% endmacro %}
+
+{% macro export_button(onclick="exportData()", class="btn-sm") %}
+{{ action_button('secondary', {'ar': 'تصدير', 'en': 'Export'}, 'download', onclick, class) }}
+{% endmacro %}
+
+{% macro print_button(onclick="printReport()", class="btn-sm") %}
+{{ action_button('primary', {'ar': 'طباعة', 'en': 'Print'}, 'print', onclick, class) }}
+{% endmacro %}
+
+{% macro add_button(onclick="addNew()", class="btn-sm") %}
+{{ action_button('success', {'ar': 'إضافة', 'en': 'Add'}, 'plus', onclick, class) }}
+{% endmacro %}
+
+{% macro close_button(onclick="", class="btn-sm") %}
+<button type="button" class="btn btn-secondary {{ class }}" data-bs-dismiss="modal" onclick="{{ onclick }}">
+    <i class="fas fa-times me-1"></i>
+    {% if session.get('language', 'ar') == 'ar' %}إغلاق{% else %}Close{% endif %}
+</button>
+{% endmacro %}
+
+{% macro reset_button(onclick="", class="btn-sm") %}
+<button type="reset" class="btn btn-outline-warning {{ class }}" onclick="{{ onclick }}">
+    <i class="fas fa-undo me-1"></i>
+    {% if session.get('language', 'ar') == 'ar' %}إعادة تعيين{% else %}Reset{% endif %}
+</button>
+{% endmacro %}

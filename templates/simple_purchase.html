@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فاتورة مشتريات جديدة - اختبار</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border-radius: 15px 15px 0 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header text-center">
+                <h3><i class="fas fa-shopping-bag me-2"></i>فاتورة مشتريات جديدة - اختبار</h3>
+            </div>
+            <div class="card-body">
+                <form id="purchaseForm" method="POST" action="/api/purchases/save/debug">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">رقم الفاتورة</label>
+                                <input type="text" class="form-control" name="invoice_number" id="invoice_number" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">المورد</label>
+                                <select class="form-select" name="supplier_id" id="supplier_id" required>
+                                    <option value="">اختر المورد</option>
+                                    {% if suppliers %}
+                                        {% for supplier in suppliers %}
+                                        <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                                        {% endfor %}
+                                    {% else %}
+                                        <option value="">لا توجد موردين متاحين</option>
+                                    {% endif %}
+                                </select>
+                                <div class="form-text">يمكنك إضافة موردين جدد من <a href="/suppliers" target="_blank">شاشة الموردين</a></div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">تاريخ الفاتورة</label>
+                                <input type="date" class="form-control" name="invoice_date" id="invoice_date" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">طريقة الدفع</label>
+                                <select class="form-select" name="payment_method" id="payment_method">
+                                    <option value="نقدي">نقدي</option>
+                                    <option value="تحويل بنكي">تحويل بنكي</option>
+                                    <option value="شيك">شيك</option>
+                                    <option value="آجل">آجل</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Products Section -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h6>المنتجات</h6>
+                            <div class="table-responsive">
+                                <table class="table table-bordered" id="productsTable">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th width="40%">اسم المنتج</th>
+                                            <th width="20%">الكمية</th>
+                                            <th width="20%">سعر الوحدة</th>
+                                            <th width="20%">الإجمالي</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="productsTableBody">
+                                        <tr>
+                                            <td><input type="text" class="form-control" name="product_name[]" placeholder="اسم المنتج"></td>
+                                            <td><input type="number" class="form-control quantity-input" name="quantity[]" min="1" step="0.01" value="1"></td>
+                                            <td><input type="number" class="form-control price-input" name="unit_price[]" min="0" step="0.01"></td>
+                                            <td><input type="number" class="form-control total-input" name="total_price[]" readonly></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <button type="button" class="btn btn-secondary btn-sm" id="addProductRow">
+                                <i class="fas fa-plus me-1"></i>إضافة منتج
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Totals Section -->
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">ملاحظات</label>
+                                <textarea class="form-control" name="notes" rows="3"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>المجموع الفرعي:</strong></td>
+                                    <td class="text-end"><span id="subtotal">0.00</span> ريال</td>
+                                </tr>
+                                <tr>
+                                    <td>ضريبة القيمة المضافة (15%):</td>
+                                    <td class="text-end"><span id="tax_amount">0.00</span> ريال</td>
+                                </tr>
+                                <tr class="table-primary">
+                                    <td><strong>الإجمالي النهائي:</strong></td>
+                                    <td class="text-end"><strong><span id="final_total">0.00</span> ريال</strong></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Hidden inputs for totals -->
+                    <input type="hidden" name="subtotal" id="subtotal_input">
+                    <input type="hidden" name="tax_amount" id="tax_amount_input">
+                    <input type="hidden" name="final_amount" id="final_amount_input">
+                    <input type="hidden" name="branch_id" value="1">
+
+                    <!-- Action Buttons -->
+                    <div class="row mt-4">
+                        <div class="col-12 text-center">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-save me-1"></i>حفظ الفاتورة
+                            </button>
+                            <a href="/purchases" class="btn btn-secondary btn-lg ms-2">
+                                <i class="fas fa-arrow-left me-1"></i>العودة
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Generate invoice number
+        generateInvoiceNumber();
+
+        // Set today's date
+        document.getElementById('invoice_date').value = new Date().toISOString().split('T')[0];
+
+        // Load suppliers data
+        loadSuppliersData();
+
+        // Add event listeners
+        setupEventListeners();
+
+        // Calculate totals initially
+        calculateTotals();
+    });
+
+    function generateInvoiceNumber() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+        
+        document.getElementById('invoice_number').value = `PUR-${year}${month}${day}-${random}`;
+    }
+
+    function loadSuppliersData() {
+        // إذا لم يتم تحميل الموردين من الخادم، جلبهم عبر API
+        const supplierSelect = document.getElementById('supplier_id');
+        if (supplierSelect.options.length <= 1) {
+            console.log('🔍 جاري تحميل قائمة الموردين...');
+
+            fetch('/api/suppliers/list')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.data.length > 0) {
+                        // مسح الخيارات الحالية
+                        supplierSelect.innerHTML = '<option value="">اختر المورد</option>';
+
+                        // إضافة الموردين
+                        data.data.forEach(supplier => {
+                            const option = document.createElement('option');
+                            option.value = supplier.id;
+                            option.textContent = supplier.name;
+                            supplierSelect.appendChild(option);
+                        });
+
+                        console.log(`✅ تم تحميل ${data.data.length} مورد`);
+                    } else {
+                        console.log('⚠️ لا توجد موردين متاحين');
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ خطأ في تحميل الموردين:', error);
+                });
+        }
+    }
+
+    function setupEventListeners() {
+        // Add product row
+        document.getElementById('addProductRow').addEventListener('click', addProductRow);
+
+        // Quantity and price change
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('quantity-input') || e.target.classList.contains('price-input')) {
+                updateRowTotal(e.target.closest('tr'));
+            }
+        });
+
+        // Supplier selection change
+        document.getElementById('supplier_id').addEventListener('change', function(e) {
+            const selectedOption = e.target.options[e.target.selectedIndex];
+            if (selectedOption.value) {
+                console.log(`✅ تم اختيار المورد: ${selectedOption.text}`);
+            }
+        });
+    }
+
+    function addProductRow() {
+        const tbody = document.getElementById('productsTableBody');
+        const newRow = tbody.rows[0].cloneNode(true);
+        
+        // Clear values
+        newRow.querySelectorAll('input').forEach(input => {
+            if (input.type === 'number') {
+                input.value = input.name.includes('quantity') ? '1' : '';
+            } else {
+                input.value = '';
+            }
+        });
+        
+        tbody.appendChild(newRow);
+    }
+
+    function updateRowTotal(row) {
+        const quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
+        const price = parseFloat(row.querySelector('.price-input').value) || 0;
+        const total = quantity * price;
+        
+        row.querySelector('.total-input').value = total.toFixed(2);
+        calculateTotals();
+    }
+
+    function calculateTotals() {
+        let subtotal = 0;
+        
+        document.querySelectorAll('.total-input').forEach(input => {
+            subtotal += parseFloat(input.value) || 0;
+        });
+        
+        const taxAmount = subtotal * 0.15;
+        const finalTotal = subtotal + taxAmount;
+        
+        // Update display
+        document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+        document.getElementById('tax_amount').textContent = taxAmount.toFixed(2);
+        document.getElementById('final_total').textContent = finalTotal.toFixed(2);
+        
+        // Update hidden inputs
+        document.getElementById('subtotal_input').value = subtotal.toFixed(2);
+        document.getElementById('tax_amount_input').value = taxAmount.toFixed(2);
+        document.getElementById('final_amount_input').value = finalTotal.toFixed(2);
+    }
+
+    // Form submission
+    document.getElementById('purchaseForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        fetch('/api/purchases/save/debug', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('تم حفظ الفاتورة بنجاح: ' + data.invoice_number);
+                console.log('✅ تم حفظ الفاتورة:', data);
+                // إعادة توجيه إلى صفحة المشتريات
+                window.location.href = '/purchases';
+            } else {
+                alert('حدث خطأ: ' + data.message);
+                console.error('❌ خطأ في الحفظ:', data);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ أثناء حفظ الفاتورة');
+        });
+    });
+    </script>
+</body>
+</html>

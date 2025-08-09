@@ -1,0 +1,47 @@
+{
+  "sales": {
+    "page_load": true,
+    "btnSalesPrint": true,
+    "btnSalesPreview": true,
+    "btnSalesPayment": true,
+    "btnSalesEdit": true,
+    "btnSalesDelete": true,
+    "js_PrintSalesRecord": true,
+    "js_PreviewSalesRecord": true,
+    "js_RegisterPayment": true,
+    "js_EditSalesRecord": true,
+    "js_DeleteSalesRecord": true
+  },
+  "purchases": {
+    "page_load": true,
+    "btnPurchasesPrint": true,
+    "btnPurchasesPreview": true,
+    "btnPurchasesPayment": true,
+    "btnPurchasesEdit": true,
+    "btnPurchasesDelete": true,
+    "js_PrintPurchasesRecord": true,
+    "js_PreviewPurchasesRecord": true,
+    "js_RegisterPurchasesPayment": true,
+    "js_EditPurchasesRecord": true,
+    "js_DeletePurchasesRecord": true
+  },
+  "expenses": {
+    "page_load": true,
+    "btnExpensesPrint": true,
+    "btnExpensesPreview": true,
+    "btnExpensesPayment": true,
+    "btnExpensesEdit": true,
+    "btnExpensesDelete": true,
+    "js_PrintExpensesRecord": true,
+    "js_PreviewExpensesRecord": true,
+    "js_RegisterExpensesPayment": true,
+    "js_EditExpensesRecord": true,
+    "js_DeleteExpensesRecord": true
+  },
+  "summary": {
+    "passed": 33,
+    "failed": 0,
+    "total": 33,
+    "success_rate": 100.0
+  }
+}

@@ -1,4 +1,4 @@
-{% extends "base_simple.html" %}
+{% extends "base_unified.html" %}
 
 {% block title %}
     {% if session.get('language', 'ar') == 'ar' %}
@@ -6,6 +6,16 @@
     {% else %}
         Advanced Expenses
     {% endif %}
+{% endblock %}
+
+{% block page_icon %}<i class="fas fa-chart-pie"></i>{% endblock %}
+
+{% block page_title %}
+{% if session.get('language', 'ar') == 'ar' %}
+    المصروفات المتقدمة
+{% else %}
+    Advanced Expenses
+{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -544,8 +554,8 @@ $(document).ready(function() {
     // Generate operation number
     generateOperationNumber();
 
-    // Load sample data
-    loadSampleExpenses();
+    // Initialize empty data
+    initializeExpensesData();
 
     // Filter and display data
     filterExpenses();
@@ -566,130 +576,9 @@ function generateOperationNumber() {
     document.getElementById('operation-number').value = operationNumber;
 }
 
-// Load sample expenses data
-function loadSampleExpenses() {
-    expensesData = [
-        {
-            id: 1,
-            operation_number: 'EXP-20250801-001',
-            date: '2025-08-01',
-            main_category: 'operational',
-            type: 'salaries',
-            type_ar: 'رواتب',
-            type_en: 'Salaries',
-            description: 'راتب شهر يوليو للموظفين',
-            description_en: 'July salary for employees',
-            amount: 15000.00,
-            currency: 'SAR',
-            vendor: 'قسم الموارد البشرية',
-            vendor_en: 'HR Department',
-            payment_method: 'BANK',
-            payment_status: 'paid',
-            reference_number: 'PAY-001',
-            notes: 'تم الدفع في الموعد المحدد',
-            attachments: ['salary_receipt.pdf']
-        },
-        {
-            id: 2,
-            operation_number: 'EXP-20250802-002',
-            date: '2025-08-02',
-            main_category: 'administrative',
-            type: 'rent',
-            type_ar: 'إيجار',
-            type_en: 'Rent',
-            description: 'إيجار المطعم لشهر أغسطس',
-            description_en: 'Restaurant rent for August',
-            amount: 8000.00,
-            currency: 'SAR',
-            vendor: 'شركة العقارات المتحدة',
-            vendor_en: 'United Real Estate',
-            payment_method: 'CHECK',
-            payment_status: 'paid',
-            reference_number: 'CHK-001',
-            notes: 'تم الدفع بشيك',
-            attachments: ['rent_receipt.jpg']
-        },
-        {
-            id: 3,
-            operation_number: 'EXP-20250803-003',
-            date: '2025-08-03',
-            main_category: 'operational',
-            type: 'utilities',
-            type_ar: 'خدمات',
-            type_en: 'Utilities',
-            description: 'فاتورة الكهرباء والماء',
-            description_en: 'Electricity and water bill',
-            amount: 2500.00,
-            currency: 'SAR',
-            vendor: 'شركة الكهرباء السعودية',
-            vendor_en: 'Saudi Electricity Company',
-            payment_method: 'MADA',
-            payment_status: 'unpaid',
-            reference_number: 'ELEC-001',
-            notes: 'في انتظار الدفع',
-            attachments: []
-        },
-        {
-            id: 4,
-            operation_number: 'EXP-20250804-004',
-            date: '2025-08-04',
-            main_category: 'operational',
-            type: 'maintenance',
-            type_ar: 'صيانة',
-            type_en: 'Maintenance',
-            description: 'صيانة أجهزة التكييف',
-            description_en: 'Air conditioning maintenance',
-            amount: 1200.00,
-            currency: 'SAR',
-            vendor: 'شركة التكييف المتخصصة',
-            vendor_en: 'AC Specialists Company',
-            payment_method: 'CASH',
-            payment_status: 'partial',
-            reference_number: 'MAINT-001',
-            notes: 'تم دفع 50% من المبلغ',
-            attachments: ['maintenance_invoice.pdf']
-        },
-        {
-            id: 5,
-            operation_number: 'EXP-20250805-005',
-            date: '2025-08-05',
-            main_category: 'investment',
-            type: 'marketing',
-            type_ar: 'تسويق',
-            type_en: 'Marketing',
-            description: 'حملة إعلانية على وسائل التواصل',
-            description_en: 'Social media advertising campaign',
-            amount: 3000.00,
-            currency: 'SAR',
-            vendor: 'وكالة التسويق الرقمي',
-            vendor_en: 'Digital Marketing Agency',
-            payment_method: 'VISA',
-            payment_status: 'paid',
-            reference_number: 'MKT-001',
-            notes: 'حملة لمدة شهر',
-            attachments: ['marketing_contract.pdf']
-        },
-        {
-            id: 6,
-            operation_number: 'EXP-20250806-006',
-            date: '2025-08-06',
-            main_category: 'operational',
-            type: 'supplies',
-            type_ar: 'مستلزمات',
-            type_en: 'Supplies',
-            description: 'مستلزمات تنظيف ومواد استهلاكية',
-            description_en: 'Cleaning supplies and consumables',
-            amount: 800.00,
-            currency: 'SAR',
-            vendor: 'متجر المستلزمات',
-            vendor_en: 'Supplies Store',
-            payment_method: 'CASH',
-            payment_status: 'paid',
-            reference_number: 'SUP-001',
-            notes: 'مشتريات شهرية',
-            attachments: []
-        }
-    ];
+// Initialize empty expenses data
+function initializeExpensesData() {
+    expensesData = [];
 }
 
 // Update sub categories based on main category

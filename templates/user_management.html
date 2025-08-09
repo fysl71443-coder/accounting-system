@@ -1,58 +1,116 @@
-{% extends "base_simple_test.html" %}
+{% extends "base_unified.html" %}
 
 {% block title %}
-    {% if session.get('language', 'ar') == 'ar' %}
-        إدارة المستخدمين
-    {% else %}
-        User Management
-    {% endif %}
+{% if session.get('language', 'ar') == 'ar' %}
+إدارة المستخدمين - نظام المحاسبة
+{% else %}
+User Management - Accounting System
+{% endif %}
+{% endblock %}
+
+{% block page_icon %}<i class="fas fa-users-cog"></i>{% endblock %}
+
+{% block page_title %}
+{% if session.get('language', 'ar') == 'ar' %}إدارة المستخدمين{% else %}User Management{% endif %}
+{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+        <i class="fas fa-user-plus me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}إضافة مستخدم{% else %}Add User{% endif %}
+    </button>
+    <button type="button" class="btn btn-success" onclick="exportUsers()">
+        <i class="fas fa-download me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تصدير{% else %}Export{% endif %}
+    </button>
+</div>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">
-            {% if session.get('language', 'ar') == 'ar' %}
-                <i class="fas fa-users"></i> إدارة المستخدمين
-            {% else %}
-                <i class="fas fa-users"></i> User Management
-            {% endif %}
-        </h1>
-        <div class="btn-group" role="group">
-            <button type="button" class="btn btn-primary" onclick="showAddUserModal()">
-                {% if session.get('language', 'ar') == 'ar' %}
-                    <i class="fas fa-user-plus"></i> إضافة مستخدم
-                {% else %}
-                    <i class="fas fa-user-plus"></i> Add User
-                {% endif %}
-            </button>
-            <button type="button" class="btn btn-success" onclick="exportUsers()">
-                {% if session.get('language', 'ar') == 'ar' %}
-                    <i class="fas fa-download"></i> تصدير
-                {% else %}
-                    <i class="fas fa-download"></i> Export
-                {% endif %}
-            </button>
+<!-- Users Statistics -->
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}إجمالي المستخدمين{% else %}Total Users{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-primary">12</h4>
+                    </div>
+                    <div class="text-primary opacity-75">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-
-    <!-- Users Table -->
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        {% if session.get('language', 'ar') == 'ar' %}
-                            قائمة المستخدمين
-                        {% else %}
-                            Users List
-                        {% endif %}
-                    </h6>
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}المستخدمين النشطين{% else %}Active Users{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-success">10</h4>
+                    </div>
+                    <div class="text-success opacity-75">
+                        <i class="fas fa-user-check fa-2x"></i>
+                    </div>
                 </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover mb-0">
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}المديرين{% else %}Administrators{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-warning">3</h4>
+                    </div>
+                    <div class="text-warning opacity-75">
+                        <i class="fas fa-user-shield fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}آخر تسجيل دخول{% else %}Last Login{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-info">اليوم</h4>
+                    </div>
+                    <div class="text-info opacity-75">
+                        <i class="fas fa-clock fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="card">
+    <div class="card-header">
+        <h6 class="mb-0">
+            <i class="fas fa-list me-2"></i>
+            {% if session.get('language', 'ar') == 'ar' %}قائمة المستخدمين{% else %}Users List{% endif %}
+        </h6>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="usersTable">
                             <thead class="table-dark">
                                 <tr>
                                     <th>

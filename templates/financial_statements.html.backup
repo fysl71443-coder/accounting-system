@@ -1,0 +1,1460 @@
+{% extends "base_unified.html" %}
+
+{% block title %}
+{% if session.get('language', 'ar') == 'ar' %}
+القوائم المالية - نظام المحاسبة
+{% else %}
+Financial Statements - Accounting System
+{% endif %}
+{% endblock %}
+
+{% block page_icon %}<i class="fas fa-chart-line"></i>{% endblock %}
+
+{% block page_title %}
+{% if session.get('language', 'ar') == 'ar' %}القوائم المالية{% else %}Financial Statements{% endif %}
+{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group">
+    <button type="button" class="btn btn-primary" id="generate-btn" onclick="generateStatements()">
+        <i class="fas fa-calculator me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}توليد التقارير{% else %}Generate Reports{% endif %}
+    </button>
+    <button type="button" class="btn btn-success" onclick="exportToPDF()">
+        <i class="fas fa-file-pdf me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}PDF{% else %}PDF{% endif %}
+    </button>
+    <button type="button" class="btn btn-secondary" onclick="printStatements()">
+        <i class="fas fa-print me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}طباعة{% else %}Print{% endif %}
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Info Alert -->
+<div class="alert alert-info mb-4">
+    <i class="fas fa-info-circle me-2"></i>
+    {% if session.get('language', 'ar') == 'ar' %}
+        هذه هي شاشة القوائم المالية الرسمية (قائمة الدخل، الميزانية العمومية، التدفقات النقدية)
+    {% else %}
+        This is the Official Financial Statements page (Income Statement, Balance Sheet, Cash Flow)
+    {% endif %}
+</div>
+
+    <!-- Filters and Controls -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            <i class="fas fa-filter"></i> فلاتر التقارير
+                        {% else %}
+                            <i class="fas fa-filter"></i> Report Filters
+                        {% endif %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}الفترة الزمنية{% else %}Time Period{% endif %}
+                            </label>
+                            <select class="form-select" id="period-select" onchange="updateDateRange()">
+                                <option value="custom">
+                                    {% if session.get('language', 'ar') == 'ar' %}فترة مخصصة{% else %}Custom Period{% endif %}
+                                </option>
+                                <option value="today">
+                                    {% if session.get('language', 'ar') == 'ar' %}اليوم{% else %}Today{% endif %}
+                                </option>
+                                <option value="week">
+                                    {% if session.get('language', 'ar') == 'ar' %}هذا الأسبوع{% else %}This Week{% endif %}
+                                </option>
+                                <option value="month" selected>
+                                    {% if session.get('language', 'ar') == 'ar' %}هذا الشهر{% else %}This Month{% endif %}
+                                </option>
+                                <option value="quarter">
+                                    {% if session.get('language', 'ar') == 'ar' %}هذا الربع{% else %}This Quarter{% endif %}
+                                </option>
+                                <option value="year">
+                                    {% if session.get('language', 'ar') == 'ar' %}هذا العام{% else %}This Year{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}من تاريخ{% else %}From Date{% endif %}
+                            </label>
+                            <input type="date" class="form-control" id="from-date">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}إلى تاريخ{% else %}To Date{% endif %}
+                            </label>
+                            <input type="date" class="form-control" id="to-date">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">
+                                {% if session.get('language', 'ar') == 'ar' %}نوع التقرير{% else %}Report Type{% endif %}
+                            </label>
+                            <select class="form-select" id="report-type">
+                                <option value="all">
+                                    {% if session.get('language', 'ar') == 'ar' %}جميع التقارير{% else %}All Reports{% endif %}
+                                </option>
+                                <option value="income">
+                                    {% if session.get('language', 'ar') == 'ar' %}قائمة الدخل{% else %}Income Statement{% endif %}
+                                </option>
+                                <option value="balance">
+                                    {% if session.get('language', 'ar') == 'ar' %}الميزانية العمومية{% else %}Balance Sheet{% endif %}
+                                </option>
+                                <option value="cashflow">
+                                    {% if session.get('language', 'ar') == 'ar' %}التدفقات النقدية{% else %}Cash Flow{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="button" class="btn btn-primary w-100" id="apply-filters-btn" onclick="generateStatements()">
+                                <i class="fas fa-search"></i>
+                                {% if session.get('language', 'ar') == 'ar' %}تطبيق{% else %}Apply{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4" id="summary-cards" style="display: none;">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-4 border-success h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-success mb-1">
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                إجمالي الإيرادات
+                            {% else %}
+                                Total Revenue
+                            {% endif %}
+                        </h6>
+                        <h3 class="mb-0" id="total-revenue">0.00 ريال</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-arrow-up fa-2x opacity-75 text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-4 border-danger h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-danger mb-1">
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                إجمالي المصروفات
+                            {% else %}
+                                Total Expenses
+                            {% endif %}
+                        </h6>
+                        <h3 class="mb-0" id="total-expenses">0.00 ريال</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-arrow-down fa-2x opacity-75 text-danger"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-4 border-primary h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-primary mb-1">
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                صافي الربح
+                            {% else %}
+                                Net Profit
+                            {% endif %}
+                        </h6>
+                        <h3 class="mb-0" id="net-profit">0.00 ريال</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-chart-line fa-2x opacity-75 text-primary"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-start border-4 border-info h-100">
+                <div class="card-body d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <h6 class="text-info mb-1">
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                إجمالي الأصول
+                            {% else %}
+                                Total Assets
+                            {% endif %}
+                        </h6>
+                        <h3 class="mb-0" id="total-assets">0.00 ريال</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-building fa-2x opacity-75 text-info"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Analysis Summary -->
+    <div class="row mb-4" id="analysis-summary" style="display: none;">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        {% if session.get('language', 'ar') == 'ar' %}
+                            <i class="fas fa-chart-bar"></i> التحليل المالي التلقائي
+                        {% else %}
+                            <i class="fas fa-chart-bar"></i> Automated Financial Analysis
+                        {% endif %}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div id="analysis-text" class="alert alert-info">
+                        <!-- Analysis text will be generated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Financial Statements Tabs -->
+    <div class="row" id="statements-container" style="display: none;">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" id="statementsTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="income-tab" data-bs-toggle="tab" data-bs-target="#income-statement" type="button" role="tab">
+                                <i class="fas fa-chart-line me-2"></i>
+                                {% if session.get('language', 'ar') == 'ar' %}قائمة الدخل{% else %}Income Statement{% endif %}
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="balance-tab" data-bs-toggle="tab" data-bs-target="#balance-sheet" type="button" role="tab">
+                                <i class="fas fa-balance-scale me-2"></i>
+                                {% if session.get('language', 'ar') == 'ar' %}الميزانية العمومية{% else %}Balance Sheet{% endif %}
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="cashflow-tab" data-bs-toggle="tab" data-bs-target="#cash-flow" type="button" role="tab">
+                                <i class="fas fa-money-bill-wave me-2"></i>
+                                {% if session.get('language', 'ar') == 'ar' %}التدفقات النقدية{% else %}Cash Flow{% endif %}
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="charts-tab" data-bs-toggle="tab" data-bs-target="#charts" type="button" role="tab">
+                                <i class="fas fa-chart-pie me-2"></i>
+                                {% if session.get('language', 'ar') == 'ar' %}الرسوم البيانية{% else %}Charts{% endif %}
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="statementsTabContent">
+                        <!-- Income Statement Tab -->
+                        <div class="tab-pane fade show active" id="income-statement" role="tabpanel">
+                            <div id="income-statement-content">
+                                <!-- Income statement will be generated here -->
+                            </div>
+                        </div>
+
+                        <!-- Balance Sheet Tab -->
+                        <div class="tab-pane fade" id="balance-sheet" role="tabpanel">
+                            <div id="balance-sheet-content">
+                                <!-- Balance sheet will be generated here -->
+                            </div>
+                        </div>
+
+                        <!-- Cash Flow Tab -->
+                        <div class="tab-pane fade" id="cash-flow" role="tabpanel">
+                            <div id="cash-flow-content">
+                                <!-- Cash flow statement will be generated here -->
+                            </div>
+                        </div>
+
+                        <!-- Charts Tab -->
+                        <div class="tab-pane fade" id="charts" role="tabpanel">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h6 class="mb-0">
+                                                {% if session.get('language', 'ar') == 'ar' %}توزيع الإيرادات{% else %}Revenue Distribution{% endif %}
+                                            </h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <canvas id="revenueChart" width="400" height="200"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h6 class="mb-0">
+                                                {% if session.get('language', 'ar') == 'ar' %}توزيع المصروفات{% else %}Expenses Distribution{% endif %}
+                                            </h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <canvas id="expensesChart" width="400" height="200"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Global variables
+let financialData = {};
+let currentLanguage = '{{ session.get("language", "ar") }}';
+let revenueChart = null;
+let expensesChart = null;
+
+// Initialize page
+$(document).ready(function() {
+    console.log('Financial Statements page loaded');
+    setDefaultDates();
+    loadAccountsData();
+
+    // Add click handlers for buttons
+    $('#generate-btn').on('click', function() {
+        console.log('Generate button clicked');
+        generateStatements();
+    });
+
+    // Show welcome message
+    showWelcomeMessage();
+});
+
+// Show welcome message
+function showWelcomeMessage() {
+    const welcomeMessage = currentLanguage === 'ar' ?
+        'مرحباً بك في شاشة القوائم المالية. اضغط على "توليد التقارير" لعرض القوائم المالية.' :
+        'Welcome to Financial Statements. Click "Generate Reports" to display financial statements.';
+
+    $('#analysis-text').html(`
+        <div class="text-center">
+            <i class="fas fa-info-circle fa-2x text-primary mb-3"></i>
+            <h5>${welcomeMessage}</h5>
+        </div>
+    `);
+
+    document.getElementById('analysis-summary').style.display = 'block';
+}
+
+// Set default dates (current month)
+function setDefaultDates() {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+    document.getElementById('from-date').value = firstDay.toISOString().split('T')[0];
+    document.getElementById('to-date').value = lastDay.toISOString().split('T')[0];
+}
+
+// Update date range based on period selection
+function updateDateRange() {
+    const period = document.getElementById('period-select').value;
+    const now = new Date();
+    let fromDate, toDate;
+
+    switch (period) {
+        case 'today':
+            fromDate = toDate = now;
+            break;
+        case 'week':
+            const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+            const endOfWeek = new Date(now.setDate(now.getDate() - now.getDay() + 6));
+            fromDate = startOfWeek;
+            toDate = endOfWeek;
+            break;
+        case 'month':
+            fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            toDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            break;
+        case 'quarter':
+            const quarter = Math.floor(now.getMonth() / 3);
+            fromDate = new Date(now.getFullYear(), quarter * 3, 1);
+            toDate = new Date(now.getFullYear(), quarter * 3 + 3, 0);
+            break;
+        case 'year':
+            fromDate = new Date(now.getFullYear(), 0, 1);
+            toDate = new Date(now.getFullYear(), 11, 31);
+            break;
+        default:
+            return; // Custom period - don't change dates
+    }
+
+    if (fromDate && toDate) {
+        document.getElementById('from-date').value = fromDate.toISOString().split('T')[0];
+        document.getElementById('to-date').value = toDate.toISOString().split('T')[0];
+    }
+}
+
+// Load accounts data (sample data)
+function loadAccountsData() {
+    // Sample chart of accounts
+    financialData = {
+        accounts: {
+            // Assets
+            cash: { name_ar: 'النقدية', name_en: 'Cash', type: 'asset', balance: 45000.00 },
+            bank: { name_ar: 'البنك', name_en: 'Bank', type: 'asset', balance: 125000.00 },
+            accounts_receivable: { name_ar: 'حسابات العملاء', name_en: 'Accounts Receivable', type: 'asset', balance: 35000.00 },
+            inventory: { name_ar: 'المخزون', name_en: 'Inventory', type: 'asset', balance: 85000.00 },
+            equipment: { name_ar: 'المعدات', name_en: 'Equipment', type: 'asset', balance: 150000.00 },
+            furniture: { name_ar: 'الأثاث', name_en: 'Furniture', type: 'asset', balance: 25000.00 },
+
+            // Liabilities
+            accounts_payable: { name_ar: 'حسابات الموردين', name_en: 'Accounts Payable', type: 'liability', balance: 28000.00 },
+            salaries_payable: { name_ar: 'الرواتب المستحقة', name_en: 'Salaries Payable', type: 'liability', balance: 15000.00 },
+            vat_payable: { name_ar: 'ضريبة القيمة المضافة المستحقة', name_en: 'VAT Payable', type: 'liability', balance: 8500.00 },
+            loans: { name_ar: 'القروض', name_en: 'Loans', type: 'liability', balance: 75000.00 },
+
+            // Equity
+            capital: { name_ar: 'رأس المال', name_en: 'Capital', type: 'equity', balance: 200000.00 },
+            retained_earnings: { name_ar: 'الأرباح المرحلة', name_en: 'Retained Earnings', type: 'equity', balance: 89500.00 },
+
+            // Revenue
+            sales_revenue: { name_ar: 'إيرادات المبيعات', name_en: 'Sales Revenue', type: 'revenue', balance: 180000.00 },
+            other_income: { name_ar: 'إيرادات أخرى', name_en: 'Other Income', type: 'revenue', balance: 5000.00 },
+
+            // Expenses
+            cost_of_goods: { name_ar: 'تكلفة البضاعة المباعة', name_en: 'Cost of Goods Sold', type: 'expense', balance: 95000.00 },
+            salaries_expense: { name_ar: 'مصروف الرواتب', name_en: 'Salaries Expense', type: 'expense', balance: 45000.00 },
+            rent_expense: { name_ar: 'مصروف الإيجار', name_en: 'Rent Expense', type: 'expense', balance: 18000.00 },
+            utilities_expense: { name_ar: 'مصروف الكهرباء والماء', name_en: 'Utilities Expense', type: 'expense', balance: 8500.00 },
+            marketing_expense: { name_ar: 'مصروف التسويق', name_en: 'Marketing Expense', type: 'expense', balance: 6000.00 },
+            depreciation_expense: { name_ar: 'مصروف الإهلاك', name_en: 'Depreciation Expense', type: 'expense', balance: 12000.00 }
+        }
+    };
+}
+
+// Generate financial statements
+function generateStatements() {
+    console.log('generateStatements function called');
+
+    try {
+        // Show loading indicator
+        showLoadingIndicator();
+
+        const fromDate = document.getElementById('from-date').value;
+        const toDate = document.getElementById('to-date').value;
+        const reportType = document.getElementById('report-type').value;
+
+        console.log('Date range:', fromDate, 'to', toDate);
+        console.log('Report type:', reportType);
+
+        if (!fromDate || !toDate) {
+            alert(currentLanguage === 'ar' ? 'يرجى تحديد الفترة الزمنية' : 'Please select date range');
+            hideLoadingIndicator();
+            return;
+        }
+
+        // Calculate financial data
+        console.log('Calculating financial data...');
+        calculateFinancialData();
+
+        // Update summary cards
+        console.log('Updating summary cards...');
+        updateSummaryCards();
+
+        // Generate analysis
+        console.log('Generating analysis...');
+        generateAnalysis();
+
+        // Generate statements based on type
+        console.log('Generating statements for type:', reportType);
+        if (reportType === 'all' || reportType === 'income') {
+            console.log('Generating income statement...');
+            generateIncomeStatement();
+        }
+        if (reportType === 'all' || reportType === 'balance') {
+            console.log('Generating balance sheet...');
+            generateBalanceSheet();
+        }
+        if (reportType === 'all' || reportType === 'cashflow') {
+            console.log('Generating cash flow statement...');
+            generateCashFlowStatement();
+        }
+
+        // Generate charts
+        console.log('Generating charts...');
+        generateCharts();
+
+        // Show results
+        console.log('Showing results...');
+        document.getElementById('summary-cards').style.display = 'block';
+        document.getElementById('analysis-summary').style.display = 'block';
+        document.getElementById('statements-container').style.display = 'block';
+
+        // Hide loading indicator
+        hideLoadingIndicator();
+
+        // Show success message
+        showSuccessMessage();
+
+        console.log('Financial statements generated successfully!');
+
+    } catch (error) {
+        console.error('Error generating financial statements:', error);
+        hideLoadingIndicator();
+        alert(currentLanguage === 'ar' ? 'حدث خطأ في توليد القوائم المالية' : 'Error generating financial statements');
+    }
+}
+
+// Show loading indicator
+function showLoadingIndicator() {
+    const generateBtn = document.getElementById('generate-btn');
+    const applyBtn = document.getElementById('apply-filters-btn');
+
+    if (generateBtn) {
+        generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' +
+            (currentLanguage === 'ar' ? 'جاري التوليد...' : 'Generating...');
+        generateBtn.disabled = true;
+    }
+
+    if (applyBtn) {
+        applyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' +
+            (currentLanguage === 'ar' ? 'جاري التطبيق...' : 'Applying...');
+        applyBtn.disabled = true;
+    }
+}
+
+// Hide loading indicator
+function hideLoadingIndicator() {
+    const generateBtn = document.getElementById('generate-btn');
+    const applyBtn = document.getElementById('apply-filters-btn');
+
+    if (generateBtn) {
+        generateBtn.innerHTML = '<i class="fas fa-calculator"></i> ' +
+            (currentLanguage === 'ar' ? 'توليد التقارير' : 'Generate Reports');
+        generateBtn.disabled = false;
+    }
+
+    if (applyBtn) {
+        applyBtn.innerHTML = '<i class="fas fa-search"></i> ' +
+            (currentLanguage === 'ar' ? 'تطبيق' : 'Apply');
+        applyBtn.disabled = false;
+    }
+}
+
+// Show success message
+function showSuccessMessage() {
+    const successMessage = currentLanguage === 'ar' ?
+        'تم توليد القوائم المالية بنجاح!' :
+        'Financial statements generated successfully!';
+
+    // Create and show toast notification
+    const toast = document.createElement('div');
+    toast.className = 'toast align-items-center text-white bg-success border-0 position-fixed';
+    toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999;';
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="fas fa-check-circle me-2"></i>${successMessage}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+
+    document.body.appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+
+    // Remove toast after it's hidden
+    toast.addEventListener('hidden.bs.toast', function() {
+        document.body.removeChild(toast);
+    });
+}
+
+// Calculate financial data
+function calculateFinancialData() {
+    const accounts = financialData.accounts;
+
+    // Calculate totals
+    financialData.totals = {
+        totalRevenue: 0,
+        totalExpenses: 0,
+        totalAssets: 0,
+        totalLiabilities: 0,
+        totalEquity: 0,
+        netProfit: 0
+    };
+
+    // Sum up by account type
+    Object.keys(accounts).forEach(key => {
+        const account = accounts[key];
+        switch (account.type) {
+            case 'revenue':
+                financialData.totals.totalRevenue += account.balance;
+                break;
+            case 'expense':
+                financialData.totals.totalExpenses += account.balance;
+                break;
+            case 'asset':
+                financialData.totals.totalAssets += account.balance;
+                break;
+            case 'liability':
+                financialData.totals.totalLiabilities += account.balance;
+                break;
+            case 'equity':
+                financialData.totals.totalEquity += account.balance;
+                break;
+        }
+    });
+
+    // Calculate net profit
+    financialData.totals.netProfit = financialData.totals.totalRevenue - financialData.totals.totalExpenses;
+
+    // Calculate tax (15%)
+    financialData.totals.tax = financialData.totals.netProfit > 0 ? financialData.totals.netProfit * 0.15 : 0;
+    financialData.totals.netProfitAfterTax = financialData.totals.netProfit - financialData.totals.tax;
+}
+
+// Update summary cards
+function updateSummaryCards() {
+    const totals = financialData.totals;
+
+    document.getElementById('total-revenue').textContent = formatCurrency(totals.totalRevenue);
+    document.getElementById('total-expenses').textContent = formatCurrency(totals.totalExpenses);
+    document.getElementById('net-profit').textContent = formatCurrency(totals.netProfitAfterTax);
+    document.getElementById('total-assets').textContent = formatCurrency(totals.totalAssets);
+
+    // Update net profit color based on value
+    const netProfitElement = document.getElementById('net-profit');
+    const netProfitCard = netProfitElement.closest('.card');
+
+    if (totals.netProfitAfterTax > 0) {
+        netProfitCard.className = netProfitCard.className.replace('border-primary', 'border-success');
+        netProfitElement.className = netProfitElement.className.replace('text-primary', 'text-success');
+    } else if (totals.netProfitAfterTax < 0) {
+        netProfitCard.className = netProfitCard.className.replace('border-primary', 'border-danger');
+        netProfitElement.className = netProfitElement.className.replace('text-primary', 'text-danger');
+    }
+}
+
+// Generate automated analysis
+function generateAnalysis() {
+    const totals = financialData.totals;
+    const fromDate = document.getElementById('from-date').value;
+    const toDate = document.getElementById('to-date').value;
+
+    const fromDateFormatted = new Date(fromDate).toLocaleDateString('ar-SA');
+    const toDateFormatted = new Date(toDate).toLocaleDateString('ar-SA');
+
+    let analysisText = '';
+
+    if (currentLanguage === 'ar') {
+        analysisText = `
+            <h6><i class="fas fa-chart-line"></i> التحليل المالي للفترة من ${fromDateFormatted} إلى ${toDateFormatted}:</h6>
+            <ul class="mb-0">
+                <li><strong>الأداء المالي:</strong> بلغت إجمالي الإيرادات ${formatCurrency(totals.totalRevenue)} مقابل مصروفات قدرها ${formatCurrency(totals.totalExpenses)}.</li>
+                <li><strong>الربحية:</strong> حققت الشركة ${totals.netProfitAfterTax > 0 ? 'ربحاً' : 'خسارة'} صافية قدرها ${formatCurrency(Math.abs(totals.netProfitAfterTax))} بعد الضرائب.</li>
+                <li><strong>هامش الربح:</strong> بلغ هامش الربح الصافي ${((totals.netProfitAfterTax / totals.totalRevenue) * 100).toFixed(1)}%.</li>
+                <li><strong>المركز المالي:</strong> تبلغ إجمالي الأصول ${formatCurrency(totals.totalAssets)} مقابل التزامات قدرها ${formatCurrency(totals.totalLiabilities)}.</li>
+                <li><strong>نسبة السيولة:</strong> تبلغ نسبة الأصول المتداولة إلى الالتزامات ${((totals.totalAssets * 0.6 / totals.totalLiabilities) * 100).toFixed(1)}%.</li>
+            </ul>
+        `;
+    } else {
+        analysisText = `
+            <h6><i class="fas fa-chart-line"></i> Financial Analysis for period from ${fromDateFormatted} to ${toDateFormatted}:</h6>
+            <ul class="mb-0">
+                <li><strong>Financial Performance:</strong> Total revenue reached ${formatCurrency(totals.totalRevenue)} against expenses of ${formatCurrency(totals.totalExpenses)}.</li>
+                <li><strong>Profitability:</strong> The company achieved a net ${totals.netProfitAfterTax > 0 ? 'profit' : 'loss'} of ${formatCurrency(Math.abs(totals.netProfitAfterTax))} after taxes.</li>
+                <li><strong>Profit Margin:</strong> Net profit margin reached ${((totals.netProfitAfterTax / totals.totalRevenue) * 100).toFixed(1)}%.</li>
+                <li><strong>Financial Position:</strong> Total assets amount to ${formatCurrency(totals.totalAssets)} against liabilities of ${formatCurrency(totals.totalLiabilities)}.</li>
+                <li><strong>Liquidity Ratio:</strong> Current assets to liabilities ratio is ${((totals.totalAssets * 0.6 / totals.totalLiabilities) * 100).toFixed(1)}%.</li>
+            </ul>
+        `;
+    }
+
+    document.getElementById('analysis-text').innerHTML = analysisText;
+}
+
+// Generate Income Statement
+function generateIncomeStatement() {
+    const accounts = financialData.accounts;
+    const totals = financialData.totals;
+
+    let incomeHTML = `
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th colspan="2" class="text-center">
+                            ${currentLanguage === 'ar' ? 'قائمة الدخل' : 'Income Statement'}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="table-success">
+                        <td colspan="2"><strong>${currentLanguage === 'ar' ? 'الإيرادات:' : 'Revenue:'}</strong></td>
+                    </tr>
+    `;
+
+    // Add revenue accounts
+    Object.keys(accounts).forEach(key => {
+        const account = accounts[key];
+        if (account.type === 'revenue') {
+            const accountName = currentLanguage === 'ar' ? account.name_ar : account.name_en;
+            incomeHTML += `
+                <tr>
+                    <td>${accountName}</td>
+                    <td class="text-end">${formatCurrency(account.balance)}</td>
+                </tr>
+            `;
+        }
+    });
+
+    incomeHTML += `
+                    <tr class="table-success">
+                        <td><strong>${currentLanguage === 'ar' ? 'إجمالي الإيرادات:' : 'Total Revenue:'}</strong></td>
+                        <td class="text-end"><strong>${formatCurrency(totals.totalRevenue)}</strong></td>
+                    </tr>
+                    <tr class="table-danger">
+                        <td colspan="2"><strong>${currentLanguage === 'ar' ? 'المصروفات:' : 'Expenses:'}</strong></td>
+                    </tr>
+    `;
+
+    // Add expense accounts
+    Object.keys(accounts).forEach(key => {
+        const account = accounts[key];
+        if (account.type === 'expense') {
+            const accountName = currentLanguage === 'ar' ? account.name_ar : account.name_en;
+            incomeHTML += `
+                <tr>
+                    <td>${accountName}</td>
+                    <td class="text-end">${formatCurrency(account.balance)}</td>
+                </tr>
+            `;
+        }
+    });
+
+    incomeHTML += `
+                    <tr class="table-danger">
+                        <td><strong>${currentLanguage === 'ar' ? 'إجمالي المصروفات:' : 'Total Expenses:'}</strong></td>
+                        <td class="text-end"><strong>${formatCurrency(totals.totalExpenses)}</strong></td>
+                    </tr>
+                    <tr class="table-warning">
+                        <td><strong>${currentLanguage === 'ar' ? 'الربح قبل الضرائب:' : 'Profit Before Tax:'}</strong></td>
+                        <td class="text-end"><strong>${formatCurrency(totals.netProfit)}</strong></td>
+                    </tr>
+                    <tr>
+                        <td>${currentLanguage === 'ar' ? 'ضريبة الدخل (15%):' : 'Income Tax (15%):'}</td>
+                        <td class="text-end">${formatCurrency(totals.tax)}</td>
+                    </tr>
+                    <tr class="table-primary">
+                        <td><strong>${currentLanguage === 'ar' ? 'صافي الربح بعد الضرائب:' : 'Net Profit After Tax:'}</strong></td>
+                        <td class="text-end"><strong>${formatCurrency(totals.netProfitAfterTax)}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    document.getElementById('income-statement-content').innerHTML = incomeHTML;
+}
+
+// Generate Balance Sheet
+function generateBalanceSheet() {
+    const accounts = financialData.accounts;
+    const totals = financialData.totals;
+
+    let balanceHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th colspan="2" class="text-center">
+                                    ${currentLanguage === 'ar' ? 'الأصول' : 'Assets'}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="table-info">
+                                <td colspan="2"><strong>${currentLanguage === 'ar' ? 'الأصول المتداولة:' : 'Current Assets:'}</strong></td>
+                            </tr>
+    `;
+
+    // Add current assets
+    const currentAssets = ['cash', 'bank', 'accounts_receivable', 'inventory'];
+    let currentAssetsTotal = 0;
+
+    currentAssets.forEach(key => {
+        if (accounts[key]) {
+            const account = accounts[key];
+            const accountName = currentLanguage === 'ar' ? account.name_ar : account.name_en;
+            currentAssetsTotal += account.balance;
+            balanceHTML += `
+                <tr>
+                    <td>${accountName}</td>
+                    <td class="text-end">${formatCurrency(account.balance)}</td>
+                </tr>
+            `;
+        }
+    });
+
+    balanceHTML += `
+                            <tr class="table-info">
+                                <td><strong>${currentLanguage === 'ar' ? 'إجمالي الأصول المتداولة:' : 'Total Current Assets:'}</strong></td>
+                                <td class="text-end"><strong>${formatCurrency(currentAssetsTotal)}</strong></td>
+                            </tr>
+                            <tr class="table-info">
+                                <td colspan="2"><strong>${currentLanguage === 'ar' ? 'الأصول الثابتة:' : 'Fixed Assets:'}</strong></td>
+                            </tr>
+    `;
+
+    // Add fixed assets
+    const fixedAssets = ['equipment', 'furniture'];
+    let fixedAssetsTotal = 0;
+
+    fixedAssets.forEach(key => {
+        if (accounts[key]) {
+            const account = accounts[key];
+            const accountName = currentLanguage === 'ar' ? account.name_ar : account.name_en;
+            fixedAssetsTotal += account.balance;
+            balanceHTML += `
+                <tr>
+                    <td>${accountName}</td>
+                    <td class="text-end">${formatCurrency(account.balance)}</td>
+                </tr>
+            `;
+        }
+    });
+
+    balanceHTML += `
+                            <tr class="table-info">
+                                <td><strong>${currentLanguage === 'ar' ? 'إجمالي الأصول الثابتة:' : 'Total Fixed Assets:'}</strong></td>
+                                <td class="text-end"><strong>${formatCurrency(fixedAssetsTotal)}</strong></td>
+                            </tr>
+                            <tr class="table-primary">
+                                <td><strong>${currentLanguage === 'ar' ? 'إجمالي الأصول:' : 'Total Assets:'}</strong></td>
+                                <td class="text-end"><strong>${formatCurrency(totals.totalAssets)}</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th colspan="2" class="text-center">
+                                    ${currentLanguage === 'ar' ? 'الالتزامات وحقوق الملكية' : 'Liabilities & Equity'}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="table-warning">
+                                <td colspan="2"><strong>${currentLanguage === 'ar' ? 'الالتزامات:' : 'Liabilities:'}</strong></td>
+                            </tr>
+    `;
+
+    // Add liabilities
+    Object.keys(accounts).forEach(key => {
+        const account = accounts[key];
+        if (account.type === 'liability') {
+            const accountName = currentLanguage === 'ar' ? account.name_ar : account.name_en;
+            balanceHTML += `
+                <tr>
+                    <td>${accountName}</td>
+                    <td class="text-end">${formatCurrency(account.balance)}</td>
+                </tr>
+            `;
+        }
+    });
+
+    balanceHTML += `
+                            <tr class="table-warning">
+                                <td><strong>${currentLanguage === 'ar' ? 'إجمالي الالتزامات:' : 'Total Liabilities:'}</strong></td>
+                                <td class="text-end"><strong>${formatCurrency(totals.totalLiabilities)}</strong></td>
+                            </tr>
+                            <tr class="table-success">
+                                <td colspan="2"><strong>${currentLanguage === 'ar' ? 'حقوق الملكية:' : 'Equity:'}</strong></td>
+                            </tr>
+    `;
+
+    // Add equity accounts
+    Object.keys(accounts).forEach(key => {
+        const account = accounts[key];
+        if (account.type === 'equity') {
+            const accountName = currentLanguage === 'ar' ? account.name_ar : account.name_en;
+            balanceHTML += `
+                <tr>
+                    <td>${accountName}</td>
+                    <td class="text-end">${formatCurrency(account.balance)}</td>
+                </tr>
+            `;
+        }
+    });
+
+    // Add current period profit
+    balanceHTML += `
+                            <tr>
+                                <td>${currentLanguage === 'ar' ? 'ربح الفترة الحالية:' : 'Current Period Profit:'}</td>
+                                <td class="text-end">${formatCurrency(totals.netProfitAfterTax)}</td>
+                            </tr>
+                            <tr class="table-success">
+                                <td><strong>${currentLanguage === 'ar' ? 'إجمالي حقوق الملكية:' : 'Total Equity:'}</strong></td>
+                                <td class="text-end"><strong>${formatCurrency(totals.totalEquity + totals.netProfitAfterTax)}</strong></td>
+                            </tr>
+                            <tr class="table-primary">
+                                <td><strong>${currentLanguage === 'ar' ? 'إجمالي الالتزامات وحقوق الملكية:' : 'Total Liabilities & Equity:'}</strong></td>
+                                <td class="text-end"><strong>${formatCurrency(totals.totalLiabilities + totals.totalEquity + totals.netProfitAfterTax)}</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('balance-sheet-content').innerHTML = balanceHTML;
+}
+
+// Generate Cash Flow Statement
+function generateCashFlowStatement() {
+    const totals = financialData.totals;
+
+    // Sample cash flow data
+    const cashFlowData = {
+        operatingActivities: {
+            netProfit: totals.netProfitAfterTax,
+            depreciation: 12000.00,
+            accountsReceivableChange: -5000.00,
+            inventoryChange: -8000.00,
+            accountsPayableChange: 3000.00,
+            total: 0
+        },
+        investingActivities: {
+            equipmentPurchase: -25000.00,
+            total: -25000.00
+        },
+        financingActivities: {
+            loanProceeds: 50000.00,
+            dividendsPaid: -15000.00,
+            total: 35000.00
+        }
+    };
+
+    // Calculate operating activities total
+    cashFlowData.operatingActivities.total =
+        cashFlowData.operatingActivities.netProfit +
+        cashFlowData.operatingActivities.depreciation +
+        cashFlowData.operatingActivities.accountsReceivableChange +
+        cashFlowData.operatingActivities.inventoryChange +
+        cashFlowData.operatingActivities.accountsPayableChange;
+
+    const netCashFlow = cashFlowData.operatingActivities.total +
+                       cashFlowData.investingActivities.total +
+                       cashFlowData.financingActivities.total;
+
+    let cashFlowHTML = `
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th colspan="2" class="text-center">
+                            ${currentLanguage === 'ar' ? 'قائمة التدفقات النقدية' : 'Cash Flow Statement'}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="table-success">
+                        <td colspan="2"><strong>${currentLanguage === 'ar' ? 'التدفقات النقدية من الأنشطة التشغيلية:' : 'Cash Flows from Operating Activities:'}</strong></td>
+                    </tr>
+                    <tr>
+                        <td>${currentLanguage === 'ar' ? 'صافي الربح' : 'Net Profit'}</td>
+                        <td class="text-end">${formatCurrency(cashFlowData.operatingActivities.netProfit)}</td>
+                    </tr>
+                    <tr>
+                        <td>${currentLanguage === 'ar' ? 'الإهلاك' : 'Depreciation'}</td>
+                        <td class="text-end">${formatCurrency(cashFlowData.operatingActivities.depreciation)}</td>
+                    </tr>
+                    <tr>
+                        <td>${currentLanguage === 'ar' ? 'التغير في حسابات العملاء' : 'Change in Accounts Receivable'}</td>
+                        <td class="text-end">${formatCurrency(cashFlowData.operatingActivities.accountsReceivableChange)}</td>
+                    </tr>
+                    <tr>
+                        <td>${currentLanguage === 'ar' ? 'التغير في المخزون' : 'Change in Inventory'}</td>
+                        <td class="text-end">${formatCurrency(cashFlowData.operatingActivities.inventoryChange)}</td>
+                    </tr>
+                    <tr>
+                        <td>${currentLanguage === 'ar' ? 'التغير في حسابات الموردين' : 'Change in Accounts Payable'}</td>
+                        <td class="text-end">${formatCurrency(cashFlowData.operatingActivities.accountsPayableChange)}</td>
+                    </tr>
+                    <tr class="table-success">
+                        <td><strong>${currentLanguage === 'ar' ? 'صافي التدفق النقدي من الأنشطة التشغيلية:' : 'Net Cash from Operating Activities:'}</strong></td>
+                        <td class="text-end"><strong>${formatCurrency(cashFlowData.operatingActivities.total)}</strong></td>
+                    </tr>
+
+                    <tr class="table-info">
+                        <td colspan="2"><strong>${currentLanguage === 'ar' ? 'التدفقات النقدية من الأنشطة الاستثمارية:' : 'Cash Flows from Investing Activities:'}</strong></td>
+                    </tr>
+                    <tr>
+                        <td>${currentLanguage === 'ar' ? 'شراء معدات' : 'Equipment Purchase'}</td>
+                        <td class="text-end">${formatCurrency(cashFlowData.investingActivities.equipmentPurchase)}</td>
+                    </tr>
+                    <tr class="table-info">
+                        <td><strong>${currentLanguage === 'ar' ? 'صافي التدفق النقدي من الأنشطة الاستثمارية:' : 'Net Cash from Investing Activities:'}</strong></td>
+                        <td class="text-end"><strong>${formatCurrency(cashFlowData.investingActivities.total)}</strong></td>
+                    </tr>
+
+                    <tr class="table-warning">
+                        <td colspan="2"><strong>${currentLanguage === 'ar' ? 'التدفقات النقدية من الأنشطة التمويلية:' : 'Cash Flows from Financing Activities:'}</strong></td>
+                    </tr>
+                    <tr>
+                        <td>${currentLanguage === 'ar' ? 'حصيلة القروض' : 'Loan Proceeds'}</td>
+                        <td class="text-end">${formatCurrency(cashFlowData.financingActivities.loanProceeds)}</td>
+                    </tr>
+                    <tr>
+                        <td>${currentLanguage === 'ar' ? 'توزيعات الأرباح المدفوعة' : 'Dividends Paid'}</td>
+                        <td class="text-end">${formatCurrency(cashFlowData.financingActivities.dividendsPaid)}</td>
+                    </tr>
+                    <tr class="table-warning">
+                        <td><strong>${currentLanguage === 'ar' ? 'صافي التدفق النقدي من الأنشطة التمويلية:' : 'Net Cash from Financing Activities:'}</strong></td>
+                        <td class="text-end"><strong>${formatCurrency(cashFlowData.financingActivities.total)}</strong></td>
+                    </tr>
+
+                    <tr class="table-primary">
+                        <td><strong>${currentLanguage === 'ar' ? 'صافي التغير في النقدية:' : 'Net Change in Cash:'}</strong></td>
+                        <td class="text-end"><strong>${formatCurrency(netCashFlow)}</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    document.getElementById('cash-flow-content').innerHTML = cashFlowHTML;
+}
+
+// Generate Charts
+function generateCharts() {
+    generateRevenueChart();
+    generateExpensesChart();
+}
+
+// Generate Revenue Chart
+function generateRevenueChart() {
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+
+    if (revenueChart) {
+        revenueChart.destroy();
+    }
+
+    const accounts = financialData.accounts;
+    const revenueAccounts = Object.keys(accounts).filter(key => accounts[key].type === 'revenue');
+
+    const labels = revenueAccounts.map(key =>
+        currentLanguage === 'ar' ? accounts[key].name_ar : accounts[key].name_en
+    );
+    const data = revenueAccounts.map(key => accounts[key].balance);
+
+    revenueChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: [
+                    '#28a745',
+                    '#17a2b8',
+                    '#ffc107',
+                    '#dc3545',
+                    '#6f42c1'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+// Generate Expenses Chart
+function generateExpensesChart() {
+    const ctx = document.getElementById('expensesChart').getContext('2d');
+
+    if (expensesChart) {
+        expensesChart.destroy();
+    }
+
+    const accounts = financialData.accounts;
+    const expenseAccounts = Object.keys(accounts).filter(key => accounts[key].type === 'expense');
+
+    const labels = expenseAccounts.map(key =>
+        currentLanguage === 'ar' ? accounts[key].name_ar : accounts[key].name_en
+    );
+    const data = expenseAccounts.map(key => accounts[key].balance);
+
+    expensesChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: currentLanguage === 'ar' ? 'المصروفات' : 'Expenses',
+                data: data,
+                backgroundColor: [
+                    '#dc3545',
+                    '#fd7e14',
+                    '#ffc107',
+                    '#20c997',
+                    '#6610f2',
+                    '#e83e8c'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+// Helper functions
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('ar-SA', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(amount) + ' ريال';
+}
+
+// Export and print functions
+function exportToPDF() {
+    if (!financialData.totals) {
+        alert(currentLanguage === 'ar' ? 'يرجى توليد التقارير أولاً' : 'Please generate reports first');
+        return;
+    }
+
+    // Show loading
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + (currentLanguage === 'ar' ? 'جاري التصدير...' : 'Exporting...');
+    btn.disabled = true;
+
+    // Simulate PDF generation
+    setTimeout(() => {
+        // Create PDF content
+        const pdfContent = generatePDFContent();
+
+        // Create download link
+        const blob = new Blob([pdfContent], { type: 'text/html' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `financial_statements_${new Date().toISOString().split('T')[0]}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        // Restore button
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+
+        // Show success message
+        showToast(currentLanguage === 'ar' ? 'تم تصدير PDF بنجاح' : 'PDF exported successfully', 'success');
+    }, 2000);
+}
+
+function exportToExcel() {
+    if (!financialData.totals) {
+        alert(currentLanguage === 'ar' ? 'يرجى توليد التقارير أولاً' : 'Please generate reports first');
+        return;
+    }
+
+    // Show loading
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + (currentLanguage === 'ar' ? 'جاري التصدير...' : 'Exporting...');
+    btn.disabled = true;
+
+    // Generate Excel data
+    setTimeout(() => {
+        const excelData = generateExcelData();
+
+        // Create CSV content (simplified Excel)
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += excelData.map(row => row.join(",")).join("\n");
+
+        // Create download link
+        const encodedUri = encodeURI(csvContent);
+        const a = document.createElement('a');
+        a.href = encodedUri;
+        a.download = `financial_statements_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        // Restore button
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+
+        // Show success message
+        showToast(currentLanguage === 'ar' ? 'تم تصدير Excel بنجاح' : 'Excel exported successfully', 'success');
+    }, 1500);
+}
+
+function printStatements() {
+    if (!financialData.totals) {
+        alert(currentLanguage === 'ar' ? 'يرجى توليد التقارير أولاً' : 'Please generate reports first');
+        return;
+    }
+
+    // Create print window with formatted content
+    const printContent = generatePrintContent();
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+
+    // Wait for content to load then print
+    printWindow.onload = function() {
+        printWindow.print();
+        printWindow.onafterprint = function() {
+            printWindow.close();
+        };
+    };
+
+    showToast(currentLanguage === 'ar' ? 'تم فتح نافذة الطباعة' : 'Print window opened', 'info');
+}
+
+// Test function to debug issues
+function testFunction() {
+    console.log('Test function called');
+    console.log('Current language:', currentLanguage);
+    console.log('Financial data:', financialData);
+
+    alert('Test function works! Check console for details.');
+
+    // Test generateStatements directly
+    try {
+        generateStatements();
+    } catch (error) {
+        console.error('Error in generateStatements:', error);
+        alert('Error: ' + error.message);
+    }
+}
+
+// Helper functions for export
+function generatePDFContent() {
+    const totals = financialData.totals;
+    const fromDate = document.getElementById('from-date').value;
+    const toDate = document.getElementById('to-date').value;
+
+    return `
+        <!DOCTYPE html>
+        <html dir="rtl" lang="ar">
+        <head>
+            <meta charset="UTF-8">
+            <title>القوائم المالية - ${fromDate} إلى ${toDate}</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; direction: rtl; }
+                .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
+                .section { margin-bottom: 30px; }
+                .section h3 { background: #f0f0f0; padding: 10px; margin: 0; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
+                th { background-color: #f2f2f2; font-weight: bold; }
+                .total-row { background-color: #e8f4f8; font-weight: bold; }
+                .summary { background: #f9f9f9; padding: 15px; border-radius: 5px; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>القوائم المالية</h1>
+                <p>للفترة من ${formatDate(fromDate)} إلى ${formatDate(toDate)}</p>
+                <p>تاريخ الإنشاء: ${new Date().toLocaleDateString('ar-SA')}</p>
+            </div>
+
+            <div class="summary">
+                <h3>ملخص الأداء المالي</h3>
+                <p><strong>إجمالي الإيرادات:</strong> ${formatCurrency(totals.totalRevenue)}</p>
+                <p><strong>إجمالي المصروفات:</strong> ${formatCurrency(totals.totalExpenses)}</p>
+                <p><strong>صافي الربح:</strong> ${formatCurrency(totals.netProfitAfterTax)}</p>
+                <p><strong>إجمالي الأصول:</strong> ${formatCurrency(totals.totalAssets)}</p>
+            </div>
+
+            ${document.getElementById('income-statement-content').innerHTML}
+            ${document.getElementById('balance-sheet-content').innerHTML}
+            ${document.getElementById('cash-flow-content').innerHTML}
+        </body>
+        </html>
+    `;
+}
+
+function generateExcelData() {
+    const totals = financialData.totals;
+    const accounts = financialData.accounts;
+
+    const data = [
+        ['القوائم المالية', '', '', ''],
+        ['البند', 'النوع', 'المبلغ', 'العملة'],
+        ['', '', '', ''],
+        ['الإيرادات', '', '', ''],
+    ];
+
+    // Add revenue accounts
+    Object.keys(accounts).forEach(key => {
+        const account = accounts[key];
+        if (account.type === 'revenue') {
+            data.push([
+                currentLanguage === 'ar' ? account.name_ar : account.name_en,
+                'إيرادات',
+                account.balance,
+                'ريال'
+            ]);
+        }
+    });
+
+    data.push(['إجمالي الإيرادات', '', totals.totalRevenue, 'ريال']);
+    data.push(['', '', '', '']);
+    data.push(['المصروفات', '', '', '']);
+
+    // Add expense accounts
+    Object.keys(accounts).forEach(key => {
+        const account = accounts[key];
+        if (account.type === 'expense') {
+            data.push([
+                currentLanguage === 'ar' ? account.name_ar : account.name_en,
+                'مصروفات',
+                account.balance,
+                'ريال'
+            ]);
+        }
+    });
+
+    data.push(['إجمالي المصروفات', '', totals.totalExpenses, 'ريال']);
+    data.push(['صافي الربح', '', totals.netProfitAfterTax, 'ريال']);
+
+    return data;
+}
+
+function generatePrintContent() {
+    const totals = financialData.totals;
+    const fromDate = document.getElementById('from-date').value;
+    const toDate = document.getElementById('to-date').value;
+
+    return `
+        <!DOCTYPE html>
+        <html dir="rtl" lang="ar">
+        <head>
+            <meta charset="UTF-8">
+            <title>طباعة القوائم المالية</title>
+            <style>
+                @media print {
+                    body { margin: 0; }
+                    .no-print { display: none; }
+                }
+                body { font-family: Arial, sans-serif; margin: 20px; direction: rtl; }
+                .header { text-align: center; margin-bottom: 30px; }
+                .summary { background: #f9f9f9; padding: 15px; margin-bottom: 20px; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
+                th { background-color: #f2f2f2; }
+                .page-break { page-break-before: always; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>القوائم المالية</h1>
+                <p>للفترة من ${formatDate(fromDate)} إلى ${formatDate(toDate)}</p>
+                <p>تاريخ الطباعة: ${new Date().toLocaleDateString('ar-SA')}</p>
+            </div>
+
+            <div class="summary">
+                <h3>ملخص الأداء المالي</h3>
+                <table>
+                    <tr><td><strong>إجمالي الإيرادات:</strong></td><td>${formatCurrency(totals.totalRevenue)}</td></tr>
+                    <tr><td><strong>إجمالي المصروفات:</strong></td><td>${formatCurrency(totals.totalExpenses)}</td></tr>
+                    <tr><td><strong>صافي الربح:</strong></td><td>${formatCurrency(totals.netProfitAfterTax)}</td></tr>
+                    <tr><td><strong>إجمالي الأصول:</strong></td><td>${formatCurrency(totals.totalAssets)}</td></tr>
+                </table>
+            </div>
+
+            <div class="page-break">
+                ${document.getElementById('income-statement-content').innerHTML}
+            </div>
+
+            <div class="page-break">
+                ${document.getElementById('balance-sheet-content').innerHTML}
+            </div>
+
+            <div class="page-break">
+                ${document.getElementById('cash-flow-content').innerHTML}
+            </div>
+        </body>
+        </html>
+    `;
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type} border-0 position-fixed`;
+    toast.style.cssText = 'top: 20px; left: 20px; z-index: 9999;';
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
+                ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+
+    document.body.appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+
+    toast.addEventListener('hidden.bs.toast', function() {
+        document.body.removeChild(toast);
+    });
+}
+
+// Add global error handler
+window.addEventListener('error', function(e) {
+    console.error('Global error:', e.error);
+    console.error('Error message:', e.message);
+    console.error('Error filename:', e.filename);
+    console.error('Error line:', e.lineno);
+});
+</script>
+{% endblock %}

@@ -76,17 +76,22 @@
             --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
             --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 
-            /* Layout */
-            --sidebar-width: 280px;
-            --header-height: 70px;
-            --border-radius: 12px;
-            --border-radius-sm: 8px;
-            --border-radius-lg: 16px;
+            /* Layout - Compact Design */
+            --sidebar-width: 260px;
+            --header-height: 60px;
+            --border-radius: 0.375rem;
+            --border-radius-sm: 0.25rem;
+            --border-radius-lg: 0.5rem;
 
-            /* Transitions */
-            --transition-fast: 0.15s ease;
-            --transition-normal: 0.3s ease;
-            --transition-slow: 0.5s ease;
+            /* Transitions - Faster */
+            --transition: all 0.15s ease-in-out;
+
+            /* Spacing System */
+            --spacing-xs: 0.25rem;
+            --spacing-sm: 0.5rem;
+            --spacing-md: 0.75rem;
+            --spacing-lg: 1rem;
+            --spacing-xl: 1.25rem;
         }
 
         * {
@@ -126,48 +131,40 @@
         }
 
         .sidebar-brand {
-            padding: 1.5rem;
+            padding: var(--spacing-lg);
             text-align: center;
             border-bottom: 1px solid var(--border-color);
-            background: var(--primary-gradient);
+            background: var(--bg-tertiary);
         }
 
         .sidebar-brand h4 {
-            color: var(--text-white);
-            font-weight: 700;
+            color: var(--primary-color);
+            font-weight: 600;
             margin: 0;
-            font-size: 1.2rem;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
-
-        .sidebar-brand .brand-subtitle {
-            color: rgba(255,255,255,0.8);
-            font-size: 0.8rem;
-            margin-top: 0.25rem;
-            font-weight: 400;
+            font-size: 1.1rem;
         }
 
         .sidebar .nav {
-            padding: 0.5rem 0;
+            padding: var(--spacing-sm) 0;
         }
 
         .sidebar .nav-link {
             color: var(--text-secondary);
-            padding: 0.75rem 1.25rem;
-            margin: 0.125rem 0.75rem;
+            padding: var(--spacing-md) var(--spacing-lg);
+            margin: var(--spacing-xs) var(--spacing-sm);
             border-radius: var(--border-radius-sm);
-            transition: all var(--transition-normal);
+            transition: var(--transition);
             display: flex;
             align-items: center;
             text-decoration: none;
             font-weight: 500;
-            font-size: 0.9rem;
+            font-size: 0.875rem;
         }
 
         .sidebar .nav-link:hover {
-            background: var(--bg-tertiary);
+            background: var(--bg-hover);
             color: var(--primary-color);
-            transform: translateX({{ '3px' if session.get('language', 'ar') == 'ar' else '-3px' }});
+            text-decoration: none;
         }
 
         .sidebar .nav-link.active {
@@ -177,10 +174,10 @@
         }
 
         .sidebar .nav-link i {
-            width: 18px;
+            width: 16px;
             text-align: center;
-            {{ 'margin-left' if session.get('language', 'ar') == 'ar' else 'margin-right' }}: 10px;
-            font-size: 1rem;
+            {{ 'margin-left' if session.get('language', 'ar') == 'ar' else 'margin-right' }}: var(--spacing-sm);
+            font-size: 0.875rem;
         }
 
         .sidebar .nav-section {
@@ -221,7 +218,7 @@
 
         .page-header {
             background: var(--bg-primary);
-            padding: 1.5rem;
+            padding: var(--spacing-lg);
             border-bottom: 1px solid var(--border-color);
             margin-bottom: 0;
         }
@@ -274,19 +271,20 @@
             {{ 'margin-left' if session.get('language', 'ar') == 'ar' else 'margin-right' }}: 0.5rem;
         }
 
-        /* Content Area */
+        /* Content Area - Compact */
         .content-area {
-            padding: 1.5rem;
+            padding: var(--spacing-lg);
             background: var(--bg-secondary);
         }
 
-        /* Cards */
+        /* Cards - Consistent Design */
         .card {
             border: 1px solid var(--border-color);
-            border-radius: var(--border-radius-sm);
+            border-radius: var(--border-radius);
             box-shadow: var(--shadow-sm);
-            transition: all var(--transition-normal);
+            transition: var(--transition);
             background: var(--bg-primary);
+            margin-bottom: var(--spacing-lg);
         }
 
         .card:hover {
@@ -296,24 +294,39 @@
         .card-header {
             background: var(--bg-tertiary);
             border-bottom: 1px solid var(--border-color);
-            padding: 1rem 1.25rem;
+            padding: var(--spacing-md) var(--spacing-lg);
             font-weight: 600;
             color: var(--text-primary);
-            font-size: 0.95rem;
+            font-size: 0.9rem;
         }
 
         .card-body {
-            padding: 1.25rem;
+            padding: var(--spacing-lg);
         }
 
-        /* Buttons */
+        /* Buttons - Consistent Design */
         .btn {
-            border-radius: var(--border-radius-sm);
+            border-radius: var(--border-radius);
             font-weight: 500;
-            padding: 0.625rem 1.25rem;
-            transition: all var(--transition-normal);
+            padding: var(--spacing-sm) var(--spacing-lg);
+            transition: var(--transition);
             border: 1px solid transparent;
             font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .btn:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+
+        .btn-sm {
+            padding: var(--spacing-xs) var(--spacing-sm);
+            font-size: 0.8rem;
         }
 
         .btn-primary {
@@ -461,10 +474,23 @@
         
 
 
-        /* Responsive Design */
+        /* Responsive Design - Enhanced */
+        @media (max-width: 1024px) {
+            :root {
+                --sidebar-width: 240px;
+            }
+        }
+
         @media (max-width: 768px) {
+            :root {
+                --sidebar-width: 280px;
+                --spacing-lg: 0.75rem;
+                --spacing-xl: 1rem;
+            }
+
             .sidebar {
                 transform: translateX({{ '100%' if session.get('language', 'ar') == 'ar' else '-100%' }});
+                box-shadow: var(--shadow-lg);
             }
 
             .sidebar.show {
@@ -477,11 +503,11 @@
             }
 
             .content-area {
-                padding: 1rem;
+                padding: var(--spacing-md);
             }
 
             .page-header {
-                padding: 1rem;
+                padding: var(--spacing-md);
             }
 
             .page-title {
@@ -489,18 +515,27 @@
             }
 
             .top-navbar {
-                padding: 0.5rem 1rem;
+                padding: var(--spacing-sm) var(--spacing-md);
+            }
+
+            .card-body {
+                padding: var(--spacing-md);
             }
         }
 
         @media (max-width: 576px) {
             .btn {
-                padding: 0.5rem 1rem;
+                padding: var(--spacing-xs) var(--spacing-sm);
                 font-size: 0.8rem;
             }
 
-            .card-body {
-                padding: 1rem;
+            .page-title {
+                font-size: 1.125rem;
+            }
+
+            .card-header {
+                padding: var(--spacing-sm) var(--spacing-md);
+                font-size: 0.85rem;
             }
         }
 
@@ -546,6 +581,9 @@
             <h4>
                 <i class="fas fa-calculator"></i>
                 {% if session.get('language', 'ar') == 'ar' %}نظام المحاسبة{% else %}Accounting System{% endif %}
+                <span id="network-status" class="ms-2" title="حالة الاتصال">
+                    <i class="fas fa-wifi text-success"></i>
+                </span>
             </h4>
         </div>
 
@@ -558,13 +596,13 @@
                 </a>
             </li>
 
-            <!-- المبيعات -->
-            <li class="nav-item">
-                <a class="nav-link {{ 'active' if request.endpoint == 'new_sale' else '' }}" href="{{ url_for('new_sale') }}">
-                    <i class="fas fa-plus-circle"></i>
-                    {% if session.get('language', 'ar') == 'ar' %}فاتورة جديدة{% else %}New Sale{% endif %}
-                </a>
-            </li>
+            <!-- قسم المبيعات والمشتريات -->
+            <div class="nav-section">
+                <div class="nav-section-title">
+                    {% if session.get('language', 'ar') == 'ar' %}العمليات التجارية{% else %}Business Operations{% endif %}
+                </div>
+            </div>
+
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if request.endpoint == 'sales' else '' }}" href="{{ url_for('sales') }}">
                     <i class="fas fa-receipt"></i>
@@ -572,7 +610,6 @@
                 </a>
             </li>
 
-            <!-- المشتريات -->
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if request.endpoint == 'purchases' else '' }}" href="{{ url_for('purchases') }}">
                     <i class="fas fa-shopping-cart"></i>
@@ -580,13 +617,36 @@
                 </a>
             </li>
 
-            <!-- المخزون والمنتجات -->
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'expenses' else '' }}" href="{{ url_for('expenses') }}">
+                    <i class="fas fa-money-bill-wave"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}المصروفات{% else %}Expenses{% endif %}
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'advanced_expenses' else '' }}" href="{{ url_for('advanced_expenses') }}">
+                    <i class="fas fa-chart-pie"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}المصروفات المتقدمة{% else %}Advanced Expenses{% endif %}
+                </a>
+            </li>
+
+
+
+            <!-- قسم المنتجات والمخزون -->
+            <div class="nav-section">
+                <div class="nav-section-title">
+                    {% if session.get('language', 'ar') == 'ar' %}المنتجات والمخزون{% else %}Products & Inventory{% endif %}
+                </div>
+            </div>
+
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if request.endpoint == 'products' else '' }}" href="{{ url_for('products') }}">
                     <i class="fas fa-box"></i>
                     {% if session.get('language', 'ar') == 'ar' %}المنتجات{% else %}Products{% endif %}
                 </a>
             </li>
+
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if request.endpoint == 'inventory' else '' }}" href="{{ url_for('inventory') }}">
                     <i class="fas fa-warehouse"></i>
@@ -594,13 +654,55 @@
                 </a>
             </li>
 
-            <!-- العملاء والموردين -->
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'raw_materials' else '' }}" href="{{ url_for('raw_materials') }}">
+                    <i class="fas fa-seedling"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}المواد الخام{% else %}Raw Materials{% endif %}
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'product_transfer' else '' }}" href="{{ url_for('product_transfer') }}">
+                    <i class="fas fa-exchange-alt"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}نقل المنتجات{% else %}Product Transfer{% endif %}
+                </a>
+            </li>
+
+            <!-- قسم التكاليف -->
+            <div class="nav-section">
+                <div class="nav-section-title">
+                    {% if session.get('language', 'ar') == 'ar' %}إدارة التكاليف{% else %}Cost Management{% endif %}
+                </div>
+            </div>
+
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'cost_calculation' else '' }}" href="{{ url_for('cost_calculation') }}">
+                    <i class="fas fa-calculator"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}حساب التكاليف{% else %}Cost Calculation{% endif %}
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'meal_cost_calculator' else '' }}" href="{{ url_for('meal_cost_calculator') }}">
+                    <i class="fas fa-utensils"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}حاسبة تكلفة الوجبات{% else %}Meal Cost Calculator{% endif %}
+                </a>
+            </li>
+
+            <!-- قسم العملاء والموردين -->
+            <div class="nav-section">
+                <div class="nav-section-title">
+                    {% if session.get('language', 'ar') == 'ar' %}الشركاء التجاريين{% else %}Business Partners{% endif %}
+                </div>
+            </div>
+
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if request.endpoint == 'customers' else '' }}" href="{{ url_for('customers') }}">
                     <i class="fas fa-users"></i>
                     {% if session.get('language', 'ar') == 'ar' %}العملاء{% else %}Customers{% endif %}
                 </a>
             </li>
+
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if request.endpoint == 'suppliers' else '' }}" href="{{ url_for('suppliers') }}">
                     <i class="fas fa-truck"></i>
@@ -608,19 +710,27 @@
                 </a>
             </li>
 
-            <!-- المالية والمحاسبة -->
-            <li class="nav-item">
-                <a class="nav-link {{ 'active' if request.endpoint == 'financial_statements' else '' }}" href="{{ url_for('financial_statements') }}">
-                    <i class="fas fa-file-invoice-dollar"></i>
-                    {% if session.get('language', 'ar') == 'ar' %}القوائم المالية{% else %}Financial Statements{% endif %}
-                </a>
-            </li>
+            <!-- قسم المالية والمحاسبة -->
+            <div class="nav-section">
+                <div class="nav-section-title">
+                    {% if session.get('language', 'ar') == 'ar' %}المالية والمحاسبة{% else %}Finance & Accounting{% endif %}
+                </div>
+            </div>
+
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if request.endpoint == 'payments_dues' else '' }}" href="{{ url_for('payments_dues') }}">
                     <i class="fas fa-credit-card"></i>
                     {% if session.get('language', 'ar') == 'ar' %}المدفوعات والمستحقات{% else %}Payments & Dues{% endif %}
                 </a>
             </li>
+
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'financial_statements' else '' }}" href="{{ url_for('financial_statements') }}">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}القوائم المالية{% else %}Financial Statements{% endif %}
+                </a>
+            </li>
+
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if request.endpoint == 'tax_management' else '' }}" href="{{ url_for('tax_management') }}">
                     <i class="fas fa-percentage"></i>
@@ -628,7 +738,13 @@
                 </a>
             </li>
 
-            <!-- الموظفين والرواتب -->
+            <!-- قسم الموظفين -->
+            <div class="nav-section">
+                <div class="nav-section-title">
+                    {% if session.get('language', 'ar') == 'ar' %}الموارد البشرية{% else %}Human Resources{% endif %}
+                </div>
+            </div>
+
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if request.endpoint == 'employee_payroll' else '' }}" href="{{ url_for('employee_payroll') }}">
                     <i class="fas fa-user-tie"></i>
@@ -636,13 +752,20 @@
                 </a>
             </li>
 
-            <!-- التقارير -->
+            <!-- قسم التقارير -->
+            <div class="nav-section">
+                <div class="nav-section-title">
+                    {% if session.get('language', 'ar') == 'ar' %}التقارير والتحليلات{% else %}Reports & Analytics{% endif %}
+                </div>
+            </div>
+
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if request.endpoint == 'reports' else '' }}" href="{{ url_for('reports') }}">
                     <i class="fas fa-chart-bar"></i>
                     {% if session.get('language', 'ar') == 'ar' %}التقارير{% else %}Reports{% endif %}
                 </a>
             </li>
+
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if request.endpoint == 'advanced_reports' else '' }}" href="{{ url_for('advanced_reports') }}">
                     <i class="fas fa-chart-line"></i>
@@ -650,13 +773,27 @@
                 </a>
             </li>
 
-            <!-- الإدارة -->
+            <!-- قسم الإدارة -->
+            <div class="nav-section">
+                <div class="nav-section-title">
+                    {% if session.get('language', 'ar') == 'ar' %}إدارة النظام{% else %}System Management{% endif %}
+                </div>
+            </div>
+
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if request.endpoint == 'user_management' else '' }}" href="{{ url_for('user_management') }}">
                     <i class="fas fa-users-cog"></i>
                     {% if session.get('language', 'ar') == 'ar' %}إدارة المستخدمين{% else %}User Management{% endif %}
                 </a>
             </li>
+
+            <li class="nav-item">
+                <a class="nav-link {{ 'active' if request.endpoint == 'role_management' else '' }}" href="{{ url_for('role_management') }}">
+                    <i class="fas fa-user-shield"></i>
+                    {% if session.get('language', 'ar') == 'ar' %}إدارة الأدوار{% else %}Role Management{% endif %}
+                </a>
+            </li>
+
             <li class="nav-item">
                 <a class="nav-link {{ 'active' if request.endpoint == 'settings' else '' }}" href="{{ url_for('settings') }}">
                     <i class="fas fa-cog"></i>
@@ -665,6 +802,12 @@
             </li>
 
             <!-- تسجيل الخروج -->
+            <div class="nav-section">
+                <div class="nav-section-title">
+                    {% if session.get('language', 'ar') == 'ar' %}الحساب{% else %}Account{% endif %}
+                </div>
+            </div>
+
             <li class="nav-item">
                 <a class="nav-link" href="{{ url_for('logout') }}">
                     <i class="fas fa-sign-out-alt"></i>
@@ -717,26 +860,25 @@
         <!-- Page Header -->
         <div class="page-header">
             <div class="d-flex justify-content-between align-items-center">
-                <h1 class="page-title">
-                    {% block page_icon %}<i class="fas fa-home"></i>{% endblock %}
-                    {% block page_title %}{% if session.get('language', 'ar') == 'ar' %}الصفحة الرئيسية{% else %}Home{% endif %}{% endblock %}
-                </h1>
+                <div class="d-flex align-items-center">
+                    {% if request.endpoint != 'dashboard' %}
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary btn-sm me-3" title="{% if session.get('language', 'ar') == 'ar' %}العودة للرئيسية{% else %}Back to Dashboard{% endif %}">
+                        <i class="fas fa-arrow-{{ 'right' if session.get('language', 'ar') == 'ar' else 'left' }}"></i>
+                    </a>
+                    {% endif %}
+                    <h1 class="page-title mb-0">
+                        {% block page_icon %}<i class="fas fa-home"></i>{% endblock %}
+                        {% block page_title %}{% if session.get('language', 'ar') == 'ar' %}الصفحة الرئيسية{% else %}Home{% endif %}{% endblock %}
+                    </h1>
+                </div>
                 <div class="d-flex gap-2">
-                    {% block page_actions %}{% endblock %}
+                    
                 </div>
             </div>
         </div>
 
         <!-- Content Area -->
         <div class="content-area">
-            <!-- Back Button (if not dashboard) -->
-            {% if request.endpoint != 'dashboard' %}
-            <a href="{{ url_for('dashboard') }}" class="back-button">
-                <i class="fas fa-arrow-{{ 'right' if session.get('language', 'ar') == 'ar' else 'left' }}"></i>
-                {% if session.get('language', 'ar') == 'ar' %}العودة للرئيسية{% else %}Back to Dashboard{% endif %}
-            </a>
-            {% endif %}
-
             <!-- Flash Messages -->
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
@@ -757,9 +899,15 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Button System JavaScript Handlers -->
+    
+
+    <!-- Common Functions -->
+    <script src="{{ url_for('static', filename='js/common-functions.js') }}"></script>
     
     <!-- Common JavaScript -->
     <script>
@@ -1040,6 +1188,92 @@
             }
         }
 
+        // Enhanced utility functions
+        function validateForm(form) {
+            const requiredFields = form.querySelectorAll('[required]');
+            let isValid = true;
+
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+
+            return isValid;
+        }
+
+        function clearFormValidation(form) {
+            const invalidFields = form.querySelectorAll('.is-invalid');
+            invalidFields.forEach(field => {
+                field.classList.remove('is-invalid');
+            });
+
+            const errorMessages = form.querySelectorAll('.invalid-feedback');
+            errorMessages.forEach(msg => msg.remove());
+        }
+
+        function confirmAction(message, callback) {
+            if (confirm(message)) {
+                callback();
+            }
+        }
+
+        function showLoading(element, text = null) {
+            const originalText = element.innerHTML;
+            const loadingText = text || (isRTL ? 'جاري المعالجة...' : 'Processing...');
+            element.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>' + loadingText;
+            element.disabled = true;
+            element.dataset.originalText = originalText;
+        }
+
+        function hideLoading(element) {
+            if (element.dataset.originalText) {
+                element.innerHTML = element.dataset.originalText;
+                element.disabled = false;
+                delete element.dataset.originalText;
+            }
+        }
+
+        function showToast(message, type = 'info', duration = 4000) {
+            const existingToasts = document.querySelectorAll('.toast-notification');
+            existingToasts.forEach(toast => toast.remove());
+
+            const toast = document.createElement('div');
+            toast.className = `toast-notification alert alert-${type} alert-dismissible fade show`;
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                ${isRTL ? 'left' : 'right'}: 20px;
+                z-index: 9999;
+                min-width: 320px;
+                max-width: 400px;
+                box-shadow: var(--shadow-lg);
+                border-radius: var(--border-radius);
+            `;
+
+            const icons = {
+                'success': 'check-circle',
+                'danger': 'times-circle',
+                'warning': 'exclamation-triangle',
+                'info': 'info-circle',
+                'primary': 'info-circle'
+            };
+
+            toast.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-${icons[type] || 'info-circle'} me-2"></i>
+                    <div class="flex-grow-1">${message}</div>
+                    <button type="button" class="btn-close ms-2" onclick="this.parentElement.parentElement.remove()"></button>
+                </div>
+            `;
+
+            document.body.appendChild(toast);
+            setTimeout(() => { if (toast.parentNode) toast.remove(); }, duration);
+        }
+
         // Language change function
         function changeLanguage(lang) {
             fetch('/change_language', {
@@ -1058,7 +1292,205 @@
             });
         }
     </script>
-    
+
+    <!-- Advanced Auto-Save System -->
+    <script src="{{ url_for('static', filename='js/advanced-notifications.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/auto-save-system.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/batch-operations.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/undo-redo-system.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/performance-monitor.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/payment-integration.js') }}"></script></script>
+
+    <script>
+        // تفعيل نظام الحفظ التلقائي عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            // البحث عن النماذج وتفعيل الحفظ التلقائي
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                // تحديد endpoint حسب نوع النموذج
+                let endpoint = null;
+
+                if (form.id.includes('sale') || form.classList.contains('sales-form')) {
+                    endpoint = '/api/sales/create';
+                } else if (form.id.includes('purchase') || form.classList.contains('purchases-form')) {
+                    endpoint = '/api/purchases/create';
+                } else if (form.id.includes('expense') || form.classList.contains('expenses-form')) {
+                    endpoint = '/api/expenses/create';
+                } else if (form.id.includes('employee') || form.classList.contains('employees-form')) {
+                    endpoint = '/api/employees/create';
+                }
+
+                if (endpoint) {
+                    form.dataset.autoSave = endpoint;
+                    console.log(`🔄 تم تفعيل الحفظ التلقائي للنموذج: ${form.id}`);
+                }
+            });
+
+            // إظهار حالة النظام
+            showInfo('نظام الحفظ التلقائي مفعل', { duration: 2000 });
+        });
+
+        // حفظ عند الضغط على Ctrl+S
+        document.addEventListener('keydown', function(event) {
+            if (event.ctrlKey && event.key === 's') {
+                event.preventDefault();
+                saveAllFormsNow().then(() => {
+                    showSuccess('تم حفظ جميع النماذج');
+                }).catch(error => {
+                    showError('خطأ في الحفظ: ' + error.message);
+                });
+            }
+        });
+
+        // مراقبة حالة الشبكة
+        function updateNetworkStatus() {
+            const statusElement = document.getElementById('network-status');
+            if (statusElement) {
+                if (navigator.onLine) {
+                    statusElement.innerHTML = '<i class="fas fa-wifi text-success"></i>';
+                    statusElement.title = 'متصل';
+                } else {
+                    statusElement.innerHTML = '<i class="fas fa-wifi-slash text-danger"></i>';
+                    statusElement.title = 'غير متصل';
+                }
+            }
+        }
+
+        // تحديث حالة الشبكة كل 5 ثوانٍ
+        setInterval(updateNetworkStatus, 5000);
+        updateNetworkStatus();
+    </script>
+
     {% block extra_js %}{% endblock %}
+
+    <!-- نظام الربط التلقائي للمدفوعات -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // تفعيل نظام الربط التلقائي (مخفي)
+        if (typeof paymentIntegration !== 'undefined') {
+            console.log('🔗 نظام ربط المدفوعات مفعل (مخفي)');
+
+            // نظام الربط يعمل في الخلفية بدون مؤشرات بصرية
+            // مراقبة حالة الاتصال في الخلفية فقط
+            setInterval(() => {
+                fetch('/api/payments/check-updates')
+                    .then(response => {
+                        if (response.ok) {
+                            console.log('🔗 نظام المدفوعات متصل');
+                        } else {
+                            console.warn('⚠️ مشكلة في اتصال نظام المدفوعات');
+                        }
+                    })
+                    .catch(() => {
+                        console.error('❌ انقطاع في اتصال نظام المدفوعات');
+                    });
+            }, 30000); // كل 30 ثانية
+        }
+
+        // إضافة مؤشرات حالة الدفع للجداول
+        const tables = document.querySelectorAll('table');
+        tables.forEach(table => {
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                // إضافة data attributes للربط
+                const saleId = row.dataset.saleId;
+                const purchaseId = row.dataset.purchaseId;
+                const expenseId = row.dataset.expenseId;
+                const payrollId = row.dataset.payrollId;
+
+                if (saleId || purchaseId || expenseId || payrollId) {
+                    row.classList.add('payment-linked-row');
+                }
+            });
+        });
+    });
+
+    // دالة تحديث حالة الدفع في الوقت الفعلي
+    function updatePaymentStatusRealTime(type, id, status, paidAmount, totalAmount) {
+        const row = document.querySelector(`[data-${type}-id="${id}"]`);
+        if (!row) return;
+
+        // تحديث حالة الدفع
+        const statusBadge = row.querySelector('.payment-status');
+        if (statusBadge) {
+            const statusClass = status === 'paid' ? 'bg-success' :
+                               status === 'partial' ? 'bg-warning' : 'bg-danger';
+            const statusText = status === 'paid' ? 'مدفوع' :
+                              status === 'partial' ? 'جزئي' : 'غير مدفوع';
+
+            statusBadge.className = `badge payment-status ${statusClass}`;
+            statusBadge.textContent = statusText;
+        }
+
+        // تحديث المبلغ المدفوع
+        const paidCell = row.querySelector('.paid-amount');
+        if (paidCell) {
+            paidCell.textContent = new Intl.NumberFormat('ar-SA', {
+                style: 'currency',
+                currency: 'SAR'
+            }).format(paidAmount);
+        }
+
+        // تحديث المبلغ المتبقي
+        const remainingCell = row.querySelector('.remaining-amount');
+        if (remainingCell) {
+            const remaining = totalAmount - paidAmount;
+            remainingCell.textContent = new Intl.NumberFormat('ar-SA', {
+                style: 'currency',
+                currency: 'SAR'
+            }).format(remaining);
+        }
+
+        // إضافة تأثير بصري
+        row.classList.add('payment-updated');
+        setTimeout(() => {
+            row.classList.remove('payment-updated');
+        }, 2000);
+
+        // إشعار المستخدم
+        showSuccess(`تم تحديث حالة الدفع: ${statusText}`);
+    }
+    </script>
+
+    <!-- أنماط CSS للربط التلقائي -->
+    <style>
+        .payment-linked-row {
+            position: relative;
+        }
+
+        .payment-linked-row::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(45deg, #28a745, #20c997);
+        }
+
+        .payment-updated {
+            background-color: #d4edda !important;
+            transition: background-color 2s ease-out;
+        }
+
+        .payment-status {
+            position: relative;
+        }
+
+        .payment-status.updated::after {
+            content: '●';
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            color: #28a745;
+            font-size: 10px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+    </style>
 </body>
 </html>

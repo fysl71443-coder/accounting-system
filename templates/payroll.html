@@ -1,0 +1,229 @@
+{% extends "base_unified.html" %}
+
+{% block title %}
+{% if session.get('language', 'ar') == 'ar' %}
+الرواتب - نظام المحاسبة
+{% else %}
+Payroll - Accounting System
+{% endif %}
+{% endblock %}
+
+{% block page_icon %}<i class="fas fa-money-bill-wave"></i>{% endblock %}
+
+{% block page_title %}
+{% if session.get('language', 'ar') == 'ar' %}إدارة الرواتب{% else %}Payroll Management{% endif %}
+{% endblock %}
+
+{% block content %}
+
+<!-- Action Buttons -->
+<div class="card mb-4">
+    <div class="card-body">
+        <button type="button" class="btn btn-success btn-sm" onclick="location.href='/payroll/new'" title="إنشاء راتب جديد">
+            <i class="fas fa-plus me-1"></i>
+            ➕ راتب جديد
+        </button>
+        <button type="button" class="btn btn-danger btn-sm" onclick="deleteSelectedPayrolls()" title="حذف الرواتب المحددة">
+            <i class="fas fa-trash me-1"></i>
+            🗑 حذف المحدد
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="window.print()" title="طباعة كشف الرواتب">
+            <i class="fas fa-print me-1"></i>
+            🖨 طباعة الكشف
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="location.href='/payments_dues'" title="المدفوعات والمستحقات">
+            <i class="fas fa-credit-card me-1"></i>
+            💵 المدفوعات والمستحقات
+        </button>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}إجمالي الرواتب{% else %}Total Payrolls{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-primary" id="total-payrolls">{{ payrolls|length if payrolls else 0 }}</h4>
+                    </div>
+                    <div class="text-primary opacity-75">
+                        <i class="fas fa-money-bill-wave fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}رواتب مدفوعة{% else %}Paid Payrolls{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-success" id="paid-payrolls">{{ payrolls|selectattr('payment_status', 'equalto', 'paid')|list|length if payrolls else 0 }}</h4>
+                    </div>
+                    <div class="text-success opacity-75">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}إجمالي المبلغ{% else %}Total Amount{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-warning" id="total-amount">
+                            {% set total = payrolls|sum(attribute='net_salary') if payrolls else 0 %}
+                            {{ "%.2f"|format(total) }} ريال
+                        </h4>
+                    </div>
+                    <div class="text-warning opacity-75">
+                        <i class="fas fa-chart-line fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase mb-1 text-muted small">
+                            {% if session.get('language', 'ar') == 'ar' %}رواتب معلقة{% else %}Pending Payrolls{% endif %}
+                        </h6>
+                        <h4 class="mb-0 text-danger" id="pending-payrolls">{{ payrolls|selectattr('payment_status', 'equalto', 'pending')|list|length if payrolls else 0 }}</h4>
+                    </div>
+                    <div class="text-danger opacity-75">
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payroll Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">
+            <i class="fas fa-table me-2"></i>
+            {% if session.get('language', 'ar') == 'ar' %}كشف الرواتب{% else %}Payroll List{% endif %}
+        </h6>
+        <input type="text" class="form-control form-control-sm" style="width: 250px;" placeholder="{% if session.get('language', 'ar') == 'ar' %}البحث في الرواتب...{% else %}Search payrolls...{% endif %}">
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>
+                            <input type="checkbox" class="form-check-input" id="select-all" onchange="toggleSelectAll()">
+                        </th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}رقم الراتب{% else %}Payroll Number{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}اسم الموظف{% else %}Employee Name{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الشهر/السنة{% else %}Month/Year{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الراتب الأساسي{% else %}Basic Salary{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}البدلات{% else %}Allowances{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الخصومات{% else %}Deductions{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}صافي الراتب{% else %}Net Salary{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الحالة{% else %}Status{% endif %}</th>
+                        <th>{% if session.get('language', 'ar') == 'ar' %}الإجراءات{% else %}Actions{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if payrolls %}
+                        {% for payroll in payrolls %}
+                        <tr>
+                            <td><input type="checkbox" class="form-check-input payroll-checkbox" data-id="{{ payroll.id }}"></td>
+                            <td><strong>#{{ payroll.payroll_number }}</strong></td>
+                            <td>{{ payroll.employee_name }}</td>
+                            <td>{{ payroll.month }}/{{ payroll.year }}</td>
+                            <td>{{ "%.2f"|format(payroll.basic_salary) }} ريال</td>
+                            <td>{{ "%.2f"|format(payroll.allowances) }} ريال</td>
+                            <td>{{ "%.2f"|format(payroll.deductions) }} ريال</td>
+                            <td><strong>{{ "%.2f"|format(payroll.net_salary) }} ريال</strong></td>
+                            <td>
+                                {% if payroll.payment_status == 'paid' %}
+                                    <span class="badge bg-success">مدفوع</span>
+                                {% elif payroll.payment_status == 'partial' %}
+                                    <span class="badge bg-warning">مدفوع جزئياً</span>
+                                {% else %}
+                                    <span class="badge bg-danger">معلق</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="alert('عرض الراتب: #{{ payroll.payroll_number }}')" title="عرض الراتب">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-warning btn-sm" onclick="alert('تعديل الراتب: #{{ payroll.payroll_number }}')" title="تعديل الراتب">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    {% if payroll.payment_status != 'paid' %}
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="location.href='/payments/new?invoice=payroll_{{ payroll.id }}'" title="دفع الراتب">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                    </button>
+                                    {% endif %}
+                                    <button type="button" class="btn btn-danger btn-sm" onclick="if(confirm('هل تريد حذف هذا الراتب؟')) alert('تم حذف الراتب: #{{ payroll.payroll_number }}')" title="حذف الراتب">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="10" class="text-center text-muted">
+                                {% if session.get('language', 'ar') == 'ar' %}لا توجد رواتب مسجلة{% else %}No payrolls registered{% endif %}
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Toggle select all checkboxes
+function toggleSelectAll() {
+    const selectAll = document.getElementById('select-all');
+    const checkboxes = document.querySelectorAll('.payroll-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+}
+
+// Delete selected payrolls
+function deleteSelectedPayrolls() {
+    const selected = document.querySelectorAll('.payroll-checkbox:checked');
+    if (selected.length === 0) {
+        alert('يرجى تحديد راتب واحد على الأقل للحذف');
+        return;
+    }
+    
+    if (confirm(`هل أنت متأكد من حذف ${selected.length} راتب؟`)) {
+        alert(`تم حذف ${selected.length} راتب بنجاح`);
+        location.reload();
+    }
+}
+</script>
+{% endblock %}

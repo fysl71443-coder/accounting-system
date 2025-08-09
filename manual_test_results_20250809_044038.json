@@ -1,0 +1,118 @@
+{
+  "sales": {
+    "btnSalesPrint": {
+      "button_exists": true,
+      "onclick_exists": true,
+      "function_defined": true,
+      "function_complete": true,
+      "score": 100
+    },
+    "btnSalesPreview": {
+      "button_exists": true,
+      "onclick_exists": true,
+      "function_defined": true,
+      "function_complete": true,
+      "score": 100
+    },
+    "btnSalesPayment": {
+      "button_exists": true,
+      "onclick_exists": true,
+      "function_defined": true,
+      "function_complete": true,
+      "score": 100
+    },
+    "btnSalesEdit": {
+      "button_exists": true,
+      "onclick_exists": true,
+      "function_defined": true,
+      "function_complete": true,
+      "score": 100
+    },
+    "btnSalesDelete": {
+      "button_exists": true,
+      "onclick_exists": true,
+      "function_defined": true,
+      "function_complete": true,
+      "score": 100
+    }
+  },
+  "purchases": {
+    "btnPurchasesPrint": {
+      "button_exists": true,
+      "onclick_exists": true,
+      "function_defined": true,
+      "function_complete": true,
+      "score": 100
+    },
+    "btnPurchasesPreview": {
+      "button_exists": true,
+      "onclick_exists": true,
+      "function_defined": true,
+      "function_complete": true,
+      "score": 100
+    },
+    "btnPurchasesPayment": {
+      "button_exists": true,
+      "onclick_exists": true,
+      "function_defined": true,
+      "function_complete": true,
+      "score": 100
+    },
+    "btnPurchasesEdit": {
+      "button_exists": true,
+      "onclick_exists": true,
+      "function_defined": true,
+      "function_complete": true,
+      "score": 100
+    },
+    "btnPurchasesDelete": {
+      "button_exists": true,
+      "onclick_exists": true,
+      "function_defined": true,
+      "function_complete": true,
+      "score": 100
+    }
+  },
+  "expenses": {
+    "btnExpensesPrint": {
+      "button_exists": true,
+      "onclick_exists": true,
+      "function_defined": false,
+      "function_complete": false,
+      "score": 50
+    },
+    "btnExpensesPreview": {
+      "button_exists": true,
+      "onclick_exists": true,
+      "function_defined": false,
+      "function_complete": false,
+      "score": 50
+    },
+    "btnExpensesPayment": {
+      "button_exists": true,
+      "onclick_exists": true,
+      "function_defined": false,
+      "function_complete": false,
+      "score": 50
+    },
+    "btnExpensesEdit": {
+      "button_exists": true,
+      "onclick_exists": true,
+      "function_defined": false,
+      "function_complete": false,
+      "score": 50
+    },
+    "btnExpensesDelete": {
+      "button_exists": true,
+      "onclick_exists": true,
+      "function_defined": false,
+      "function_complete": false,
+      "score": 50
+    }
+  },
+  "api": {
+    "/api/sales/delete/999": false,
+    "/api/purchases/delete/999": false,
+    "/api/expenses/delete/999": false
+  }
+}

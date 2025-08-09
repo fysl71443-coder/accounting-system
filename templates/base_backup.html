@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="{{ session.get('language', 'ar') }}" dir="{{ 'rtl' if session.get('language', 'ar') == 'ar' else 'ltr' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}نظام المحاسبة المتكامل{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap RTL for Arabic -->
+    {% if session.get('language', 'ar') == 'ar' %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    {% endif %}
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --success-color: #059669;
+            --danger-color: #dc2626;
+            --warning-color: #d97706;
+            --info-color: #0891b2;
+            --light-color: #f8fafc;
+            --dark-color: #1e293b;
+        }
+        
+        body {
+            font-family: {% if session.get('language', 'ar') == 'ar' %}'Cairo', sans-serif{% else %}'Inter', sans-serif{% endif %};
+            background-color: var(--light-color);
+            direction: {{ 'rtl' if session.get('language', 'ar') == 'ar' else 'ltr' }};
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary-color) !important;
+        }
+        
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            margin: 5px 10px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+            transform: translateX({{ '5px' if session.get('language', 'ar') == 'ar' else '-5px' }});
+        }
+
+        .sidebar .nav-link.unified-products {
+            background: linear-gradient(135deg, rgba(255,193,7,0.25), rgba(255,152,0,0.15));
+            border: 2px solid rgba(255,193,7,0.4);
+            border-radius: 12px;
+            margin: 10px;
+            padding: 15px !important;
+            box-shadow: 0 4px 15px rgba(255,193,7,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar .nav-link.unified-products::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s;
+        }
+
+        .sidebar .nav-link.unified-products:hover::before {
+            transform: translateX(100%);
+        }
+
+        .sidebar .nav-link.unified-products:hover {
+            background: linear-gradient(135deg, rgba(255,193,7,0.35), rgba(255,152,0,0.25));
+            border-color: rgba(255,193,7,0.6);
+            transform: translateX({{ '10px' if session.get('language', 'ar') == 'ar' else '-10px' }}) scale(1.02);
+            box-shadow: 0 6px 20px rgba(255,193,7,0.3);
+        }
+
+        .sidebar .nav-link.unified-products.active {
+            background: linear-gradient(135deg, rgba(255,193,7,0.4), rgba(255,152,0,0.3));
+            border-color: rgba(255,193,7,0.8);
+            box-shadow: 0 8px 25px rgba(255,193,7,0.4);
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        .main-content {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin: 20px;
+            padding: 30px;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .btn {
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 10px 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+        }
+        
+        .table {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .table thead th {
+            background: linear-gradient(135deg, var(--primary-color), #1d4ed8);
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+        
+        .alert {
+            border: none;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+        }
+        
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        
+        .stats-card.success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        
+        .stats-card.warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .stats-card.info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .language-switcher {
+            position: fixed;
+            top: 20px;
+            {{ 'left' if session.get('language', 'ar') == 'ar' else 'right' }}: 20px;
+            z-index: 1050;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: {{ '0' if session.get('language', 'ar') == 'ar' else '-250px' }};
+                width: 250px;
+                z-index: 1040;
+                transition: left 0.3s ease;
+            }
+            
+            .sidebar.show {
+                left: 0;
+            }
+            
+            .main-content {
+                margin: 10px;
+                padding: 20px;
+            }
+        }
+    
+        /* إصلاح القائمة الجانبية - ضمان الظهور */
+        .sidebar {
+            min-height: 100vh !important;
+            background: linear-gradient(135deg, var(--primary-color), #1d4ed8) !important;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1) !important;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: relative !important;
+            z-index: 1000 !important;
+        }
+        
+        /* إجبار ظهور القائمة الجانبية على جميع الأحجام */
+        @media (min-width: 768px) {
+            .sidebar {
+                display: block !important;
+                position: static !important;
+                width: auto !important;
+            }
+        }
+        
+        /* إصلاح للشاشات الصغيرة */
+        @media (max-width: 767px) {
+            .sidebar {
+                position: fixed !important;
+                top: 0 !important;
+                right: 0 !important;
+                width: 250px !important;
+                z-index: 1040 !important;
+                transform: translateX(0) !important;
+            }
+            
+            .sidebar.show {
+                display: block !important;
+            }
+        }
+        
+        /* إصلاح روابط القائمة الجانبية */
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8) !important;
+            padding: 12px 20px !important;
+            margin: 5px 10px !important;
+            border-radius: 8px !important;
+            transition: all 0.3s ease !important;
+            display: flex !important;
+            align-items: center !important;
+            text-decoration: none !important;
+        }
+        
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background-color: rgba(255,255,255,0.1) !important;
+            color: white !important;
+            transform: translateX(5px) !important;
+        }
+
+        /* إصلاح الشاشة الموحدة المميزة */
+        .sidebar .nav-link.unified-products {
+            background: linear-gradient(135deg, rgba(255,193,7,0.25), rgba(255,152,0,0.15)) !important;
+            border: 2px solid rgba(255,193,7,0.4) !important;
+            border-radius: 12px !important;
+            margin: 10px !important;
+            padding: 15px !important;
+            box-shadow: 0 4px 15px rgba(255,193,7,0.2) !important;
+            position: relative !important;
+            overflow: hidden !important;
+        }
+
+        /* تأثير النبض */
+        .pulse {
+            animation: pulse 2s infinite !important;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        /* إصلاح المحتوى الرئيسي */
+        .main-content {
+            margin-right: 0 !important;
+            padding: 20px !important;
+        }
+        
+        /* إجبار ظهور العناصر */
+        .nav-item {
+            display: block !important;
+        }
+        
+        .nav-item .nav-link {
+            display: flex !important;
+            visibility: visible !important;
+        }
+    
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Language Switcher -->
+    <div class="language-switcher">
+        <div class="btn-group">
+            <a href="?lang=ar" class="btn btn-sm btn-outline-primary {{ 'active' if session.get('language', 'ar') == 'ar' else '' }}">
+                العربية
+            </a>
+            <a href="?lang=en" class="btn btn-sm btn-outline-primary {{ 'active' if session.get('language', 'ar') == 'ar' == 'en' else '' }}">
+                English
+            </a>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            {% if session.get('user_id') or request.endpoint in ['dashboard', 'unified_products', 'new_sale', 'sales'] %}
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <div class="text-center mb-4">
+                        <h4 class="text-white">
+                            <i class="fas fa-calculator me-2"></i>
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                نظام المحاسبة
+                            {% else %}
+                                Accounting System
+                            {% endif %}
+                        </h4>
+                        <small class="text-white-50">
+                            {% if session.get('language', 'ar') == 'ar' %}
+                                مرحباً {{ session.get('full_name', 'المستخدم') }}
+                            {% else %}
+                                Welcome {{ session.get('full_name', 'User') }}
+                            {% endif %}
+                        </small>
+                    </div>
+                    
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if request.endpoint == 'dashboard' else '' }}" href="{{ url_for('dashboard') }}">
+                                <i class="fas fa-tachometer-alt me-2"></i>
+                                {% if session.get('language', 'ar') == 'ar' %}لوحة التحكم{% else %}Dashboard{% endif %}
+                            </a>
+                        </li>
+
+                        <!-- الشاشات الجديدة -->
+                        <li class="nav-item">
+                            <hr class="text-white-50 my-2">
+                            <small class="text-white-50 px-3">
+                                {% if session.get('language', 'ar') == 'ar' %}الشاشات المتقدمة{% else %}Advanced Screens{% endif %}
+                            </small>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link unified-products {{ 'active' if request.endpoint == 'unified_products' else '' }}" href="{{ url_for('unified_products') }}">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-cogs me-2 text-warning fs-5"></i>
+                                    <div class="flex-grow-1">
+                                        <span class="fw-bold text-warning d-block">
+                                            {% if session.get('language', 'ar') == 'ar' %}🌟 إدارة المنتجات والتكاليف{% else %}🌟 Products & Costing{% endif %}
+                                        </span>
+                                        <small class="text-white-50">
+                                            {% if session.get('language', 'ar') == 'ar' %}شاشة موحدة متكاملة{% else %}Integrated unified screen{% endif %}
+                                        </small>
+                                    </div>
+                                    <span class="badge bg-success ms-2 pulse">
+                                        {% if session.get('language', 'ar') == 'ar' %}جديد{% else %}NEW{% endif %}
+                                    </span>
+                                </div>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <hr class="text-white-50 my-2">
+                            <small class="text-white-50 px-3">
+                                {% if session.get('language', 'ar') == 'ar' %}الشاشات الأساسية{% else %}Basic Screens{% endif %}
+                            </small>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if request.endpoint == 'new_sale' else '' }}" href="{{ url_for('new_sale') }}">
+                                <i class="fas fa-plus-circle me-2"></i>
+                                {% if session.get('language', 'ar') == 'ar' %}فاتورة جديدة{% else %}New Invoice{% endif %}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if request.endpoint == 'sales' else '' }}" href="{{ url_for('sales') }}">
+                                <i class="fas fa-shopping-cart me-2"></i>
+                                {% if session.get('language', 'ar') == 'ar' %}المبيعات{% else %}Sales{% endif %}
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-truck me-2"></i>
+                                {% if session.get('language', 'ar') == 'ar' %}الموردين{% else %}Suppliers{% endif %}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-users me-2"></i>
+                                {% if session.get('language', 'ar') == 'ar' %}العملاء{% else %}Customers{% endif %}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-chart-bar me-2"></i>
+                                {% if session.get('language', 'ar') == 'ar' %}التقارير{% else %}Reports{% endif %}
+                            </a>
+                        </li>
+                        <li class="nav-item mt-3">
+                            <a class="nav-link text-warning" href="{{ url_for('logout') }}">
+                                <i class="fas fa-sign-out-alt me-2"></i>
+                                {% if session.get('language', 'ar') == 'ar' %}تسجيل الخروج{% else %}Logout{% endif %}
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+            {% endif %}
+
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                {% if session.get('user_id') or request.endpoint in ['dashboard', 'unified_products', 'new_sale', 'sales'] %}
+                <div class="main-content">
+                {% endif %}
+                
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+                
+                {% if session.get('user_id') or request.endpoint in ['dashboard', 'unified_products', 'new_sale', 'sales'] %}
+                </div>
+                {% endif %}
+            </main>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script>
+        // Language switching
+        document.addEventListener('DOMContentLoaded', function() {
+            const langButtons = document.querySelectorAll('.language-switcher a');
+            langButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const lang = this.href.split('lang=')[1];
+                    
+                    // Send AJAX request to change language
+                    fetch('/change_language', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({language: lang})
+                    }).then(() => {
+                        location.reload();
+                    });
+                });
+            });
+        });
+        
+        // Auto-hide alerts
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                if (alert.classList.contains('alert-success') || alert.classList.contains('alert-info')) {
+                    alert.style.transition = 'opacity 0.5s';
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.remove(), 500);
+                }
+            });
+        }, 3000);
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+
+    <script>
+        // إجبار ظهور القائمة الجانبية
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔧 تشغيل إصلاح القائمة الجانبية...');
+            
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) {
+                // إجبار ظهور القائمة الجانبية
+                sidebar.style.display = 'block';
+                sidebar.style.visibility = 'visible';
+                sidebar.style.opacity = '1';
+                
+                console.log('✅ تم إجبار ظهور القائمة الجانبية');
+                
+                // إضافة معالج للنقر على الروابط
+                const navLinks = sidebar.querySelectorAll('.nav-link');
+                navLinks.forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        // إزالة active من جميع الروابط
+                        navLinks.forEach(l => l.classList.remove('active'));
+                        // إضافة active للرابط المنقور
+                        this.classList.add('active');
+                    });
+                });
+                
+                // إضافة تأثير hover محسن
+                navLinks.forEach(link => {
+                    link.addEventListener('mouseenter', function() {
+                        this.style.transform = 'translateX(5px)';
+                    });
+                    
+                    link.addEventListener('mouseleave', function() {
+                        if (!this.classList.contains('active')) {
+                            this.style.transform = 'translateX(0)';
+                        }
+                    });
+                });
+            } else {
+                console.warn('⚠️ لم يتم العثور على القائمة الجانبية');
+            }
+            
+            // إضافة زر toggle للشاشات الصغيرة
+            const toggleButton = document.createElement('button');
+            toggleButton.className = 'btn btn-primary d-md-none position-fixed';
+            toggleButton.style.cssText = 'top: 10px; right: 10px; z-index: 1050;';
+            toggleButton.innerHTML = '<i class="fas fa-bars"></i>';
+            toggleButton.onclick = function() {
+                if (sidebar) {
+                    sidebar.classList.toggle('show');
+                }
+            };
+            document.body.appendChild(toggleButton);
+        });
+        
+        // إصلاح مشاكل التحميل
+        window.addEventListener('load', function() {
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) {
+                sidebar.style.display = 'block';
+                console.log('✅ تأكيد ظهور القائمة الجانبية بعد التحميل');
+            }
+        });
+    </script>
+    
+</body>
+</html>

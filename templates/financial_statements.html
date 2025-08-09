@@ -1,71 +1,29 @@
-{% extends "base_simple_test.html" %}
+{% extends "base_unified.html" %}
 
 {% block title %}
-    {% if session.get('language', 'ar') == 'ar' %}
-        القوائم المالية
-    {% else %}
-        Financial Statements
-    {% endif %}
+{% if session.get('language', 'ar') == 'ar' %}
+القوائم المالية - نظام المحاسبة
+{% else %}
+Financial Statements - Accounting System
+{% endif %}
+{% endblock %}
+
+{% block page_icon %}<i class="fas fa-chart-line"></i>{% endblock %}
+
+{% block page_title %}
+{% if session.get('language', 'ar') == 'ar' %}القوائم المالية{% else %}Financial Statements{% endif %}
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid" id="financial-statements-page">
-    <!-- Page Header -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">
-            {% if session.get('language', 'ar') == 'ar' %}
-                <i class="fas fa-chart-line"></i> القوائم المالية الرسمية
-            {% else %}
-                <i class="fas fa-chart-line"></i> Official Financial Statements
-            {% endif %}
-        </h1>
-        <div class="alert alert-info alert-sm mb-0">
-            <small>
-                {% if session.get('language', 'ar') == 'ar' %}
-                    <i class="fas fa-info-circle"></i> هذه هي شاشة القوائم المالية الرسمية (قائمة الدخل، الميزانية العمومية، التدفقات النقدية)
-                {% else %}
-                    <i class="fas fa-info-circle"></i> This is the Official Financial Statements page (Income Statement, Balance Sheet, Cash Flow)
-                {% endif %}
-            </small>
-        </div>
-        <div class="btn-group" role="group">
-            <button type="button" class="btn btn-primary" id="generate-btn" onclick="generateStatements()">
-                {% if session.get('language', 'ar') == 'ar' %}
-                    <i class="fas fa-calculator"></i> توليد التقارير
-                {% else %}
-                    <i class="fas fa-calculator"></i> Generate Reports
-                {% endif %}
-            </button>
-            <button type="button" class="btn btn-success" onclick="exportToPDF()">
-                {% if session.get('language', 'ar') == 'ar' %}
-                    <i class="fas fa-file-pdf"></i> تصدير PDF
-                {% else %}
-                    <i class="fas fa-file-pdf"></i> Export PDF
-                {% endif %}
-            </button>
-            <button type="button" class="btn btn-info" onclick="exportToExcel()">
-                {% if session.get('language', 'ar') == 'ar' %}
-                    <i class="fas fa-file-excel"></i> تصدير Excel
-                {% else %}
-                    <i class="fas fa-file-excel"></i> Export Excel
-                {% endif %}
-            </button>
-            <button type="button" class="btn btn-secondary" onclick="printStatements()">
-                {% if session.get('language', 'ar') == 'ar' %}
-                    <i class="fas fa-print"></i> طباعة
-                {% else %}
-                    <i class="fas fa-print"></i> Print
-                {% endif %}
-            </button>
-            <button type="button" class="btn btn-warning" onclick="testFunction()">
-                {% if session.get('language', 'ar') == 'ar' %}
-                    <i class="fas fa-bug"></i> اختبار
-                {% else %}
-                    <i class="fas fa-bug"></i> Test
-                {% endif %}
-            </button>
-        </div>
-    </div>
+<!-- Info Alert -->
+<div class="alert alert-info mb-4">
+    <i class="fas fa-info-circle me-2"></i>
+    {% if session.get('language', 'ar') == 'ar' %}
+        هذه هي شاشة القوائم المالية الرسمية (قائمة الدخل، الميزانية العمومية، التدفقات النقدية)
+    {% else %}
+        This is the Official Financial Statements page (Income Statement, Balance Sheet, Cash Flow)
+    {% endif %}
+</div>
 
     <!-- Filters and Controls -->
     <div class="row mb-4">
@@ -438,42 +396,15 @@ function updateDateRange() {
     }
 }
 
-// Load accounts data (sample data)
+// Load accounts data from database
 function loadAccountsData() {
-    // Sample chart of accounts
+    // Initialize empty financial data structure
     financialData = {
-        accounts: {
-            // Assets
-            cash: { name_ar: 'النقدية', name_en: 'Cash', type: 'asset', balance: 45000.00 },
-            bank: { name_ar: 'البنك', name_en: 'Bank', type: 'asset', balance: 125000.00 },
-            accounts_receivable: { name_ar: 'حسابات العملاء', name_en: 'Accounts Receivable', type: 'asset', balance: 35000.00 },
-            inventory: { name_ar: 'المخزون', name_en: 'Inventory', type: 'asset', balance: 85000.00 },
-            equipment: { name_ar: 'المعدات', name_en: 'Equipment', type: 'asset', balance: 150000.00 },
-            furniture: { name_ar: 'الأثاث', name_en: 'Furniture', type: 'asset', balance: 25000.00 },
-
-            // Liabilities
-            accounts_payable: { name_ar: 'حسابات الموردين', name_en: 'Accounts Payable', type: 'liability', balance: 28000.00 },
-            salaries_payable: { name_ar: 'الرواتب المستحقة', name_en: 'Salaries Payable', type: 'liability', balance: 15000.00 },
-            vat_payable: { name_ar: 'ضريبة القيمة المضافة المستحقة', name_en: 'VAT Payable', type: 'liability', balance: 8500.00 },
-            loans: { name_ar: 'القروض', name_en: 'Loans', type: 'liability', balance: 75000.00 },
-
-            // Equity
-            capital: { name_ar: 'رأس المال', name_en: 'Capital', type: 'equity', balance: 200000.00 },
-            retained_earnings: { name_ar: 'الأرباح المرحلة', name_en: 'Retained Earnings', type: 'equity', balance: 89500.00 },
-
-            // Revenue
-            sales_revenue: { name_ar: 'إيرادات المبيعات', name_en: 'Sales Revenue', type: 'revenue', balance: 180000.00 },
-            other_income: { name_ar: 'إيرادات أخرى', name_en: 'Other Income', type: 'revenue', balance: 5000.00 },
-
-            // Expenses
-            cost_of_goods: { name_ar: 'تكلفة البضاعة المباعة', name_en: 'Cost of Goods Sold', type: 'expense', balance: 95000.00 },
-            salaries_expense: { name_ar: 'مصروف الرواتب', name_en: 'Salaries Expense', type: 'expense', balance: 45000.00 },
-            rent_expense: { name_ar: 'مصروف الإيجار', name_en: 'Rent Expense', type: 'expense', balance: 18000.00 },
-            utilities_expense: { name_ar: 'مصروف الكهرباء والماء', name_en: 'Utilities Expense', type: 'expense', balance: 8500.00 },
-            marketing_expense: { name_ar: 'مصروف التسويق', name_en: 'Marketing Expense', type: 'expense', balance: 6000.00 },
-            depreciation_expense: { name_ar: 'مصروف الإهلاك', name_en: 'Depreciation Expense', type: 'expense', balance: 12000.00 }
-        }
+        accounts: {}
     };
+
+    // TODO: Load real data from database via API
+    // This should fetch actual account balances from the accounting system
 }
 
 // Generate financial statements

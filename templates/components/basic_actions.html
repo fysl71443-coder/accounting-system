@@ -1,0 +1,26 @@
+<!-- مكون الأزرار الأساسية المشتركة -->
+<div class="btn-group" role="group">
+    <!-- زر الحفظ -->
+    <button type="button" class="btn btn-success btn-sm" onclick="{{ save_function|default('saveData()') }}">
+        <i class="fas fa-save me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}حفظ{% else %}Save{% endif %}
+    </button>
+    
+    <!-- زر التحديث -->
+    <button type="button" class="btn btn-info btn-sm" onclick="{{ refresh_function|default('refreshData()') }}">
+        <i class="fas fa-sync-alt me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تحديث{% else %}Refresh{% endif %}
+    </button>
+    
+    <!-- زر التصدير -->
+    <button type="button" class="btn btn-secondary btn-sm" onclick="{{ export_function|default('exportData()') }}">
+        <i class="fas fa-download me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تصدير{% else %}Export{% endif %}
+    </button>
+    
+    <!-- زر الطباعة -->
+    <button type="button" class="btn btn-primary btn-sm" onclick="{{ print_function|default('printReport()') }}">
+        <i class="fas fa-print me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}طباعة{% else %}Print{% endif %}
+    </button>
+</div>
