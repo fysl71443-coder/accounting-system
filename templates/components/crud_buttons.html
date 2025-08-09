@@ -1,0 +1,192 @@
+<!-- مكون أزرار CRUD الموحد -->
+<!-- Unified CRUD Buttons Component -->
+
+{% macro crud_buttons(
+    show_add=true, 
+    show_edit=true, 
+    show_delete=true, 
+    show_save=true, 
+    show_cancel=true,
+    add_text={'ar': 'إضافة', 'en': 'Add'},
+    edit_text={'ar': 'تعديل', 'en': 'Edit'},
+    delete_text={'ar': 'حذف', 'en': 'Delete'},
+    save_text={'ar': 'حفظ', 'en': 'Save'},
+    cancel_text={'ar': 'إلغاء', 'en': 'Cancel'},
+    add_onclick='addNew()',
+    edit_onclick='editSelected()',
+    delete_onclick='deleteSelected()',
+    save_onclick='saveData()',
+    cancel_onclick='cancelOperation()',
+    button_size='btn-sm'
+) %}
+
+<div class="btn-group" role="group">
+    {% if show_add %}
+    <button type="button" class="btn btn-success {{ button_size }}" onclick="{{ add_onclick }}" title="{{ add_text.ar if session.get('language', 'ar') == 'ar' else add_text.en }}">
+        <i class="fas fa-plus me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}{{ add_text.ar }}{% else %}{{ add_text.en }}{% endif %}
+    </button>
+    {% endif %}
+    
+    {% if show_edit %}
+    <button type="button" class="btn btn-warning {{ button_size }}" onclick="{{ edit_onclick }}" title="{{ edit_text.ar if session.get('language', 'ar') == 'ar' else edit_text.en }}">
+        <i class="fas fa-edit me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}{{ edit_text.ar }}{% else %}{{ edit_text.en }}{% endif %}
+    </button>
+    {% endif %}
+    
+    {% if show_delete %}
+    <button type="button" class="btn btn-danger {{ button_size }}" onclick="{{ delete_onclick }}" title="{{ delete_text.ar if session.get('language', 'ar') == 'ar' else delete_text.en }}">
+        <i class="fas fa-trash me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}{{ delete_text.ar }}{% else %}{{ delete_text.en }}{% endif %}
+    </button>
+    {% endif %}
+    
+    {% if show_save %}
+    <button type="button" class="btn btn-primary {{ button_size }}" onclick="{{ save_onclick }}" title="{{ save_text.ar if session.get('language', 'ar') == 'ar' else save_text.en }}">
+        <i class="fas fa-save me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}{{ save_text.ar }}{% else %}{{ save_text.en }}{% endif %}
+    </button>
+    {% endif %}
+    
+    {% if show_cancel %}
+    <button type="button" class="btn btn-secondary {{ button_size }}" onclick="{{ cancel_onclick }}" title="{{ cancel_text.ar if session.get('language', 'ar') == 'ar' else cancel_text.en }}">
+        <i class="fas fa-times me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}{{ cancel_text.ar }}{% else %}{{ cancel_text.en }}{% endif %}
+    </button>
+    {% endif %}
+</div>
+
+{% endmacro %}
+
+<!-- أزرار إدارة البيانات الأساسية -->
+{% macro data_management_buttons(
+    add_onclick='addNew()',
+    edit_onclick='editSelected()',
+    delete_onclick='deleteSelected()',
+    refresh_onclick='refreshData()',
+    export_onclick='exportData()'
+) %}
+
+<div class="btn-toolbar mb-3" role="toolbar">
+    <div class="btn-group me-2" role="group">
+        <button type="button" class="btn btn-success btn-sm" onclick="{{ add_onclick }}">
+            <i class="fas fa-plus me-1"></i>
+            {% if session.get('language', 'ar') == 'ar' %}إضافة{% else %}Add{% endif %}
+        </button>
+        
+        <button type="button" class="btn btn-warning btn-sm" onclick="{{ edit_onclick }}">
+            <i class="fas fa-edit me-1"></i>
+            {% if session.get('language', 'ar') == 'ar' %}تعديل{% else %}Edit{% endif %}
+        </button>
+        
+        <button type="button" class="btn btn-danger btn-sm" onclick="{{ delete_onclick }}">
+            <i class="fas fa-trash me-1"></i>
+            {% if session.get('language', 'ar') == 'ar' %}حذف{% else %}Delete{% endif %}
+        </button>
+    </div>
+    
+    <div class="btn-group me-2" role="group">
+        <button type="button" class="btn btn-info btn-sm" onclick="{{ refresh_onclick }}">
+            <i class="fas fa-sync-alt me-1"></i>
+            {% if session.get('language', 'ar') == 'ar' %}تحديث{% else %}Refresh{% endif %}
+        </button>
+        
+        <button type="button" class="btn btn-secondary btn-sm" onclick="{{ export_onclick }}">
+            <i class="fas fa-download me-1"></i>
+            {% if session.get('language', 'ar') == 'ar' %}تصدير{% else %}Export{% endif %}
+        </button>
+    </div>
+</div>
+
+{% endmacro %}
+
+<!-- أزرار النماذج (Modal) -->
+{% macro modal_buttons(
+    show_save=true,
+    show_cancel=true,
+    save_onclick='saveData()',
+    cancel_onclick='',
+    save_text={'ar': 'حفظ', 'en': 'Save'},
+    cancel_text={'ar': 'إلغاء', 'en': 'Cancel'}
+) %}
+
+<div class="modal-footer">
+    {% if show_cancel %}
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="{{ cancel_onclick }}">
+        {% if session.get('language', 'ar') == 'ar' %}{{ cancel_text.ar }}{% else %}{{ cancel_text.en }}{% endif %}
+    </button>
+    {% endif %}
+    
+    {% if show_save %}
+    <button type="button" class="btn btn-primary" onclick="{{ save_onclick }}">
+        {% if session.get('language', 'ar') == 'ar' %}{{ save_text.ar }}{% else %}{{ save_text.en }}{% endif %}
+    </button>
+    {% endif %}
+</div>
+
+{% endmacro %}
+
+<!-- أزرار الإعدادات -->
+{% macro settings_buttons(
+    save_onclick='saveAllSettings()',
+    reset_onclick='resetSettings()',
+    export_onclick='exportSettings()',
+    import_onclick='importSettings()'
+) %}
+
+<div class="btn-group" role="group">
+    <button type="button" class="btn btn-success" onclick="{{ save_onclick }}">
+        <i class="fas fa-save me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}حفظ جميع الإعدادات{% else %}Save All Settings{% endif %}
+    </button>
+    
+    <button type="button" class="btn btn-warning" onclick="{{ reset_onclick }}">
+        <i class="fas fa-undo me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}إعادة تعيين{% else %}Reset{% endif %}
+    </button>
+    
+    <button type="button" class="btn btn-info" onclick="{{ export_onclick }}">
+        <i class="fas fa-download me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تصدير الإعدادات{% else %}Export Settings{% endif %}
+    </button>
+    
+    <button type="button" class="btn btn-secondary" onclick="{{ import_onclick }}">
+        <i class="fas fa-upload me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}استيراد الإعدادات{% else %}Import Settings{% endif %}
+    </button>
+</div>
+
+{% endmacro %}
+
+<!-- أزرار التقارير -->
+{% macro report_buttons(
+    preview_onclick='previewReport()',
+    print_onclick='printReport()',
+    export_onclick='exportReport()',
+    email_onclick='emailReport()'
+) %}
+
+<div class="btn-group" role="group">
+    <button type="button" class="btn btn-primary" onclick="{{ preview_onclick }}">
+        <i class="fas fa-eye me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}معاينة{% else %}Preview{% endif %}
+    </button>
+    
+    <button type="button" class="btn btn-success" onclick="{{ print_onclick }}">
+        <i class="fas fa-print me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}طباعة{% else %}Print{% endif %}
+    </button>
+    
+    <button type="button" class="btn btn-info" onclick="{{ export_onclick }}">
+        <i class="fas fa-file-export me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تصدير{% else %}Export{% endif %}
+    </button>
+    
+    <button type="button" class="btn btn-secondary" onclick="{{ email_onclick }}">
+        <i class="fas fa-envelope me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}إرسال بالبريد{% else %}Email{% endif %}
+    </button>
+</div>
+
+{% endmacro %}

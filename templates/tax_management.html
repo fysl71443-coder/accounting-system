@@ -14,6 +14,23 @@ Tax Management - Accounting System
 {% if session.get('language', 'ar') == 'ar' %}إدارة الضرائب{% else %}Tax Management{% endif %}
 {% endblock %}
 
+{% block page_actions %}
+<div class="btn-group">
+    <button type="button" class="btn btn-primary" onclick="addNewTax()">
+        <i class="fas fa-plus me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}إضافة ضريبة جديدة{% else %}Add New Tax{% endif %}
+    </button>
+    <button type="button" class="btn btn-success" onclick="saveTaxSettings()">
+        <i class="fas fa-save me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}حفظ الإعدادات{% else %}Save Settings{% endif %}
+    </button>
+    <button type="button" class="btn btn-info" onclick="generateTaxReport()">
+        <i class="fas fa-file-alt me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تقرير الضرائب{% else %}Tax Report{% endif %}
+    </button>
+</div>
+{% endblock %}
+
 {% block content %}
 <!-- Tax Statistics -->
 <div class="row g-3 mb-4">

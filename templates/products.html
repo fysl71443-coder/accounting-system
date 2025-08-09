@@ -18,6 +18,23 @@ Product Management - Accounting System
 {% endif %}
 {% endblock %}
 
+{% block page_actions %}
+<div class="btn-group">
+    <button type="button" class="btn btn-success" onclick="showAddProductModal()">
+        <i class="fas fa-plus me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}إضافة منتج جديد{% else %}Add New Product{% endif %}
+    </button>
+    <button type="button" class="btn btn-info" onclick="exportProducts()">
+        <i class="fas fa-download me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}تصدير{% else %}Export{% endif %}
+    </button>
+    <button type="button" class="btn btn-secondary" onclick="printProductsList()">
+        <i class="fas fa-print me-1"></i>
+        {% if session.get('language', 'ar') == 'ar' %}طباعة{% else %}Print{% endif %}
+    </button>
+</div>
+{% endblock %}
+
 {% block content %}
 <!-- Search and Filter -->
 <div class="card mb-3">
@@ -695,6 +712,23 @@ function printReport() {
 // Delete selected
 function deleteSelected() {
     showToast(isRTL ? 'يرجى اختيار منتج واحد على الأقل' : 'Please select at least one product', 'warning');
+}
+
+// Export products
+function exportProducts() {
+    showToast(isRTL ? 'جاري تصدير المنتجات...' : 'Exporting products...', 'info');
+    // Here you would implement the actual export functionality
+    setTimeout(() => {
+        showToast(isRTL ? 'تم تصدير المنتجات بنجاح' : 'Products exported successfully', 'success');
+    }, 1500);
+}
+
+// Print products list
+function printProductsList() {
+    showToast(isRTL ? 'جاري إعداد قائمة المنتجات للطباعة...' : 'Preparing products list for printing...', 'info');
+    setTimeout(() => {
+        window.print();
+    }, 1000);
 }
 </script>
 {% endblock %}

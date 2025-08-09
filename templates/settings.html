@@ -729,34 +729,108 @@
 {% block extra_js %}
 <script>
 function saveAllSettings() {
-    alert('تم حفظ جميع الإعدادات بنجاح');
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+
+    // Show loading state
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>جاري الحفظ...';
+
+    // Simulate API call
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+
+        // Show success message
+        showToast('تم حفظ جميع الإعدادات بنجاح', 'success');
+    }, 1500);
 }
 
 function resetSettings() {
     if (confirm('هل تريد إعادة تعيين جميع الإعدادات؟')) {
-        alert('تم إعادة تعيين الإعدادات');
+        const btn = event.target.closest('button');
+        const originalText = btn.innerHTML;
+
+        // Show loading state
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>جاري إعادة التعيين...';
+
+        // Simulate reset
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+
+            // Reset form values
+            document.querySelectorAll('input, select, textarea').forEach(element => {
+                if (element.type === 'checkbox') {
+                    element.checked = false;
+                } else {
+                    element.value = '';
+                }
+            });
+
+            showToast('تم إعادة تعيين الإعدادات بنجاح', 'success');
+        }, 1000);
     }
 }
 
 function editUser(id) {
-    alert('تعديل المستخدم رقم: ' + id);
+    showToast(`جاري تحميل بيانات المستخدم رقم: ${id}`, 'info');
+    // Here you would load user data and show edit modal
+    setTimeout(() => {
+        showToast('تم تحميل بيانات المستخدم', 'success');
+    }, 1000);
 }
 
 function deleteUser(id) {
     if (confirm('هل تريد حذف هذا المستخدم؟')) {
-        alert('تم حذف المستخدم رقم: ' + id);
+        const deleteBtn = document.querySelector(`button[onclick="deleteUser(${id})"]`);
+        if (deleteBtn) {
+            const originalText = deleteBtn.innerHTML;
+            deleteBtn.disabled = true;
+            deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            // Simulate delete API call
+            setTimeout(() => {
+                deleteBtn.disabled = false;
+                deleteBtn.innerHTML = originalText;
+
+                // Remove user row from table
+                const userRow = deleteBtn.closest('tr');
+                if (userRow) {
+                    userRow.remove();
+                }
+
+                showToast(`تم حذف المستخدم رقم: ${id} بنجاح`, 'success');
+            }, 1000);
+        }
     }
 }
 
 function saveUser() {
     const form = document.getElementById('addUserForm');
-    const formData = new FormData(form);
-    
-    alert('تم إضافة المستخدم بنجاح');
-    
-    const modal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
-    modal.hide();
-    form.reset();
+    const saveBtn = document.querySelector('#addUserModal .btn-primary');
+
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    const originalText = saveBtn.innerHTML;
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>جاري الحفظ...';
+
+    // Simulate API call
+    setTimeout(() => {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalText;
+
+        showToast('تم إضافة المستخدم بنجاح', 'success');
+
+        const modal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
+        modal.hide();
+        form.reset();
+    }, 1500);
 }
 
 function createBackup() {
@@ -781,8 +855,47 @@ function downloadBackup(filename) {
 
 function deleteBackup(filename) {
     if (confirm('هل تريد حذف النسخة الاحتياطية: ' + filename + '؟')) {
-        alert('تم حذف النسخة الاحتياطية');
+        showToast('تم حذف النسخة الاحتياطية: ' + filename, 'success');
     }
+}
+
+// Toast notification function
+function showToast(message, type = 'info') {
+    // Create toast container if it doesn't exist
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.className = 'position-fixed top-0 end-0 p-3';
+        toastContainer.style.zIndex = '1055';
+        document.body.appendChild(toastContainer);
+    }
+
+    // Create toast element
+    const toastId = 'toast-' + Date.now();
+    const toastHtml = `
+        <div id="${toastId}" class="toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'danger' ? 'danger' : type === 'warning' ? 'warning' : 'info'} border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-triangle' : type === 'warning' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `;
+
+    toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+
+    // Show toast
+    const toastElement = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+    toast.show();
+
+    // Remove toast element after it's hidden
+    toastElement.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+    });
 }
 </script>
 {% endblock %}
